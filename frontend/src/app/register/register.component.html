@@ -1,0 +1,132 @@
+<div class="register-wrapper">
+  <div class="register-content">
+
+    <!-- Left Column - Text + Logo -->
+    <div class="left-column">
+      <div class="logo">
+        <span class="logo-icon">◈</span>
+        RecruitPro
+      </div>
+      <h1 class="title">Create your account</h1>
+      <p class="subtitle">
+        Join thousands of candidates and companies transforming the recruitment process.
+      </p>
+       <div class="subtitle">
+        Already have an account? 
+        <a routerLink="/login" class="link">Sign in</a>
+      </div>
+    </div>
+
+    <!-- Right Column - Form -->
+    <div class="right-column">
+      <div class="register-card">
+        <h2 class="form-title">Sign Up</h2>
+
+        <form (ngSubmit)="onSubmit()">
+
+          <!-- Account Type -->
+          <div class="role-selector">
+            <button type="button" [class.active]="role === 'CANDIDATE'" (click)="role = 'CANDIDATE'">
+              👤 Candidate
+            </button>
+            <button type="button" [class.active]="role === 'COMPANY'" (click)="role = 'COMPANY'">
+              🏢 Company
+            </button>
+          </div>
+
+          <!-- Photo -->
+          <div class="photo-upload">
+            <label>
+              <input type="file" accept="image/*" (change)="onImageChange($event)" hidden>
+              <div class="preview" [class.has-image]="imagePreview()">
+                <img *ngIf="imagePreview()" [src]="imagePreview()!" alt="Preview">
+                <div *ngIf="!imagePreview()" class="placeholder">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110">
+                    <circle cx="55" cy="55" r="55" fill="#ede9fe"/>
+                    <circle cx="55" cy="42" r="18" fill="#c4b5fd"/>
+                    <ellipse cx="55" cy="95" rx="30" ry="22" fill="#c4b5fd"/>
+                  </svg>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- First Name + Last Name -->
+          <div class="grid-2">
+            <div>
+              <label>First Name *</label>
+              <input type="text" [(ngModel)]="firstName" name="firstName" required class="form-input">
+            </div>
+            <div>
+              <label>Last Name *</label>
+              <input type="text" [(ngModel)]="lastName" name="lastName" required class="form-input">
+            </div>
+          </div>
+
+          <div>
+            <label>Professional Email *</label>
+            <input type="email" [(ngModel)]="email" name="email" required class="form-input">
+          </div>
+
+          <div>
+            <label>Phone Number *</label>
+            <input type="tel" [(ngModel)]="phone" name="phone" required class="form-input">
+          </div>
+
+          <div>
+            <label>Password * (min. 8 characters)</label>
+            <input type="password" [(ngModel)]="password" name="password" required class="form-input">
+          </div>
+
+          <!-- CV Upload -->
+          <div *ngIf="isCandidate" class="cv-upload">
+            <label></label>
+            
+            <div class="upload-area" 
+                 [class.has-file]="cvFile"
+                 (click)="cvInput.click()"
+                 (dragover)="onDragOver($event)"
+                 (dragleave)="onDragLeave($event)"
+                 (drop)="onDrop($event)">
+              
+              <input #cvInput 
+                     type="file" 
+                     accept=".pdf" 
+                     (change)="onCvChange($event)" 
+                     hidden>
+
+              <div class="upload-content" *ngIf="!cvFile">
+                <i class="fas fa-file-pdf upload-icon"></i>
+                <div class="upload-text">
+                  <span class="browse-btn"><strong>Drop your CV here</strong></span>
+                </div>
+                <small class="upload-hint">PDF only • Maximum 5 MB</small>
+              </div>
+
+              <!-- Selected File -->
+              <div *ngIf="cvFile" class="file-selected">
+                <i class="fas fa-file-pdf"></i>
+                <span class="filename">{{ cvFile.name }}</span>
+                <button type="button" class="remove-file" (click)="removeCv($event)">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          @if (error()) { <div class="error-message">{{ error() }}</div> }
+          @if (success()) { <div class="success-message">{{ success() }}</div> }
+
+          <button type="submit" class="btn-primary" [disabled]="loading()">
+            @if (loading()) { <span class="spinner"></span> }
+            Create my account
+          </button>
+
+          <div class="divider">OR</div>
+          <div id="google-register-btn-container" class="google-btn"></div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

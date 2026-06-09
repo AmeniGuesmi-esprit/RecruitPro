@@ -1,0 +1,51 @@
+<div class="modern-navbar">
+  <div class="nav-container">
+    <!-- Logo -->
+    <a href="#" class="nav-logo">
+      <span class="logo-icon">◈</span>
+      RecruitPro
+    </a>
+
+    <!-- Navigation Links -->
+    <div class="nav-links">
+      @if (user?.role === 'CANDIDATE') {
+        <a routerLink="/frontoffice/dashboard" routerLinkActive="active">Dashboard</a>
+        <a routerLink="/frontoffice/projects" routerLinkActive="active">Projets</a>
+        <a routerLink="/frontoffice/recommendations" routerLinkActive="active">Recommandations</a>
+        <a routerLink="/frontoffice/applications" routerLinkActive="active">Candidatures</a>
+      }
+      @if (user?.role === 'COMPANY') {
+        <a routerLink="/frontoffice/dashboard" routerLinkActive="active">Dashboard</a>
+        <a routerLink="/frontoffice/post" routerLinkActive="active">Publier une offre</a>
+      }
+    </div>
+
+    <!-- Avatar + Dropdown -->
+    <div class="user-avatar" (click)="toggleDropdown($event)">
+      <img [src]="getAvatarUrl()" alt="Avatar" class="avatar">
+    </div>
+
+    <!-- Dropdown Menu -->
+    @if (dropdownOpen) {
+      <div class="dropdown-menu">
+        <a routerLink="/frontoffice/profile" 
+           (click)="toggleDropdown($event)" 
+           class="dropdown-item">
+          <i class="ti ti-user me-2"></i> Mon Profil
+        </a>
+        <a href="#" 
+           (click)="logout(); $event.preventDefault()" 
+           class="dropdown-item logout-btn">
+          <i class="ti ti-logout me-2"></i> Déconnexion
+        </a>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Content Wrapper - Important pour le style Berry -->
+<div class="pc-container">
+  <div class="coded-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>

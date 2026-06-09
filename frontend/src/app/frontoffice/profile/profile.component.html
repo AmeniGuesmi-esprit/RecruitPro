@@ -1,0 +1,225 @@
+<div class="profile-page">
+
+  @if (success()) {
+    <div class="toast-success">{{ success() }}</div>
+  }
+  @if (error()) {
+    <div class="toast-error">{{ error() }}</div>
+  }
+
+  @if (user) {
+
+    <div class="profile-card">
+
+      <!-- Avatar + nom -->
+      <div class="profile-header">
+        <div class="avatar-wrapper">
+          <img [src]="currentImageUrl" class="avatar-img" alt="Photo de profil">
+          <div class="avatar-badge"><i class="ti ti-check"></i></div>
+        </div>
+        <h2 class="profile-name">{{ user.firstName }} {{ user.lastName }}</h2>
+        <span class="profile-role-badge">{{ user.role === 'CANDIDATE' ? 'Candidat' : 'Recruteur' }}</span>
+      </div>
+
+      <!-- Coordonnées -->
+      <div class="profile-section">
+        <h3 class="section-title">Coordonnées</h3>
+        <div class="info-grid">
+
+          <div class="info-item">
+            <span class="info-icon"><i class="ti ti-user"></i></span>
+            <div>
+              <span class="info-label">Prénom</span>
+              <span class="info-value">{{ user.firstName || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <span class="info-icon"><i class="ti ti-user"></i></span>
+            <div>
+              <span class="info-label">Nom</span>
+              <span class="info-value">{{ user.lastName || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <span class="info-icon"><i class="ti ti-mail"></i></span>
+            <div>
+              <span class="info-label">Email</span>
+              <span class="info-value">{{ user.email }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <span class="info-icon"><i class="ti ti-phone"></i></span>
+            <div>
+              <span class="info-label">Téléphone</span>
+              <span class="info-value">{{ user.phone || '—' }}</span>
+            </div>
+          </div>
+
+          @if (isCandidate) {
+            <div class="info-item" [class.clickable]="user.cvPath" (click)="openCv()" style="grid-column: 1 / -1;">
+              <span class="info-icon"><i class="ti ti-file-text"></i></span>
+              <div>
+                <span class="info-label">CV</span>
+                @if (user.cvPath) {
+                  <span class="info-value cv-link">
+                    <i class="fas fa-file-pdf"></i> {{ cvFileName }}
+                    <span class="cv-open-hint">Cliquer pour ouvrir</span>
+                  </span>
+                } @else {
+                  <span class="info-value">Aucun CV</span>
+                }
+              </div>
+            </div>
+          }
+
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="card-actions">
+        <button class="btn-edit" (click)="openEdit()">
+          <i class="ti ti-pencil"></i> Modifier le profil
+        </button>
+        <button class="btn-delete" (click)="confirmDelete()">
+          <i class="ti ti-trash"></i> Supprimer le compte
+        </button>
+      </div>
+
+    </div>
+
+  } @else {
+    <div class="loading-state">
+      <div class="spinner-ring"></div>
+      <p>Chargement du profil...</p>
+    </div>
+  }
+
+</div>
+
+<!-- ===== MODAL MODIFICATION ===== -->
+@if (editMode) {
+  <div class="modal-backdrop" (click)="closeEdit()">
+    <div class="edit-modal" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="edit-modal-header">
+        <h3>Modifier le profil</h3>
+        <button class="btn-close" (click)="closeEdit()">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="edit-modal-body">
+
+        <!-- Avatar -->
+        <div class="edit-avatar-section">
+          <img [src]="imagePreview || currentImageUrl" class="edit-avatar-preview" alt="Aperçu">
+          <label class="btn-change-photo">
+            <i class="ti ti-camera"></i>
+            Changer la photo
+            <input type="file" (change)="onImageChange($event)" accept="image/png, image/jpeg" hidden>
+          </label>
+        </div>
+
+        <form (ngSubmit)="onUpdate()">
+
+          <div class="edit-row">
+            <div class="edit-field">
+              <label>Prénom</label>
+              <input type="text" class="edit-input" [(ngModel)]="firstName" name="firstName" required>
+            </div>
+            <div class="edit-field">
+              <label>Nom</label>
+              <input type="text" class="edit-input" [(ngModel)]="lastName" name="lastName" required>
+            </div>
+          </div>
+
+          <div class="edit-field">
+            <label>Email</label>
+            <input type="email" class="edit-input edit-input--disabled" [value]="user.email" disabled>
+          </div>
+
+          <div class="edit-field">
+            <label>Téléphone</label>
+            <input type="tel" class="edit-input" [(ngModel)]="phone" name="phone" placeholder="+216 XX XXX XXX">
+          </div>
+
+          <div class="edit-field">
+            <label>Nouveau mot de passe <span class="optional">(laisser vide pour ne pas changer)</span></label>
+            <input type="password" class="edit-input" [(ngModel)]="password" name="password" placeholder="••••••••">
+          </div>
+
+          @if (isCandidate) {
+            <div class="cv-upload">
+              <label>CV (PDF)</label>
+              <div class="upload-area"
+                   [class.has-file]="cvFile"
+                   (click)="cvInput.click()"
+                   (dragover)="$event.preventDefault()"
+                   (drop)="onDrop($event)">
+
+                <input #cvInput
+                       type="file"
+                       accept=".pdf"
+                       (change)="onCvChange($event)"
+                       hidden>
+
+                @if (!cvFile) {
+                  <div class="upload-content">
+                    <i class="fas fa-file-pdf upload-icon"></i>
+                    <div class="upload-text">
+                      <span><strong>Déposez votre CV ici</strong></span>
+                    </div>
+                    <small class="upload-hint">
+                      @if (user.cvPath) { ✓ CV déjà enregistré — déposez-en un nouveau pour remplacer }
+                      @else { PDF uniquement • Maximum 5 Mo }
+                    </small>
+                  </div>
+                }
+
+                @if (cvFile) {
+                  <div class="file-selected">
+                    <i class="fas fa-file-pdf"></i>
+                    <span class="filename">{{ cvFile.name }}</span>
+                    <button type="button" class="remove-file" (click)="cvFile = null; $event.stopPropagation()">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="edit-actions">
+            <button type="button" class="btn-cancel" (click)="closeEdit()">Annuler</button>
+            <button type="submit" class="btn-save" [disabled]="loading()">
+              @if (loading()) { <span class="spinner"></span> }
+              Enregistrer
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ===== MODAL SUPPRESSION ===== -->
+@if (showDeleteConfirm) {
+  <div class="modal-backdrop">
+    <div class="confirm-modal">
+      <div class="confirm-icon"><i class="ti ti-alert-triangle"></i></div>
+      <h4>Supprimer le compte ?</h4>
+      <p>Cette action est irréversible. Toutes vos données seront définitivement supprimées.</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" (click)="showDeleteConfirm = false">Annuler</button>
+        <button class="btn-delete-confirm" (click)="deleteAccount()">Oui, supprimer</button>
+      </div>
+    </div>
+  </div>
+}

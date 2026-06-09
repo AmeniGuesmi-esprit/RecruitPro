@@ -1,0 +1,290 @@
+.register-wrapper {
+  min-height: 100vh;
+  background: #06060f;
+  color: #f0f0ff;
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 30% 20%, rgba(124, 92, 252, 0.18), transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(0, 229, 192, 0.18), transparent 50%);
+  z-index: 0;
+}
+
+.register-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  z-index: 0;
+}
+
+.register-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  max-width: 1100px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  align-items: center;
+}
+
+/* ==================== COLONNE GAUCHE ==================== */
+.left-column {
+  .logo {
+    font-size: 2rem;
+    font-family: 'Syne', sans-serif;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon { color: #7c5cfc; }
+
+  .title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.2rem;
+  }
+
+  .subtitle {
+    font-size: 1.15rem;
+    color: #a5b4fc;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+}
+
+/* ==================== COLONNE DROITE ==================== */
+.right-column {
+  max-width: 900px;
+}
+
+.register-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+  color: #1f2937;
+}
+
+.form-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1.8rem;
+  color: #1f2937;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 18px;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #7c5cfc;
+  box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15);
+}
+
+/* ==================== CV UPLOAD ==================== */
+.cv-upload {
+  margin-bottom: 1.2rem; /* réduit */
+}
+
+.upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 16px;
+  padding: 1.2rem 1.5rem;           /* Réduit de 2rem → 1.2rem */
+  text-align: center;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 110px;                /* Réduit de 160px → 110px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: #7c5cfc;
+    background: #f0f0ff;
+  }
+
+  &.has-file {
+    border-style: solid;
+    border-color: #7c5cfc;
+    background: #f8f5ff;
+    padding: 1rem 1.5rem;           /* Encore plus compact quand un fichier est sélectionné */
+  }
+}
+
+.upload-content {
+  .upload-icon {
+    font-size: 2.2rem;              /* Légèrement réduit */
+    color: #7c5cfc;
+    margin-bottom: 0.7rem;
+  }
+
+  .upload-text {
+    margin-bottom: 0.6rem;
+    strong {
+      font-size: 1.05rem;
+    }
+  }
+
+  .upload-hint {
+    font-size: 0.82rem;
+  }
+}
+
+.file-selected {
+  margin-top: 10px;                 /* Réduit */
+  padding: 10px 14px;
+}
+
+/* Autres styles existants */
+.role-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.role-selector button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  font-weight: 500;
+}
+
+.role-selector button.active {
+  background: linear-gradient(135deg, #7c5cfc, #5b3de8);
+  color: white;
+  border-color: #7c5cfc;
+}
+
+.photo-upload {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.preview {
+  width: 110px;
+  height: 110px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 3px dashed #c4b5fd;
+  overflow: hidden;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: #7c5cfc;
+    box-shadow: 0 0 0 4px rgba(124, 92, 252, 0.12);
+  }
+
+  &.has-image {
+    border-style: solid;
+    border-color: #7c5cfc;
+  }
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, #7c5cfc, #5b3de8);
+  color: white;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  margin: 1.5rem 0;
+}
+
+.divider {
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #6b7280;
+  position: relative;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.error-message { background: #fee2e2; color: #ef4444; padding: 12px; border-radius: 10px; }
+.success-message { background: #d1fae5; color: #10b981; padding: 12px; border-radius: 10px; }
+
+.link { color: #7c5cfc; font-weight: 500; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .register-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .left-column { text-align: center; }
+}

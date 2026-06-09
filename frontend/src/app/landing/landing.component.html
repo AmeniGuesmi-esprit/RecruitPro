@@ -1,0 +1,137 @@
+<div class="landing-wrapper">
+
+  <!-- Animated background particles -->
+  <div class="bg-layer">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- Navigation bar -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">Recruit<strong>Pro</strong></span>
+    </div>
+    <div class="nav-links">
+      <a href="#features" class="nav-link">Features</a>
+      <button class="btn btn-secondary" (click)="goToRegister()">
+        <span class="btn-text">Sign up</span>
+      </button>
+      <button class="btn btn-secondary" (click)="goToLogin()">
+        <span class="btn-text">Sign in</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+
+      <h1 class="hero-title">
+        Find the talent<br>
+        <span class="title-accent">that changes everything.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        RecruitPro connects the best candidates with companies shaping the future.
+        A recruitment experience designed for excellence.
+      </p>
+
+      <div class="cta-group">
+        <button class="btn btn-primary" (click)="goToRegister()">
+          <span class="btn-text">Create an account</span>
+          <span class="btn-arrow">→</span>
+        </button>
+        <button class="btn btn-secondary" (click)="goToLogin()">
+          <span class="btn-text">Sign in</span>
+        </button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-num">12K+</span>
+          <span class="stat-label">Active candidates</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">3K+</span>
+          <span class="stat-label">Companies</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">98%</span>
+          <span class="stat-label">Satisfaction</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating card preview -->
+    <div class="hero-visual">
+      <div class="card-float card-main">
+        <div class="card-header">
+          <div class="company-logo">T</div>
+          <div class="card-meta">
+            <span class="card-company">TechCorp Tunisia</span>
+            <span class="card-role">Full Stack Developer</span>
+          </div>
+          <span class="card-badge">New</span>
+        </div>
+        <div class="card-tags">
+          <span class="tag">React</span>
+          <span class="tag">Spring Boot</span>
+          <span class="tag">Remote</span>
+        </div>
+        <div class="card-footer">
+          <span class="card-salary">3,500 – 5,000 TND</span>
+          <button class="card-btn">Apply</button>
+        </div>
+      </div>
+
+      <div class="card-float card-mini card-mini-1">
+        <div class="mini-avatar">✓</div>
+        <div class="mini-text">
+          <span class="mini-name">Application sent</span>
+          <span class="mini-sub">2 minutes ago</span>
+        </div>
+      </div>
+
+      <div class="card-float card-mini card-mini-2">
+        <div class="mini-avatar" style="background: linear-gradient(135deg,#f59e0b,#ef4444);">⚡</div>
+        <div class="mini-text">
+          <span class="mini-name">Match found!</span>
+          <span class="mini-sub">95% compatibility</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features — card grid -->
+  <section class="features" id="features">
+    <h2 class="features-title">Everything you need to hire smarter</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-card-icon">🎯</div>
+        <h3>Smart Matching</h3>
+        <p>AI-powered matching algorithm based on your real skills and experience</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">🔒</div>
+        <h3>Secure Data</h3>
+        <p>Your information is encrypted and protected at all times</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">⚡</div>
+        <h3>Fast Response</h3>
+        <p>Companies respond within 48 hours thanks to our automated follow-up system</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span class="footer-logo"></span>
+  </footer>
+
+</div>

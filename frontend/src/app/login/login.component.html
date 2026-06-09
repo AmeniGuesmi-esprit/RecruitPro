@@ -1,0 +1,57 @@
+<div class="login-wrapper">
+  <div class="login-content">
+
+    <!-- Left Column - Text -->
+    <div class="left-column">
+      <div class="logo">
+        <span class="logo-icon">◈</span>
+        RecruitPro
+      </div>
+      <h1 class="title">Welcome back!</h1>
+      <p class="subtitle">
+        Sign in and pick up where you left off. Your next opportunity is waiting.
+      </p>
+
+      <div class="register-link">
+        Don't have an account yet?
+        <a routerLink="/register" class="link">Sign up</a>
+      </div>
+    </div>
+
+    <!-- Right Column - Form -->
+    <div class="right-column">
+      <div class="login-card">
+        <h2 class="form-title">Sign In</h2>
+
+        <form (ngSubmit)="onSubmit()">
+
+          <div>
+            <label>Email</label>
+            <input type="email" [(ngModel)]="email" name="email" placeholder="your@email.com" class="form-input">
+          </div>
+
+          <div>
+            <label>Password</label>
+            <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" class="form-input">
+            <!-- ✅ Lien "Mot de passe oublié" -->
+            <div class="forgot-link">
+              <a routerLink="/forgot-password" class="link">Mot de passe oublié ?</a>
+            </div>
+          </div>
+
+          @if (error()) { <div class="error-message">{{ error() }}</div> }
+
+          <button type="submit" class="btn-primary" [disabled]="loading()">
+            @if (loading()) { <span class="spinner"></span> }
+            Sign in
+          </button>
+
+          <div class="divider">OR</div>
+          <div id="google-login-btn-container" class="google-btn"></div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>

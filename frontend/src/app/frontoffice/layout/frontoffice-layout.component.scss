@@ -1,0 +1,126 @@
+.modern-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(6, 6, 15, 0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 40px;
+}
+
+.nav-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+
+  .logo-icon { color: #7c5cfc; font-size: 1.85rem; }
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex: 1;
+  justify-content: center;
+
+  a {
+    color: #b0b0d0;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 0;
+    position: relative;
+
+    &:hover, &.active { color: white; }
+
+    &.active::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 100%;
+      height: 2.5px;
+      background: linear-gradient(to right, #7c5cfc, #00e5c0);
+    }
+  }
+}
+
+/* ==================== AVATAR & DROPDOWN ==================== */
+.user-avatar {
+  position: relative;
+  cursor: pointer;
+  z-index: 1020;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid #7c5cfc;
+  transition: transform 0.2s;
+
+  &:hover { transform: scale(1.08); }
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 62px;
+  right: 20px;
+  background: #0f0f23;
+  border: 1px solid rgba(124, 92, 252, 0.3);
+  border-radius: 12px;
+  padding: 8px 0;
+  min-width: 200px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  z-index: 1030;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  color: #f0f0ff;
+  text-decoration: none;
+  font-size: 0.95rem;
+
+  &:hover {
+    background: rgba(124, 92, 252, 0.15);
+  }
+}
+
+.logout-btn {
+  color: #ff6b6b !important;
+  &:hover {
+    background: rgba(255, 107, 107, 0.1) !important;
+  }
+}
+/* ==================== RESET BERRY CONTAINER ==================== */
+.pc-container {
+  background: #ffffff !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: calc(100vh - 73px);
+}
+
+.coded-content {
+  background: #ffffff !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
