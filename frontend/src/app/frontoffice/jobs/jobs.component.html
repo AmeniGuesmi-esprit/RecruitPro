@@ -125,6 +125,9 @@
             </div>
           }
           <span class="schedule-badge" [attr.data-schedule]="job.workSchedule">{{ job.workSchedule }}</span>
+          @if (job.status !== 'PUBLISHED') {
+            <span class="status-badge closed"><i class="ti ti-lock"></i> Clôturée</span>
+          }
         </div>
 
         <!-- Corps -->
@@ -148,7 +151,7 @@
           <!-- Salary -->
           <div class="salary-row">
             <i class="ti ti-currency-dollar"></i>
-            <span>{{ job.salaryMin | number:'1.0-0' }} – {{ job.salaryMax | number:'1.0-0' }} TND / mois</span>
+            <span>{{ job.salary | number:'1.0-0' }} TND / mois</span>
           </div>
 
           <!-- Période -->
@@ -164,6 +167,38 @@
               <span><i class="ti ti-phone me-1"></i>{{ job.contactPhone }}</span>
             }
           </div>
+
+          <!-- ══ CANDIDATURE (CANDIDATE uniquement) — directement sur la carte ══ -->
+          @if (isCandidate) {
+            <div class="apply-section card-apply-section" (click)="$event.stopPropagation()">
+              @if (isApplied(job)) {
+                <span class="application-status-badge" [attr.data-status]="statusFor(job)">
+                  <i class="ti" [class.ti-clock]="statusFor(job) === 'EN_COURS_DE_TRAITEMENT'"
+                     [class.ti-circle-check]="statusFor(job) === 'ACCEPTEE_POUR_ENTRETIEN'"
+                     [class.ti-circle-x]="statusFor(job) === 'REFUSEE'"></i>
+                  {{ statusLabel(statusFor(job)) }}
+                </span>
+              }
+              @if (!canApply(job)) {
+                <button class="btn-apply disabled" disabled>
+                  <i class="ti ti-lock"></i> Offre clôturée
+                </button>
+              } @else if (isApplied(job)) {
+                <button class="btn-apply cancel" [disabled]="isApplying(job)" (click)="toggleApply(job)">
+                  @if (isApplying(job)) { <span class="spin"></span> } @else { <i class="ti ti-x"></i> }
+                  Annuler
+                </button>
+              } @else {
+                <button class="btn-apply" [disabled]="isApplying(job)" (click)="toggleApply(job)">
+                  @if (isApplying(job)) { <span class="spin"></span> } @else { <i class="ti ti-send"></i> }
+                  Postuler
+                </button>
+              }
+              @if (applyErrorMsg && applyErrorJobId === job.id) {
+                <div class="apply-error"><i class="ti ti-alert-circle"></i>{{ applyErrorMsg }}</div>
+              }
+            </div>
+          }
 
           <!-- CTA visible au survol -->
           <div class="card-cta">
@@ -190,6 +225,9 @@
           <h2>{{ selectedJob.title }}</h2>
           <p class="company-name">{{ selectedJob.companyName }}</p>
           <span class="schedule-badge" [attr.data-schedule]="selectedJob.workSchedule">{{ selectedJob.workSchedule }}</span>
+          @if (selectedJob.status !== 'PUBLISHED') {
+            <span class="status-badge closed"><i class="ti ti-lock"></i> Clôturée</span>
+          }
         </div>
       </div>
 
@@ -213,7 +251,7 @@
             <i class="ti ti-currency-dollar"></i>
             <div>
               <label>Salaire</label>
-              <span>{{ selectedJob.salaryMin | number:'1.0-0' }} – {{ selectedJob.salaryMax | number:'1.0-0' }} TND / mois</span>
+              <span>{{ selectedJob.salary | number:'1.0-0' }} TND / mois</span>
             </div>
           </div>
           <div class="info-item">
@@ -246,8 +284,59 @@
               <span>Du {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} au {{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
             </div>
           </div>
+          <div class="info-item">
+            <i class="ti ti-calendar-time"></i>
+            <div>
+              <label>Date d'entretien</label>
+              <span>{{ selectedJob.dateEntretien | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
         </section>
+
+        <!-- ══ CANDIDATURE (CANDIDATE uniquement) ══════════════════════════ -->
+        @if (isCandidate) {
+          <section class="apply-section">
+            @if (applyErrorMsg && applyErrorJobId === selectedJob.id) {
+              <div class="apply-error"><i class="ti ti-alert-circle"></i>{{ applyErrorMsg }}</div>
+            }
+            @if (isApplied(selectedJob)) {
+              <span class="application-status-badge" [attr.data-status]="statusFor(selectedJob)">
+                <i class="ti" [class.ti-clock]="statusFor(selectedJob) === 'EN_COURS_DE_TRAITEMENT'"
+                   [class.ti-circle-check]="statusFor(selectedJob) === 'ACCEPTEE_POUR_ENTRETIEN'"
+                   [class.ti-circle-x]="statusFor(selectedJob) === 'REFUSEE'"></i>
+                {{ statusLabel(statusFor(selectedJob)) }}
+              </span>
+            }
+            @if (!canApply(selectedJob)) {
+              <button class="btn-apply disabled" disabled>
+                <i class="ti ti-lock"></i> Offre clôturée
+              </button>
+            } @else if (isApplied(selectedJob)) {
+              <button class="btn-apply cancel" [disabled]="isApplying(selectedJob)" (click)="toggleApply(selectedJob)">
+                @if (isApplying(selectedJob)) { <span class="spin"></span> } @else { <i class="ti ti-x"></i> }
+                Annuler
+              </button>
+            } @else {
+              <button class="btn-apply" [disabled]="isApplying(selectedJob)" (click)="toggleApply(selectedJob)">
+                @if (isApplying(selectedJob)) { <span class="spin"></span> } @else { <i class="ti ti-send"></i> }
+                Postuler
+              </button>
+            }
+          </section>
+        }
       </div>
+    </div>
+  </div>
+}
+
+<!-- ══ MODAL CONFIRMATION (Postuler / Annuler réussi) ═══════════════════════ -->
+@if (confirmation) {
+  <div class="modal-overlay confirmation-overlay" (click)="closeConfirmation()">
+    <div class="confirmation-card" (click)="$event.stopPropagation()">
+      <div class="confirmation-icon"><i class="ti ti-circle-check"></i></div>
+      <h3>{{ confirmation.title }}</h3>
+      <p>{{ confirmation.message }}</p>
+      <button class="btn-confirmation-ok" (click)="closeConfirmation()">Compris</button>
     </div>
   </div>
 }

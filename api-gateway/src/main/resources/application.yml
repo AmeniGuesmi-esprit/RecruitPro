@@ -51,6 +51,17 @@ spring:
           filters:
             - StripPrefix=0
 
+        # ── application-service ──────────────────────────────────────────────────
+        # Candidatures (postuler / annuler / mes candidatures / liste des candidats)
+        # → toutes les routes nécessitent un JWT valide
+        - id: application-service-protected
+          uri: lb://application-service
+          predicates:
+            - Path=/api/applications/**
+          filters:
+            - StripPrefix=0
+            - AuthenticationFilter
+
 eureka:
   client:
     service-url:

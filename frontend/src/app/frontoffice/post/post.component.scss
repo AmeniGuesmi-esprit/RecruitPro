@@ -307,6 +307,11 @@ $galaxy-glow : #2f6bff;
       background: rgba($warning, .18);
       color: darken($warning, 12%);
     }
+
+    &.cloture {
+      background: rgba(#6b7280, .18);
+      color: #374151;
+    }
   }
 }
 
@@ -425,6 +430,19 @@ $galaxy-glow : #2f6bff;
       cursor: not-allowed;
     }
     i { font-size: 15px; }
+  }
+
+  .footer-note {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $text-muted;
+    i { font-size: 14px; }
   }
 }
 
@@ -843,4 +861,217 @@ $galaxy-glow : #2f6bff;
   border-top: 1px solid $border;
 
   .btn-edit-card, .btn-archive-card { flex: 1; }
+}
+
+// ── Bouton "Candidats" dans le footer de carte ──────────────────────────────
+.card-footer {
+  .btn-candidates-card {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: $radius-sm;
+    background: $accent-lt;
+    color: darken($accent, 12%);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background .2s;
+
+    &:hover { background: darken($accent-lt, 6%); }
+    i { font-size: 15px; }
+  }
+}
+
+// ── Modal "Liste des candidats" ─────────────────────────────────────────────
+.candidates-page {
+  max-width: 560px; // plus large que le detail-page standard, pour la liste
+}
+
+.apply-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: $danger;
+  background: rgba($danger, .08);
+  border: 1px solid rgba($danger, .25);
+  border-radius: $radius-sm;
+  padding: 10px 12px;
+}
+
+.candidates-loading, .candidates-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px 10px;
+  color: $text-muted;
+  font-size: 13px;
+
+  i { font-size: 26px; color: $border; }
+
+  .spin {
+    width: 22px; height: 22px;
+    border: 3px solid $primary-lt;
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: candidates-spin .7s linear infinite;
+  }
+}
+@keyframes candidates-spin { to { transform: rotate(360deg); } }
+
+.candidates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.candidate-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  background: #fff;
+  transition: border-color .2s, background .2s;
+
+  &:hover { border-color: rgba($primary, .3); background: $primary-lt; }
+}
+
+.candidate-avatar {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, $primary, $accent);
+  color: #fff;
+  font-size: 17px;
+}
+
+.candidate-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .candidate-name { font-size: 13.5px; font-weight: 700; color: $text; }
+  .candidate-email {
+    font-size: 12px; color: $text-muted;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .candidate-date {
+    font-size: 11px; color: $text-muted;
+    display: flex; align-items: center; gap: 4px;
+    i { font-size: 12px; }
+  }
+}
+
+.btn-view-cv {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: $radius-sm;
+  background: $primary;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .2s;
+
+  &:hover { background: darken($primary, 8%); color: #fff; }
+  i { font-size: 14px; }
+}
+
+.no-cv {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: $text-muted;
+  i { font-size: 14px; }
+}
+
+// ── Statut de candidature ────────────────────────────────────────────────
+.application-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  i { font-size: 13px; }
+
+  &[data-status="EN_COURS_DE_TRAITEMENT"] {
+    background: rgba($warning, .12);
+    color: darken($warning, 10%);
+  }
+  &[data-status="ACCEPTEE_POUR_ENTRETIEN"] {
+    background: rgba($success, .12);
+    color: darken($success, 5%);
+  }
+  &[data-status="REFUSEE"] {
+    background: rgba($danger, .12);
+    color: darken($danger, 5%);
+  }
+}
+
+.candidate-row {
+  flex-wrap: wrap;
+}
+
+.candidate-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.status-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: $radius-sm;
+  border: 1px solid transparent;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, opacity .2s;
+  white-space: nowrap;
+
+  i { font-size: 13px; }
+
+  &:disabled { opacity: .5; cursor: not-allowed; }
+
+  &.accept {
+    background: rgba($success, .12);
+    color: darken($success, 5%);
+    &:hover:not(:disabled) { background: rgba($success, .22); }
+  }
+  &.refuse {
+    background: rgba($danger, .12);
+    color: darken($danger, 5%);
+    &:hover:not(:disabled) { background: rgba($danger, .22); }
+  }
 }

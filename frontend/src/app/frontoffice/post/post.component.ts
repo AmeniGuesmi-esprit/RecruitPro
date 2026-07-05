@@ -2,7 +2,9 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DecimalPipe, SlicePipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { JobService } from '../../core/services/job.service';
+import { ApplicationService } from '../../core/services/application.service';
 import { Job, JobRequest, JobStatus } from '../../core/models/job.model';
+import { ApplicationResponse, ApplicationStatus } from '../../core/models/application.model';
 
 @Component({
   selector: 'app-post',
@@ -14,7 +16,7 @@ import { Job, JobRequest, JobStatus } from '../../core/models/job.model';
 export class PostComponent implements OnInit {
 
   myJobs: Job[] = [];
-  activeFilter: 'ALL' | 'PUBLISHED' | 'ARCHIVED' = 'ALL';
+  activeFilter: 'ALL' | 'PUBLISHED' | 'CLOTURE' | 'ARCHIVED' = 'ALL';
   submitting  = false;
   editingId: number | null = null;
   showForm    = false;
@@ -28,8 +30,17 @@ export class PostComponent implements OnInit {
 
   form: JobRequest = this.emptyForm();
 
+  // ── Candidats d'une offre ────────────────────────────────────────────────
+  candidatesJob: Job | null = null;
+  candidates: ApplicationResponse[] = [];
+  candidatesLoading = false;
+  candidatesErrorMsg = '';
+  /** id de candidature en cours de mise à jour de statut (empêche le double-clic) */
+  updatingStatusIds = new Set<number>();
+
   constructor(
     private jobService: JobService,
+    private applicationService: ApplicationService,
     private cdr: ChangeDetectorRef   // FIX: ajout du ChangeDetectorRef
   ) {}
 
@@ -47,15 +58,17 @@ export class PostComponent implements OnInit {
   // ── Filtres ───────────────────────────────────────────────────────────────
 
   get filteredJobs(): Job[] {
-    if (this.activeFilter === 'PUBLISHED') return this.myJobs.filter(j => !this.isArchived(j));
-    if (this.activeFilter === 'ARCHIVED')  return this.myJobs.filter(j => this.isArchived(j));
+    if (this.activeFilter === 'PUBLISHED') return this.myJobs.filter(j => j.status === 'PUBLISHED');
+    if (this.activeFilter === 'CLOTURE')   return this.myJobs.filter(j => j.status === 'CLOTURE');
+    if (this.activeFilter === 'ARCHIVED')  return this.myJobs.filter(j => j.status === 'ARCHIVED');
     return this.myJobs;
   }
 
-  get publishedCount(): number { return this.myJobs.filter(j => !this.isArchived(j)).length; }
-  get archivedCount(): number  { return this.myJobs.filter(j => this.isArchived(j)).length; }
+  get publishedCount(): number { return this.myJobs.filter(j => j.status === 'PUBLISHED').length; }
+  get clotureCount(): number   { return this.myJobs.filter(j => j.status === 'CLOTURE').length; }
+  get archivedCount(): number  { return this.myJobs.filter(j => j.status === 'ARCHIVED').length; }
 
-  setFilter(filter: 'ALL' | 'PUBLISHED' | 'ARCHIVED') {
+  setFilter(filter: 'ALL' | 'PUBLISHED' | 'CLOTURE' | 'ARCHIVED') {
     this.activeFilter = filter;
   }
 
@@ -63,6 +76,72 @@ export class PostComponent implements OnInit {
 
   openDetail(job: Job) { this.selectedJob = job; }
   closeDetail()        { this.selectedJob = null; }
+
+  // ── Candidats d'une offre ────────────────────────────────────────────────
+
+  openCandidates(job: Job) {
+    this.candidatesJob = job;
+    this.candidates = [];
+    this.candidatesErrorMsg = '';
+    this.candidatesLoading = true;
+
+    this.applicationService.getApplicationsForJob(job.id).subscribe({
+      next: res => {
+        this.candidates = res.data ?? [];
+        this.candidatesLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.candidatesLoading = false;
+        this.candidatesErrorMsg = 'Impossible de charger les candidats pour cette offre.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  closeCandidates() {
+    this.candidatesJob = null;
+    this.candidates = [];
+    this.candidatesErrorMsg = '';
+    this.updatingStatusIds.clear();
+  }
+
+  candidateFullName(c: ApplicationResponse): string {
+    return `${c.candidateFirstName} ${c.candidateLastName}`;
+  }
+
+  applicationStatusLabel(status: ApplicationStatus): string {
+    if (status === 'ACCEPTEE_POUR_ENTRETIEN') return 'Accepté pour entretien';
+    if (status === 'REFUSEE') return 'Refusé';
+    return 'En cours de traitement';
+  }
+
+  isUpdatingStatus(c: ApplicationResponse): boolean {
+    return this.updatingStatusIds.has(c.id);
+  }
+
+  updateCandidateStatus(c: ApplicationResponse, status: ApplicationStatus) {
+    if (this.isUpdatingStatus(c) || c.status === status) return;
+
+    this.updatingStatusIds.add(c.id);
+    this.cdr.detectChanges();
+
+    this.applicationService.updateStatus(c.id, status).subscribe({
+      next: res => {
+        const idx = this.candidates.findIndex(x => x.id === c.id);
+        if (idx !== -1 && res.data) {
+          this.candidates[idx] = { ...this.candidates[idx], status: res.data.status };
+        }
+        this.updatingStatusIds.delete(c.id);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.candidatesErrorMsg = 'Impossible de mettre à jour le statut de cette candidature.';
+        this.updatingStatusIds.delete(c.id);
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   // ── Panel control ─────────────────────────────────────────────────────────
 
@@ -108,12 +187,30 @@ export class PostComponent implements OnInit {
     return this.formatLocalDatetime(new Date());
   }
 
+  /** La date d'entretien doit être postérieure à la date de clôture choisie dans le formulaire. */
+  minDateEntretien(): string {
+    if (this.form.dateCloture) return this.form.dateCloture;
+    return this.formatLocalDatetime(new Date());
+  }
+
   statusLabel(status: JobStatus): string {
-    return status === 'ARCHIVED' ? 'ARCHIVÉ' : 'PUBLIÉ';
+    if (status === 'ARCHIVED') return 'ARCHIVÉE';
+    if (status === 'CLOTURE')  return 'CLÔTURÉE';
+    return 'PUBLIÉE';
   }
 
   isArchived(job: Job): boolean {
     return job.status === 'ARCHIVED';
+  }
+
+  /** Clôturée automatiquement car la date de clôture est dépassée (≠ archivage manuel). */
+  isCloture(job: Job): boolean {
+    return job.status === 'CLOTURE';
+  }
+
+  /** Toute offre qui n'est plus visible publiquement, quelle qu'en soit la raison. */
+  isInactive(job: Job): boolean {
+    return job.status !== 'PUBLISHED';
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -132,13 +229,13 @@ export class PostComponent implements OnInit {
       title:        this.form.title,
       description:  this.form.description,
       skills:       [...this.form.skills],
-      salaryMin:    this.form.salaryMin,
-      salaryMax:    this.form.salaryMax,
+      salary:       this.form.salary,
       workSchedule: this.form.workSchedule,
       companyName:  this.form.companyName,
       contactEmail: this.form.contactEmail,
       contactPhone: this.form.contactPhone,
-      dateCloture:  this.form.dateCloture
+      dateCloture:  this.form.dateCloture,
+      dateEntretien: this.form.dateEntretien
     };
     const logoSnapshot    = this.logoFile;
     const previewSnapshot = this.logoPreview;
@@ -232,13 +329,13 @@ export class PostComponent implements OnInit {
       title:        job.title,
       description:  job.description,
       skills:       [...job.skills],
-      salaryMin:    job.salaryMin,
-      salaryMax:    job.salaryMax,
+      salary:       job.salary,
       workSchedule: job.workSchedule,
       companyName:  job.companyName,
       contactEmail: job.contactEmail,
       contactPhone: job.contactPhone,
-      dateCloture:  this.toDatetimeLocal(job.dateCloture)
+      dateCloture:  this.toDatetimeLocal(job.dateCloture),
+      dateEntretien: this.toDatetimeLocal(job.dateEntretien)
     };
     this.logoPreview = job.logoUrl ?? null;
     this.logoFile    = undefined;
@@ -301,9 +398,15 @@ export class PostComponent implements OnInit {
       return false;
     }
     if (f.skills.length === 0) { this.errorMsg = 'Ajoutez au moins une compétence.'; return false; }
+    if (!f.salary || f.salary <= 0) { this.errorMsg = 'Le salaire doit être supérieur à 0.'; return false; }
     if (!f.dateCloture) { this.errorMsg = 'La date de clôture est obligatoire.'; return false; }
     if (new Date(f.dateCloture).getTime() <= Date.now()) {
       this.errorMsg = 'La date de clôture doit être postérieure à la date actuelle.';
+      return false;
+    }
+    if (!f.dateEntretien) { this.errorMsg = 'La date d\'entretien est obligatoire.'; return false; }
+    if (new Date(f.dateEntretien).getTime() <= new Date(f.dateCloture).getTime()) {
+      this.errorMsg = 'La date d\'entretien doit être postérieure à la date de clôture.';
       return false;
     }
     return true;
@@ -324,11 +427,19 @@ export class PostComponent implements OnInit {
     return this.formatLocalDatetime(d);
   }
 
+  /** Par défaut, 1 jour après la date de clôture par défaut. */
+  private defaultDateEntretien(): string {
+    const d = new Date();
+    d.setDate(d.getDate() + 31);
+    return this.formatLocalDatetime(d);
+  }
+
   private emptyForm(): JobRequest {
     return {
-      title: '', description: '', skills: [], salaryMin: 0, salaryMax: 0,
+      title: '', description: '', skills: [], salary: 0,
       workSchedule: '', companyName: '', contactEmail: '', contactPhone: '',
-      dateCloture: this.defaultDateCloture()
+      dateCloture: this.defaultDateCloture(),
+      dateEntretien: this.defaultDateEntretien()
     };
   }
 

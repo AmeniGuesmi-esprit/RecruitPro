@@ -1,0 +1,16 @@
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\dto\ApiResponse.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\model\JobApplication.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\repository\JobApplicationRepository.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\client\RemoteApiResponse.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\controller\ApplicationController.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\dto\ApplicationResponse.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\client\UserInfo.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\config\RestTemplateConfig.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\config\SecurityConfig.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\dto\ApplyRequest.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\client\JobClient.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\security\JwtService.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\service\ApplicationService.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\client\UserClient.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\ApplicationServiceApplication.java
+C:\Users\Guesmi Ameni\OneDrive\Bureau\recruitment-platform\application-service\src\main\java\com\recruitment\application\client\JobInfo.java

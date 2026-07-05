@@ -1,0 +1,286 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// APPLICATIONS COMPONENT — même thème visuel que la page Offres d'emploi
+// ═══════════════════════════════════════════════════════════════════════════
+
+$accent:      #7c5cfc;
+$accent-dark: #5b3de8;
+$teal:        #00c2a8;
+$success:     #12b76a;
+$warning:     #f59e0b;
+$pink:        #ec4899;
+$bg:          #f7f6fd;
+$surface:     #f3f1fb;
+$card:        #ffffff;
+$border:      #e9e6f7;
+$text:        #1f2937;
+$muted:       #6b7280;
+
+.applications-page {
+  padding: 96px 2rem 3rem;
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 420px at 100% -5%, rgba(0, 194, 168, 0.08), transparent 60%),
+    radial-gradient(900px 420px at -5% 0%, rgba(124, 92, 252, 0.09), transparent 55%),
+    $bg;
+}
+
+.page-title {
+  margin-bottom: 2rem;
+
+  h4 {
+    display: flex; align-items: center;
+    font-size: 1.3rem; font-weight: 700; color: $text;
+    margin: 0 0 .35rem;
+    i { color: $accent; }
+  }
+  p { margin: 0; color: $muted; font-size: .92rem; }
+}
+
+// ── États (loading / vide / erreur) ─────────────────────────────────────────
+.loading-state, .empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  text-align: center;
+  color: $muted;
+
+  i { font-size: 2.6rem; color: rgba($accent, .35); }
+  p { margin: 0; font-size: .95rem; }
+}
+
+.global-error {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .88rem; color: #e5484d;
+  background: rgba(#e5484d, .08);
+  border: 1px solid rgba(#e5484d, .25);
+  border-radius: 10px;
+  padding: .7rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-retry {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .6rem 1.1rem;
+  border: 1px solid $border;
+  background: $card;
+  color: $accent-dark;
+  border-radius: 10px;
+  font-size: .85rem; font-weight: 600;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  &:hover { border-color: $accent; background: rgba($accent, .06); }
+}
+
+// ── Grille des candidatures ──────────────────────────────────────────────────
+.applications-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.application-card {
+  background: $card;
+  border: 1px solid $border;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 18px rgba(31, 20, 90, .05);
+  transition: box-shadow .2s ease, transform .2s ease;
+
+  &:hover { box-shadow: 0 10px 30px rgba(31, 20, 90, .1); transform: translateY(-2px); }
+}
+
+.card-banner {
+  position: relative;
+  height: 120px;
+  margin: -1.5rem -1.5rem 1.1rem;
+  background: linear-gradient(135deg, #f1edff 0%, #ded4fb 55%, #cdf3ec 100%);
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+
+  .banner-img { width: 100%; height: 100%; object-fit: cover; }
+  .banner-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    i { font-size: 38px; color: rgba($accent, .35); }
+  }
+
+  .schedule-badge {
+    position: absolute; top: 12px; left: 12px;
+    background: rgba(255, 255, 255, .95) !important;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
+  }
+  .status-badge { position: absolute; top: 12px; right: 12px; }
+}
+
+.schedule-badge {
+  font-size: .72rem; font-weight: 700;
+  padding: .3rem .75rem; border-radius: 20px;
+  white-space: nowrap; flex-shrink: 0;
+  background: rgba($teal, .13);
+  color: darken($teal, 16%);
+
+  &[data-schedule="CDI"]           { background: rgba($success, .13); color: darken($success, 10%); }
+  &[data-schedule="CDD"]           { background: rgba($teal, .13);    color: darken($teal, 16%); }
+  &[data-schedule="Stage"]         { background: rgba($warning, .15); color: darken($warning, 15%); }
+  &[data-schedule="Freelance"]     { background: rgba($accent, .13);  color: $accent-dark; }
+  &[data-schedule="Alternance"]    { background: rgba($pink, .13);    color: darken($pink, 8%); }
+  &[data-schedule="Temps partiel"] { background: #eef1f6;             color: $muted; }
+}
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .72rem; font-weight: 700;
+  padding: .3rem .75rem; border-radius: 20px;
+  white-space: nowrap; flex-shrink: 0;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
+
+  &.closed { background: rgba(#e5484d, .9); color: #fff; }
+}
+
+.card-body {
+  display: flex; flex-direction: column; gap: .85rem;
+}
+
+.job-title { font-size: 1rem; font-weight: 700; color: $text; margin: 0 0 2px; }
+.company-name { font-size: .83rem; color: $accent-dark; font-weight: 600; margin: 0; }
+
+.skills-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+.skill-tag {
+  font-size: .74rem; font-weight: 600;
+  padding: .28rem .65rem; border-radius: 20px;
+  background: $surface; color: $accent-dark;
+  &.more { background: transparent; color: $muted; }
+}
+
+.salary-row {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .86rem; font-weight: 700; color: $accent-dark;
+  i {
+    font-size: 1rem; width: 24px; height: 24px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba($accent, .12); color: $accent;
+  }
+}
+
+.period-row {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .8rem; color: $muted;
+  i { font-size: .95rem; color: $teal; }
+}
+
+.interview-row {
+  margin-top: -.2rem;
+  color: darken($success, 5%);
+  font-weight: 600;
+  i { color: darken($success, 5%); }
+}
+
+// ── Statut de candidature ────────────────────────────────────────────────
+.application-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: .6rem;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  width: fit-content;
+
+  i { font-size: .85rem; }
+
+  &[data-status="EN_COURS_DE_TRAITEMENT"] {
+    background: rgba($warning, .12);
+    color: darken($warning, 10%);
+  }
+  &[data-status="ACCEPTEE_POUR_ENTRETIEN"] {
+    background: rgba($success, .12);
+    color: darken($success, 5%);
+  }
+  &[data-status="REFUSEE"] {
+    background: rgba(#f04438, .12);
+    color: darken(#f04438, 5%);
+  }
+}
+
+// ── Bouton Annuler ────────────────────────────────────────────────────────────
+.btn-cancel {
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  width: 100%;
+  margin-top: .3rem;
+  padding: .75rem 1rem;
+  border: 1px solid $border;
+  border-radius: 12px;
+  font-size: .87rem; font-weight: 700;
+  color: $text;
+  background: $card;
+  cursor: pointer;
+  transition: border-color .2s, color .2s, transform .15s;
+
+  &:hover:not(:disabled) { border-color: #e5484d; color: #e5484d; }
+  &:disabled { opacity: .65; cursor: not-allowed; }
+
+  .spin {
+    width: 14px; height: 14px;
+    border: 2px solid rgba($accent, .25);
+    border-top-color: $accent-dark;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Modal de confirmation (Annuler réussi) ──────────────────────────────────
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(31, 20, 90, .4); backdrop-filter: blur(5px);
+  z-index: 1100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.94) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.confirmation-card {
+  background: $card;
+  border-radius: 22px;
+  width: 100%; max-width: 380px;
+  padding: 2.25rem 2rem;
+  text-align: center;
+  box-shadow: 0 30px 70px rgba(31, 20, 90, .25);
+  animation: popIn .25s cubic-bezier(.34, 1.56, .64, 1);
+
+  h3 { margin: 1.1rem 0 .6rem; font-size: 1.15rem; font-weight: 700; color: $text; }
+  p  { margin: 0 0 1.5rem; font-size: .9rem; color: $muted; line-height: 1.6; }
+}
+
+.confirmation-icon {
+  width: 62px; height: 62px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba($success, .12);
+  i { font-size: 2rem; color: $success; }
+}
+
+.btn-confirmation-ok {
+  width: 100%;
+  padding: .8rem 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: .9rem; font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, $accent, $teal);
+  box-shadow: 0 8px 20px rgba($accent, .3);
+  transition: transform .15s ease, box-shadow .15s ease;
+
+  &:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba($accent, .38); }
+}

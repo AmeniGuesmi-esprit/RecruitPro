@@ -4,7 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { JobService } from '../../core/services/job.service';
+import { ApplicationService } from '../../core/services/application.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Job } from '../../core/models/job.model';
+import { ApplicationStatus } from '../../core/models/application.model';
 
 @Component({
   selector: 'app-jobs',
@@ -25,6 +28,20 @@ export class JobsComponent implements OnInit, OnDestroy {
   searching = false;
 
   selectedJob: Job | null = null;
+
+  // ── Candidature (CANDIDATE) ───────────────────────────────────────────────
+  /** jobId des offres auxquelles le candidat connecté a déjà postulé */
+  appliedJobIds = new Set<number>();
+  /** Statut de la candidature, par jobId (ex: EN_COURS_DE_TRAITEMENT, ACCEPTEE_POUR_ENTRETIEN, REFUSEE) */
+  applicationStatusByJobId = new Map<number, ApplicationStatus>();
+  /** jobId en cours de traitement (empêche le double-clic pendant l'appel HTTP) */
+  applyingJobIds = new Set<number>();
+  applyErrorMsg = '';
+  /** jobId concerné par applyErrorMsg (pour afficher l'erreur sur la bonne carte / modal) */
+  applyErrorJobId: number | null = null;
+
+  /** Modal de confirmation affiché après un Postuler / Annuler réussi */
+  confirmation: { title: string; message: string } | null = null;
 
   // ── Barre de recherche unifiée ───────────────────────────────────────────
   searchQuery = '';
@@ -56,6 +73,8 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   constructor(
     private jobService: JobService,
+    private applicationService: ApplicationService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -82,6 +101,18 @@ export class JobsComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+
+    // Charger les candidatures déjà envoyées, pour afficher "Annuler" au lieu de "Postuler"
+    if (this.isCandidate) {
+      this.applicationService.getMyApplications().subscribe({
+        next: res => {
+          const applications = res.data ?? [];
+          this.appliedJobIds = new Set(applications.map(a => a.jobId));
+          this.applicationStatusByJobId = new Map(applications.map(a => [a.jobId, a.status]));
+          this.cdr.detectChanges();
+        }
+      });
+    }
   }
 
   ngOnDestroy() {
@@ -103,6 +134,91 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   openDetail(job: Job)  { this.selectedJob = job; }
   closeDetail()         { this.selectedJob = null; }
+
+  // ── Candidature (CANDIDATE) ───────────────────────────────────────────────
+
+  get isCandidate(): boolean {
+    return this.authService.isLoggedIn() && this.authService.getRole() === 'CANDIDATE';
+  }
+
+  isApplied(job: Job): boolean {
+    return this.appliedJobIds.has(job.id);
+  }
+
+  statusFor(job: Job): ApplicationStatus {
+    return this.applicationStatusByJobId.get(job.id) ?? 'EN_COURS_DE_TRAITEMENT';
+  }
+
+  statusLabel(status: ApplicationStatus): string {
+    if (status === 'ACCEPTEE_POUR_ENTRETIEN') return 'Accepté pour entretien';
+    if (status === 'REFUSEE') return 'Refusé';
+    return 'En cours de traitement';
+  }
+
+  isApplying(job: Job): boolean {
+    return this.applyingJobIds.has(job.id);
+  }
+
+  /** L'offre accepte encore les candidatures (bouton actif) uniquement si PUBLIÉE */
+  canApply(job: Job): boolean {
+    return job.status === 'PUBLISHED';
+  }
+
+  /** Postuler / Annuler selon l'état courant. Empêche l'ouverture du modal (stopPropagation côté template). */
+  toggleApply(job: Job) {
+    if (!this.canApply(job) || this.isApplying(job)) return;
+    this.applyErrorMsg = '';
+    this.applyErrorJobId = null;
+
+    this.applyingJobIds.add(job.id);
+    this.cdr.detectChanges();
+
+    if (this.isApplied(job)) {
+      this.applicationService.cancel(job.id).subscribe({
+        next: () => {
+          this.appliedJobIds.delete(job.id);
+          this.applicationStatusByJobId.delete(job.id);
+          this.applyingJobIds.delete(job.id);
+          this.confirmation = {
+            title: 'Candidature annulée',
+            message: 'Votre candidature a été annulée avec succès.'
+          };
+          this.selectedJob = null;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.applyingJobIds.delete(job.id);
+          this.applyErrorMsg = 'Impossible d\'annuler la candidature. Veuillez réessayer.';
+          this.applyErrorJobId = job.id;
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.applicationService.apply(job.id).subscribe({
+        next: () => {
+          this.appliedJobIds.add(job.id);
+          this.applicationStatusByJobId.set(job.id, 'EN_COURS_DE_TRAITEMENT');
+          this.applyingJobIds.delete(job.id);
+          this.confirmation = {
+            title: 'Candidature envoyée !',
+            message: 'Votre candidature a été envoyée avec succès. Nous vous contacterons pour vous communiquer le résultat.'
+          };
+          this.selectedJob = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.applyingJobIds.delete(job.id);
+          this.applyErrorMsg = err?.error?.message || 'Impossible d\'envoyer la candidature. Veuillez réessayer.';
+          this.applyErrorJobId = job.id;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  closeConfirmation() {
+    this.confirmation = null;
+  }
 
   // ── Compétences disponibles pour autocomplete ────────────────────────────
   get availableSkills(): string[] {

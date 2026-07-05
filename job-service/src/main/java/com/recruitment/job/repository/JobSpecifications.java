@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -15,7 +16,7 @@ import java.util.List;
  *
  * Reprend la logique de parsing qui était auparavant côté front
  * (jobs.component.ts::parseQuery / applyFilters) :
- *   - un token numérique          -> salaire minimum (salaryMax >= n)
+ *   - un token numérique          -> salaire minimum (salary >= n)
  *   - un token = un régime connu  -> filtre sur workSchedule
  *   - tout le reste (texte libre) -> chaque mot doit matcher le titre,
  *                                     la société OU une compétence
@@ -28,12 +29,12 @@ public final class JobSpecifications {
             "CDI", "CDD", "Temps partiel", "Freelance", "Stage", "Alternance"
     );
 
-    public static Specification<Job> search(String rawQuery, JobStatus status) {
+    public static Specification<Job> search(String rawQuery, Collection<JobStatus> statuses) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (status != null) {
-                predicates.add(cb.equal(root.get("status"), status));
+            if (statuses != null && !statuses.isEmpty()) {
+                predicates.add(root.get("status").in(statuses));
             }
 
             if (rawQuery != null && !rawQuery.isBlank()) {
@@ -44,7 +45,7 @@ public final class JobSpecifications {
                     // Token numérique -> salaire minimum
                     if (token.matches("\\d+")) {
                         double min = Double.parseDouble(token);
-                        predicates.add(cb.greaterThanOrEqualTo(root.get("salaryMax"), min));
+                        predicates.add(cb.greaterThanOrEqualTo(root.get("salary"), min));
                         continue;
                     }
 

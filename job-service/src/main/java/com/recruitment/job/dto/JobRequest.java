@@ -9,8 +9,7 @@ public class JobRequest {
     private String title;
     private String description;
     private List<String> skills;
-    private Double salaryMin;
-    private Double salaryMax;
+    private Double salary;
     private String workSchedule;
     private String companyName;
     private String contactEmail;
@@ -18,4 +17,7 @@ public class JobRequest {
 
     /** Date de clôture choisie par le recruteur : doit être postérieure à la date courante */
     private LocalDateTime dateCloture;
+
+    /** Date de l'entretien : doit être postérieure à la date de clôture */
+    private LocalDateTime dateEntretien;
 }

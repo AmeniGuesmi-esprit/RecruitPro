@@ -29,10 +29,7 @@ public class Job {
     private List<String> skills;
 
     @Column(nullable = false)
-    private Double salaryMin;
-
-    @Column(nullable = false)
-    private Double salaryMax;
+    private Double salary;
 
     /** CDI, CDD, Temps partiel, Freelance, Stage … */
     @Column(nullable = false)
@@ -54,7 +51,7 @@ public class Job {
     @Column(nullable = false)
     private Long recruiterId;
 
-    /** Statut de publication : PUBLISHED (publiée) ou ARCHIVED (archivée) */
+    /** Statut de publication : PUBLISHED (publiée), CLOTURE (date de clôture dépassée, auto) ou ARCHIVED (archivée manuellement) */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private JobStatus status;
@@ -66,6 +63,10 @@ public class Job {
     /** Date de clôture de l'offre : doit être postérieure à la date courante au moment de la création */
     @Column(nullable = false)
     private LocalDateTime dateCloture;
+
+    /** Date de l'entretien : doit être postérieure à la date de clôture */
+    @Column(nullable = false)
+    private LocalDateTime dateEntretien;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;

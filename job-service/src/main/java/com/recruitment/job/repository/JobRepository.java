@@ -13,10 +13,13 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
 
     List<Job> findByStatus(JobStatus status);
 
+    /** Offres publiques : PUBLISHED + CLOTURE (visibles mais non postulables), ARCHIVED exclu. */
+    List<Job> findByStatusIn(List<JobStatus> statuses);
+
     List<Job> findByRecruiterId(Long recruiterId);
 
     List<Job> findByRecruiterIdAndStatus(Long recruiterId, JobStatus status);
 
-    /** Offres encore PUBLISHED dont la date de clôture est déjà dépassée → à archiver automatiquement */
+    /** Offres encore PUBLISHED dont la date de clôture est déjà dépassée → à faire passer en CLOTURE automatiquement */
     List<Job> findByStatusAndDateClotureBefore(JobStatus status, LocalDateTime now);
 }

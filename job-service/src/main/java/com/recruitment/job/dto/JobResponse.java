@@ -13,8 +13,7 @@ public class JobResponse {
     private String title;
     private String description;
     private List<String> skills;
-    private Double salaryMin;
-    private Double salaryMax;
+    private Double salary;
     private String workSchedule;
     private String companyName;
     private String logoUrl;          // URL complète exposée au front
@@ -27,6 +26,7 @@ public class JobResponse {
 
     private LocalDateTime dateDebut;
     private LocalDateTime dateCloture;
+    private LocalDateTime dateEntretien;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -15,6 +15,11 @@
         <span>Publiées</span>
         <span class="count">{{ publishedCount }}</span>
       </button>
+      <button class="btn-filter" [class.active]="activeFilter === 'CLOTURE'" (click)="setFilter('CLOTURE')">
+        <i class="ti ti-calendar-off"></i>
+        <span>Clôturées</span>
+        <span class="count">{{ clotureCount }}</span>
+      </button>
       <button class="btn-filter" [class.active]="activeFilter === 'ARCHIVED'" (click)="setFilter('ARCHIVED')">
         <i class="ti ti-archive"></i>
         <span>Archivées</span>
@@ -43,7 +48,7 @@
             <h2>{{ selectedJob.title }}</h2>
             <p class="company-name">{{ selectedJob.companyName }}</p>
             <span class="badge-type">{{ selectedJob.workSchedule }}</span>
-            <span class="badge-status" [class.archived]="isArchived(selectedJob)">{{ statusLabel(selectedJob.status) }}</span>
+            <span class="badge-status" [class.archived]="isArchived(selectedJob)" [class.cloture]="isCloture(selectedJob)">{{ statusLabel(selectedJob.status) }}</span>
           </div>
         </div>
 
@@ -67,7 +72,7 @@
               <i class="ti ti-currency-dollar"></i>
               <div>
                 <label>Salaire</label>
-                <span>{{ selectedJob.salaryMin | number:'1.0-0' }} – {{ selectedJob.salaryMax | number:'1.0-0' }} TND / mois</span>
+                <span>{{ selectedJob.salary | number:'1.0-0' }} TND / mois</span>
               </div>
             </div>
             <div class="info-item">
@@ -100,6 +105,13 @@
                 <span>Du {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} au {{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
               </div>
             </div>
+            <div class="info-item">
+              <i class="ti ti-calendar-time"></i>
+              <div>
+                <label>Date d'entretien</label>
+                <span>{{ selectedJob.dateEntretien | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
           </section>
         </div>
       </div>
@@ -115,7 +127,10 @@
         <p>Commencez par créer votre première offre d'emploi.</p>
       } @else if (activeFilter === 'PUBLISHED') {
         <h2>Aucune offre publiée</h2>
-        <p>Toutes vos offres sont actuellement archivées.</p>
+        <p>Toutes vos offres sont actuellement clôturées ou archivées.</p>
+      } @else if (activeFilter === 'CLOTURE') {
+        <h2>Aucune offre clôturée</h2>
+        <p>Les offres dont la date de clôture est dépassée apparaîtront ici.</p>
       } @else {
         <h2>Aucune offre archivée</h2>
         <p>Les offres archivées apparaîtront ici.</p>
@@ -130,7 +145,7 @@
   @if (filteredJobs.length > 0) {
     <div class="jobs-grid">
       @for (job of filteredJobs; track job.id) {
-        <div class="job-card" [class.is-archived]="isArchived(job)" (click)="openDetail(job)">
+        <div class="job-card" [class.is-archived]="isInactive(job)" (click)="openDetail(job)">
 
           <!-- Bannière : logoUrl + badge workSchedule + badge status -->
           <div class="card-banner">
@@ -142,7 +157,7 @@
               </div>
             }
             <span class="badge-type">{{ job.workSchedule }}</span>
-            <span class="badge-status" [class.archived]="isArchived(job)">{{ statusLabel(job.status) }}</span>
+            <span class="badge-status" [class.archived]="isArchived(job)" [class.cloture]="isCloture(job)">{{ statusLabel(job.status) }}</span>
           </div>
 
           <!-- Corps -->
@@ -155,10 +170,10 @@
             <p class="card-desc">{{ job.description | slice:0:110 }}{{ job.description.length > 110 ? '…' : '' }}</p>
 
             <div class="card-meta">
-              <!-- Méta 1 : salaryMin / salaryMax -->
+              <!-- Méta 1 : salary -->
               <div class="meta-row">
                 <i class="ti ti-currency-dollar"></i>
-                <span>{{ job.salaryMin | number }} – {{ job.salaryMax | number }} TND / mois</span>
+                <span>{{ job.salary | number }} TND / mois</span>
               </div>
               <!-- Méta 2 : skills -->
               <div class="meta-row">
@@ -180,23 +195,123 @@
                 <i class="ti ti-calendar-event"></i>
                 <span>Du {{ job.dateDebut | date:'dd/MM/yyyy' }} au {{ job.dateCloture | date:'dd/MM/yyyy' }}</span>
               </div>
+              <!-- Méta 5 : dateEntretien -->
+              <div class="meta-row">
+                <i class="ti ti-calendar-time"></i>
+                <span>Entretien le {{ job.dateEntretien | date:'dd/MM/yyyy ' }}</span>
+              </div>
             </div>
           </div>
 
-          <!-- Footer : modifier / archiver -->
+          <!-- Footer : modifier / archiver / candidats -->
           <div class="card-footer" (click)="$event.stopPropagation()">
-            <button class="btn-edit-card" (click)="editJob(job)">
-              <i class="ti ti-edit"></i>
-              Modifier
-            </button>
-            <button class="btn-archive-card" [disabled]="isArchived(job)" (click)="archiveJob(job.id)">
-              <i class="ti ti-archive"></i>
-              {{ isArchived(job) ? 'Archivée' : 'Archiver' }}
+            @if (!isInactive(job)) {
+              <button class="btn-edit-card" (click)="editJob(job)">
+                <i class="ti ti-edit"></i>
+                Modifier
+              </button>
+            }
+            @if (!isCloture(job)) {
+              <button class="btn-archive-card" [disabled]="isArchived(job)" (click)="archiveJob(job.id)">
+                <i class="ti ti-archive"></i>
+                {{ isArchived(job) ? 'Archivée' : 'Archiver' }}
+              </button>
+            } @else {
+              <span class="footer-note"><i class="ti ti-calendar-off"></i> Clôturée automatiquement</span>
+            }
+            <button class="btn-candidates-card" (click)="openCandidates(job)">
+              <i class="ti ti-users"></i>
+              Candidats
             </button>
           </div>
 
         </div>
       }
+    </div>
+  }
+
+  <!-- ══ LISTE DES CANDIDATS ═════════════════════════════════════════════════ -->
+  @if (candidatesJob) {
+    <div class="detail-overlay" (click)="closeCandidates()">
+      <div class="detail-page candidates-page" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeCandidates()"><i class="ti ti-x"></i></button>
+
+        <div class="modal-header">
+          @if (candidatesJob.logoUrl) {
+            <img [src]="candidatesJob.logoUrl" [alt]="candidatesJob.companyName" class="modal-logo" />
+          } @else {
+            <div class="modal-logo modal-logo-placeholder"><i class="ti ti-building"></i></div>
+          }
+          <div>
+            <h2>Candidats — {{ candidatesJob.title }}</h2>
+            <p class="company-name">{{ candidatesJob.companyName }}</p>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          @if (candidatesLoading) {
+            <div class="candidates-loading">
+              <span class="spin"></span>
+              <p>Chargement des candidats…</p>
+            </div>
+          }
+
+          @if (!candidatesLoading && candidatesErrorMsg) {
+            <div class="apply-error"><i class="ti ti-alert-circle"></i>{{ candidatesErrorMsg }}</div>
+          }
+
+          @if (!candidatesLoading && !candidatesErrorMsg && candidates.length === 0) {
+            <div class="candidates-empty">
+              <i class="ti ti-user-off"></i>
+              <p>Aucun candidat n'a encore postulé à cette offre.</p>
+            </div>
+          }
+
+          @if (!candidatesLoading && candidates.length > 0) {
+            <div class="candidates-list">
+              @for (c of candidates; track c.id) {
+                <div class="candidate-row">
+                  <div class="candidate-avatar"><i class="ti ti-user"></i></div>
+                  <div class="candidate-info">
+                    <span class="candidate-name">{{ candidateFullName(c) }}</span>
+                    <span class="candidate-email">{{ c.candidateEmail }}</span>
+                    <span class="candidate-date"><i class="ti ti-calendar-event"></i> Postulé le {{ c.appliedAt | date:'dd/MM/yyyy à HH:mm' }}</span>
+                    <span class="application-status-badge" [attr.data-status]="c.status">
+                      <i class="ti" [class.ti-clock]="c.status === 'EN_COURS_DE_TRAITEMENT'"
+                         [class.ti-circle-check]="c.status === 'ACCEPTEE_POUR_ENTRETIEN'"
+                         [class.ti-circle-x]="c.status === 'REFUSEE'"></i>
+                      {{ applicationStatusLabel(c.status) }}
+                    </span>
+                  </div>
+
+                  <div class="candidate-actions">
+                    @if (c.cvUrl) {
+                      <a class="btn-view-cv" [href]="c.cvUrl" target="_blank" rel="noopener">
+                        <i class="ti ti-file-cv"></i> Voir le CV
+                      </a>
+                    } @else {
+                      <span class="no-cv"><i class="ti ti-file-off"></i> Pas de CV</span>
+                    }
+
+                    <div class="status-actions">
+                      <button class="btn-status accept"
+                              [disabled]="isUpdatingStatus(c) || c.status === 'ACCEPTEE_POUR_ENTRETIEN'"
+                              (click)="updateCandidateStatus(c, 'ACCEPTEE_POUR_ENTRETIEN')">
+                        <i class="ti ti-check"></i> Accepter pour entretien
+                      </button>
+                      <button class="btn-status refuse"
+                              [disabled]="isUpdatingStatus(c) || c.status === 'REFUSEE'"
+                              (click)="updateCandidateStatus(c, 'REFUSEE')">
+                        <i class="ti ti-x"></i> Refuser
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
     </div>
   }
 
@@ -252,13 +367,8 @@
         </div>
 
         <div class="field half">
-          <label>Salaire min (TND/mois) <span class="req">*</span></label>
-          <input type="number" [(ngModel)]="form.salaryMin" min="0" placeholder="1 500" />
-        </div>
-
-        <div class="field half">
-          <label>Salaire max (TND/mois) <span class="req">*</span></label>
-          <input type="number" [(ngModel)]="form.salaryMax" min="0" placeholder="3 000" />
+          <label>Salaire (TND/mois) <span class="req">*</span></label>
+          <input type="number" [(ngModel)]="form.salary" min="0" placeholder="2 000" />
         </div>
 
         <div class="field half">
@@ -275,6 +385,12 @@
           <label>Date de clôture <span class="req">*</span></label>
           <input type="datetime-local" [(ngModel)]="form.dateCloture" [min]="minDateCloture()" />
           <small class="hint">Doit être postérieure à la date actuelle. Au-delà, l'offre s'archive automatiquement.</small>
+        </div>
+
+        <div class="field half">
+          <label>Date d'entretien <span class="req">*</span></label>
+          <input type="datetime-local" [(ngModel)]="form.dateEntretien" [min]="minDateEntretien()" />
+          <small class="hint">Doit être postérieure à la date de clôture.</small>
         </div>
 
         <div class="field full">
