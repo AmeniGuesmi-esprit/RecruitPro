@@ -4,7 +4,10 @@
 /* ==================== PAGE ==================== */
 .profile-page {
   min-height: calc(100vh - 73px);
-  background: #ffffff;
+  background:
+    radial-gradient(900px 420px at 100% -5%, rgba(0, 194, 168, 0.07), transparent 60%),
+    radial-gradient(900px 420px at -5% 0%, rgba(124, 92, 252, 0.08), transparent 55%),
+    #f7f6fd;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,7 +19,7 @@
 .profile-card {
   background: #fff;
   border-radius: 20px;
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 4px 32px rgba(31, 20, 90, 0.10);
   border: 1px solid #f0f0f5;
   width: 100%;
   max-width: 780px;
@@ -29,7 +32,7 @@
   flex-direction: column;
   align-items: center;
   padding: 2.5rem 2rem 1.5rem;
-  background: #fafafa;
+  background: linear-gradient(120deg, #f5f2ff 0%, #eefaf8 100%);
   border-bottom: 1px solid #f0f0f5;
   text-align: center;
 }
@@ -44,7 +47,10 @@
   height: 90px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #7c5cfc;
+  border: 3px solid transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, #7c5cfc, #00c2a8) border-box;
 }
 
 .avatar-badge {
@@ -78,6 +84,11 @@
   font-weight: 600;
   padding: 3px 12px;
   border-radius: 20px;
+
+  &.role-company {
+    background: #e3faf6;
+    color: #009985;
+  }
 }
 
 /* ==================== SECTION COORDONNÉES ==================== */
@@ -156,7 +167,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #7c5cfc, #5b3de8);
+  background: linear-gradient(135deg, #7c5cfc, #4fb8ab);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -164,9 +175,10 @@
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
+  box-shadow: 0 8px 18px rgba(124, 92, 252, .22);
+  transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
 
-  &:hover { opacity: 0.88; transform: translateY(-1px); }
+  &:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 10px 22px rgba(124, 92, 252, .3); }
 }
 
 .btn-delete {
@@ -265,7 +277,7 @@
   justify-content: space-between;
   padding: 1.4rem 1.8rem;
   border-bottom: 1px solid #f0f0f5;
-  background: #fafafa;
+  background: linear-gradient(120deg, #f5f2ff 0%, #eefaf8 100%);
   flex-shrink: 0;
 
   h3 {
@@ -418,7 +430,7 @@
 
 .btn-save {
   flex: 2;
-  background: linear-gradient(135deg, #7c5cfc, #5b3de8);
+  background: linear-gradient(135deg, #7c5cfc, #4fb8ab);
   color: #fff;
   border: none;
   border-radius: 10px;

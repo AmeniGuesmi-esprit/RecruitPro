@@ -1,0 +1,846 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// POST COMPONENT — SCSS
+// Bannière image + badges | corps title/companyName/desc/meta | footer actions
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Variables ──────────────────────────────────────────────────────────────
+$primary   : #7c5cfc;
+$primary-lt: #f1edff;
+$accent    : #00c2a8;
+$accent-lt : #e3faf6;
+$success   : #12b76a;
+$danger    : #f04438;
+$warning   : #f59e0b;
+$text      : #1f2937;
+$text-muted: #6b7280;
+$border    : #e9e6f7;
+$bg-page   : #f7f6fd;
+$card-bg   : #ffffff;
+$radius-lg : 16px;
+$radius-md : 10px;
+$radius-sm : 6px;
+$shadow    : 0 1px 3px rgba(31, 20, 90, 0.06);
+$shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
+
+// ── Galaxy palette (utilisée uniquement pour la toolbar) ────────────────────
+$galaxy-deep : #030a26;
+$galaxy-blue : #071238;
+$galaxy-mid  : #0c1c52;
+$galaxy-glow : #2f6bff;
+
+@keyframes galaxy-twinkle {
+  0%, 100% { opacity: .55; }
+  50%      { opacity: 1; }
+}
+
+// ── Page wrapper ───────────────────────────────────────────────────────────
+// FIX: on garde le fond clair d'origine de la page (comme demandé) — le
+// style "galaxie" est désormais isolé dans la toolbar (.galaxy-toolbar) plus bas.
+.post-page {
+  padding: 100px 32px 32px; // 72px top = espace sous la navbar
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 420px at 100% -5%, rgba(0, 194, 168, 0.07), transparent 60%),
+    radial-gradient(900px 420px at -5% 0%, rgba(124, 92, 252, 0.08), transparent 55%),
+    $bg-page;
+  font-family: 'Inter', sans-serif;
+}
+
+// ── Header ─────────────────────────────────────────────────────────────────
+// FIX: renommé en .jp-page-header (au lieu de .page-header) car .page-header
+// est une classe GLOBALE du thème (breadcrumbs / pc-common.scss) qui impose
+// un fond blanc, un box-shadow et un display:flex — elle rentrait en conflit
+// avec notre style et rendait le titre invisible.
+.jp-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  position: static;
+  top: auto; left: auto; right: auto;
+  min-height: 0;
+  padding: 24px 28px;
+  box-shadow: $shadow;
+  background: $card-bg;
+  border-radius: $radius-lg;
+  margin-bottom: 24px;
+
+  .header-eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: linear-gradient(to right, $primary, $accent);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 4px;
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: $text;
+    margin: 0 0 4px;
+  }
+
+  .header-sub {
+    font-size: 14px;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+// ── Galaxy toolbar (boîte bleue contenant les 4 boutons) ────────────────────
+.galaxy-toolbar {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; // FIX: colonne centrale pour centrer les filtres
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: $radius-lg;
+  margin-bottom: 28px;
+  overflow: hidden;
+
+  background-color: $galaxy-deep;
+  background-image:
+    radial-gradient(1.5px 1.5px at 8% 25%,  rgba(255,255,255,.85), transparent 60%),
+    radial-gradient(1.5px 1.5px at 22% 70%, rgba(255,255,255,.6),  transparent 60%),
+    radial-gradient(1.5px 1.5px at 40% 20%, rgba(255,255,255,.7),  transparent 60%),
+    radial-gradient(1.5px 1.5px at 58% 65%, rgba(255,255,255,.55), transparent 60%),
+    radial-gradient(1.5px 1.5px at 74% 30%, rgba(255,255,255,.7),  transparent 60%),
+    radial-gradient(1.5px 1.5px at 88% 60%, rgba(255,255,255,.5),  transparent 60%),
+    radial-gradient(1.5px 1.5px at 95% 20%, rgba(255,255,255,.65), transparent 60%),
+    radial-gradient(600px 260px at 5% 0%,   rgba($galaxy-glow, .5), transparent 60%),
+    radial-gradient(500px 240px at 100% 100%, rgba(124, 92, 252, .4), transparent 60%),
+    linear-gradient(135deg, $galaxy-deep 0%, $galaxy-blue 55%, $galaxy-mid 100%);
+  box-shadow: 0 10px 28px rgba(7, 18, 56, .3);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    animation: galaxy-twinkle 4s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  > * { position: relative; z-index: 1; }
+}
+
+// ── Filtres (dans la toolbar galaxie) ────────────────────────────────────────
+.filter-group {
+  grid-column: 2;
+  justify-self: center; // FIX: centre les 3 boutons dans la toolbar
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  // FIX: suppression de la boîte intérieure (fond, bordure, blur)
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+}
+
+.btn-new {
+  grid-column: 3;
+  justify-self: end; // reste aligné à droite
+}
+
+.btn-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, .7);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s, color .2s, box-shadow .2s;
+
+  i { font-size: 15px; }
+
+  .count {
+    padding: 1px 7px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .12);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $galaxy-glow, $primary);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(47, 107, 255, .4);
+
+    .count { background: rgba(255, 255, 255, .22); }
+  }
+}
+
+// ── New button ─────────────────────────────────────────────────────────────
+.btn-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: $radius-md;
+  background: linear-gradient(135deg, $galaxy-glow, $primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(47, 107, 255, .35);
+  transition: box-shadow .2s, transform .15s, filter .2s;
+
+  &:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(124, 92, 252, .32); }
+  i { font-size: 16px; }
+}
+
+// ── Empty state ────────────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+
+  .empty-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: $primary-lt;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    i { font-size: 32px; color: $primary; }
+  }
+
+  h2 { font-size: 20px; font-weight: 700; color: $text; margin: 0 0 8px; }
+  p  { font-size: 14px; color: $text-muted; margin: 0 0 24px; }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CARDS GRID
+// ══════════════════════════════════════════════════════════════════════════
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+// ── Job card ───────────────────────────────────────────────────────────────
+.job-card {
+  background: $card-bg;
+  border-radius: $radius-lg;
+  box-shadow: $shadow;
+  border: 1px solid $border;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: box-shadow .2s, transform .2s, border-color .2s;
+
+  &:hover {
+    box-shadow: $shadow-hover;
+    border-color: rgba($primary, .25);
+    transform: translateY(-3px);
+  }
+}
+
+// ── Banner ─────────────────────────────────────────────────────────────────
+.card-banner {
+  position: relative;
+  height: 140px;
+  background: linear-gradient(135deg, #f1edff 0%, #ded4fb 55%, #cdf3ec 100%);
+  overflow: hidden;
+
+  .banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .banner-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    i { font-size: 48px; color: rgba($primary, .35); }
+  }
+
+  .badge-type {
+    position: absolute;
+    top: 10px; left: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,.92);
+    color: darken($accent, 8%);
+    backdrop-filter: blur(6px);
+  }
+
+  .badge-status {
+    position: absolute;
+    top: 10px; right: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    background: rgba($success, .15);
+    color: darken($success, 10%);
+    backdrop-filter: blur(6px);
+
+    &.archived {
+      background: rgba($warning, .18);
+      color: darken($warning, 12%);
+    }
+  }
+}
+
+// ── Archived card dimming ────────────────────────────────────────────────
+.job-card.is-archived {
+  .banner-img, .banner-placeholder { filter: grayscale(.35); opacity: .85; }
+  .card-title, .card-company { opacity: .7; }
+}
+
+// ── Card body ──────────────────────────────────────────────────────────────
+.card-body {
+  flex: 1;
+  padding: 18px 20px 14px;
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: $text;
+    margin: 0 0 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-company {
+    font-size: 13px;
+    font-weight: 600;
+    color: $primary;
+    margin: 0 0 8px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: $text-muted;
+    line-height: 1.55;
+    margin: 0 0 14px;
+  }
+}
+
+// ── Meta rows ──────────────────────────────────────────────────────────────
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: $text-muted;
+
+    i {
+      font-size: 15px;
+      color: $primary;
+      flex-shrink: 0;
+    }
+
+    span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+// ── Card footer ─────────────────────────────────────────────────────────────
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid $border;
+  background: linear-gradient(to right, rgba(124, 92, 252, .03), rgba(0, 194, 168, .03));
+
+  .btn-edit-card {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: $radius-sm;
+    background: $primary-lt;
+    color: $primary;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background .2s;
+
+    &:hover { background: darken($primary-lt, 6%); }
+    i { font-size: 15px; }
+  }
+
+  .btn-archive-card {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: $radius-sm;
+    background: lighten($warning, 38%);
+    color: darken($warning, 15%);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background .2s;
+
+    &:hover:not(:disabled) { background: lighten($warning, 28%); }
+    &:disabled {
+      background: #f1f2f4;
+      color: $text-muted;
+      cursor: not-allowed;
+    }
+    i { font-size: 15px; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// FORM PANEL (slide-in)
+// ══════════════════════════════════════════════════════════════════════════
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 1040; // FIX: au-dessus de la navbar
+  backdrop-filter: blur(2px);
+}
+
+.form-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 560px;
+  max-width: calc(100vw - 32px);
+  // FIX: tenir compte de la navbar (~70px) pour ne pas déborder en haut
+  max-height: calc(100vh - 140px);
+  margin-top: 35px; // décale le centre vers le bas (moitié hauteur navbar)
+  background: #fff;
+  z-index: 1050; // FIX: z-index > navbar (généralement 1000-1040)
+  display: flex;
+  flex-direction: column;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(.96);
+  transition: opacity .25s ease, transform .25s ease;
+  box-shadow: 0 24px 60px rgba(124, 92, 252, .25);
+
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 24px 18px;
+  border-bottom: 1px solid $border;
+  background: linear-gradient(120deg, $primary-lt 0%, $accent-lt 100%);
+
+  .panel-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: $primary;
+    margin: 0 0 3px;
+  }
+
+  .panel-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: $text;
+    margin: 0;
+  }
+
+  .close-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1px solid $border;
+    background: #fff;
+    color: $text-muted;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+    &:hover { background: #f3f4f6; }
+  }
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-content: flex-start;
+}
+
+// ── Alerts ──────────────────────────────────────────────────────────────────
+.alert-success,
+.alert-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  margin: 0 24px;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  font-weight: 500;
+  i { font-size: 16px; }
+}
+
+.alert-success {
+  background: lighten($success, 48%);
+  color: darken($success, 15%);
+}
+
+.alert-error {
+  background: lighten($danger, 36%);
+  color: darken($danger, 10%);
+}
+
+// ── Form fields ─────────────────────────────────────────────────────────────
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &.full  { width: 100%; }
+  &.half  { width: calc(50% - 8px); }
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $text;
+
+    .req { color: $danger; margin-left: 2px; }
+  }
+
+  input, textarea, select {
+    padding: 10px 13px;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    font-size: 14px;
+    color: $text;
+    background: #fafafa;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    width: 100%;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, .12);
+      background: #fff;
+    }
+
+    &::placeholder { color: #b0b7c3; }
+  }
+
+  textarea { resize: vertical; }
+  select   { appearance: none; cursor: pointer; }
+
+  .hint {
+    font-size: 11.5px;
+    color: $text-muted;
+    line-height: 1.4;
+  }
+}
+
+// ── Skills input ────────────────────────────────────────────────────────────
+.skills-row {
+  display: flex;
+  gap: 8px;
+
+  input { flex: 1; }
+
+  .add-skill-btn {
+    width: 40px; height: 40px;
+    border-radius: $radius-sm;
+    background: $primary;
+    color: #fff;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background .2s;
+    &:hover { background: darken($primary, 8%); }
+  }
+}
+
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+
+  .skill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: $primary-lt;
+    color: $primary;
+    font-size: 12px;
+    font-weight: 600;
+
+    i {
+      font-size: 12px;
+      cursor: pointer;
+      opacity: .7;
+      &:hover { opacity: 1; }
+    }
+  }
+}
+
+// ── Logo drop zone ──────────────────────────────────────────────────────────
+.logo-drop {
+  border: 2px dashed $border;
+  border-radius: $radius-md;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .2s, background .2s;
+
+  &:hover {
+    border-color: $primary;
+    background: $primary-lt;
+  }
+
+  i     { font-size: 28px; color: $primary; }
+  span  { font-size: 13px; font-weight: 500; color: $text; }
+  small { font-size: 11px; color: $text-muted; }
+
+  .logo-preview {
+    width: 80px; height: 80px;
+    object-fit: contain;
+    border-radius: $radius-sm;
+  }
+
+  .logo-replace {
+    font-size: 12px;
+    color: $primary;
+    font-weight: 600;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    i { font-size: 14px; }
+  }
+}
+
+// ── Panel footer ────────────────────────────────────────────────────────────
+.panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid $border;
+
+  .btn-cancel {
+    padding: 10px 20px;
+    border-radius: $radius-sm;
+    background: #fff;
+    border: 1px solid $border;
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-muted;
+    cursor: pointer;
+    transition: background .2s;
+    &:hover { background: #f3f4f6; }
+  }
+
+  .btn-submit {
+    padding: 10px 22px;
+    border-radius: $radius-sm;
+    background: $primary;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background .2s;
+
+    &:hover:not(:disabled) { background: darken($primary, 8%); }
+    &:disabled { opacity: .6; cursor: not-allowed; }
+
+    .spin {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Prevent body scroll when panel open ────────────────────────────────────
+:global(body.panel-open) { overflow: hidden; }
+
+// ══════════════════════════════════════════════════════════════════════════
+// DÉTAIL OFFRE — mini panneau flottant affiché par-dessus la page des offres
+// ══════════════════════════════════════════════════════════════════════════
+@keyframes detail-fade-in {
+  from { opacity: 0; transform: translateY(-10px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 100px 16px 16px; // sous la navbar
+  background: rgba(7, 12, 38, .45);
+  backdrop-filter: blur(3px);
+  overflow-y: auto;
+}
+
+.detail-page {
+  position: relative;
+  width: 100%;
+  max-width: 460px; // FIX: mini panneau, plus compact qu'une pleine section
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+  background: $card-bg;
+  border-radius: $radius-lg;
+  padding: 20px;
+  box-shadow: 0 20px 50px rgba(7, 12, 38, .35);
+  animation: detail-fade-in .2s ease;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: $border; border-radius: 4px; }
+}
+
+.modal-close {
+  position: absolute; top: 14px; right: 14px;
+  background: $primary-lt; border: none;
+  color: $primary; border-radius: 8px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 14px;
+  transition: background .2s;
+  z-index: 2;
+  &:hover { background: darken($primary-lt, 6%); }
+}
+
+.modal-header {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin: -20px -20px 18px; padding: 18px 20px; padding-right: 46px;
+  background: linear-gradient(120deg, $primary-lt 0%, $accent-lt 100%);
+  border-radius: $radius-lg $radius-lg 0 0;
+
+  .modal-logo {
+    width: 48px; height: 48px;
+    border-radius: $radius-sm;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .modal-logo-placeholder {
+    display: flex; align-items: center; justify-content: center;
+    background: $primary-lt;
+    i { font-size: 20px; color: $primary; }
+  }
+
+  h2 { margin: 0 0 3px; font-size: 16px; font-weight: 700; color: $text; }
+  .company-name { margin: 0 0 6px; font-size: 12px; font-weight: 600; color: $primary; }
+
+  .badge-type, .badge-status {
+    position: static;
+    display: inline-block;
+    margin-right: 6px;
+    backdrop-filter: none;
+    font-size: 10px;
+  }
+}
+
+.modal-body {
+  display: flex; flex-direction: column; gap: 14px;
+
+  section h4 {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: $primary; margin: 0 0 8px;
+    display: flex; align-items: center;
+  }
+
+  .description-text {
+    color: $text; line-height: 1.6; font-size: 13px;
+    white-space: pre-line; margin: 0;
+  }
+}
+
+.modal-body .info-grid {
+  display: grid; grid-template-columns: 1fr; gap: 10px;
+
+  .info-item {
+    display: flex; gap: 9px; align-items: flex-start;
+    i { font-size: 15px; color: $primary; margin-top: 2px; }
+    label { display: block; font-size: 10px; color: $text-muted; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+    span, a { font-size: 12.5px; color: $text; text-decoration: none; }
+    a:hover { color: $primary; }
+  }
+}
+
+.modal-footer {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 24px; padding-top: 18px;
+  border-top: 1px solid $border;
+
+  .btn-edit-card, .btn-archive-card { flex: 1; }
+}

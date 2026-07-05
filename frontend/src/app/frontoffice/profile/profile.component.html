@@ -18,7 +18,7 @@
           <div class="avatar-badge"><i class="ti ti-check"></i></div>
         </div>
         <h2 class="profile-name">{{ user.firstName }} {{ user.lastName }}</h2>
-        <span class="profile-role-badge">{{ user.role === 'CANDIDATE' ? 'Candidat' : 'Recruteur' }}</span>
+        <span class="profile-role-badge" [class.role-company]="!isCandidate">{{ user.role === 'CANDIDATE' ? 'Candidat' : 'Recruteur' }}</span>
       </div>
 
       <!-- Coordonnées -->

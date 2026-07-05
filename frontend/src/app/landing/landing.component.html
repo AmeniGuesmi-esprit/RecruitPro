@@ -1,6 +1,6 @@
 <div class="landing-wrapper">
 
-  <!-- Animated background particles -->
+  <!-- Background -->
   <div class="bg-layer">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -8,130 +8,416 @@
     <div class="grid-overlay"></div>
   </div>
 
-  <!-- Navigation bar -->
+  <!-- Navbar -->
   <nav class="navbar">
     <div class="nav-logo">
-      <span class="logo-icon">◈</span>
+      <div class="logo-mark">
+        
+        <span class="logo-icon">◈</span>
+      </div>
       <span class="logo-text">Recruit<strong>Pro</strong></span>
     </div>
     <div class="nav-links">
       <a href="#features" class="nav-link">Features</a>
-      <button class="btn btn-secondary" (click)="goToRegister()">
-        <span class="btn-text">Sign up</span>
-      </button>
-      <button class="btn btn-secondary" (click)="goToLogin()">
-        <span class="btn-text">Sign in</span>
-      </button>
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#testimonials" class="nav-link">Reviews</a>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-ghost" (click)="goToLogin()">Sign in</button>
+      <button class="btn-nav-cta" (click)="goToRegister()">Get started free</button>
     </div>
   </nav>
 
-  <!-- Hero Section -->
+  <!-- ══ HERO ══ -->
   <section class="hero">
-    <div class="hero-content">
+    <div class="hero-left">
+
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>AI-powered recruitment platform</span>
+      </div>
 
       <h1 class="hero-title">
         Find the talent<br>
-        <span class="title-accent">that changes everything.</span>
+        <span class="title-gradient">that changes</span><br>
+        <span class="title-outline">everything.</span>
       </h1>
 
-      <p class="hero-subtitle">
-        RecruitPro connects the best candidates with companies shaping the future.
-        A recruitment experience designed for excellence.
+      <p class="hero-sub">
+        RecruitPro connects the best candidates with companies shaping the future —
+        with AI matching, face recognition login, and real-time insights.
       </p>
 
-      <div class="cta-group">
-        <button class="btn btn-primary" (click)="goToRegister()">
-          <span class="btn-text">Create an account</span>
-          <span class="btn-arrow">→</span>
+      <div class="hero-actions">
+        <button class="btn-primary-hero" (click)="goToRegister()">
+          <span>Start for free</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
-        <button class="btn btn-secondary" (click)="goToLogin()">
-          <span class="btn-text">Sign in</span>
+        <button class="btn-ghost-hero" (click)="goToLogin()">
+          <span class="play-icon">▶</span>
+          See how it works
         </button>
       </div>
 
-      <div class="stats-row">
-        <div class="stat">
-          <span class="stat-num">12K+</span>
-          <span class="stat-label">Active candidates</span>
+      <!-- Stats -->
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-val">12K+</span>
+          <span class="stat-lbl">Active candidates</span>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <span class="stat-num">3K+</span>
-          <span class="stat-label">Companies</span>
+        <div class="stat-sep"></div>
+        <div class="stat-item">
+          <span class="stat-val">3K+</span>
+          <span class="stat-lbl">Companies</span>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <span class="stat-num">98%</span>
-          <span class="stat-label">Satisfaction</span>
+        <div class="stat-sep"></div>
+        <div class="stat-item">
+          <span class="stat-val">98%</span>
+          <span class="stat-lbl">Satisfaction</span>
         </div>
       </div>
     </div>
 
-    <!-- Floating card preview -->
-    <div class="hero-visual">
-      <div class="card-float card-main">
-        <div class="card-header">
-          <div class="company-logo">T</div>
-          <div class="card-meta">
-            <span class="card-company">TechCorp Tunisia</span>
-            <span class="card-role">Full Stack Developer</span>
+    <!-- 3D Visual -->
+    <div class="hero-right">
+      <div class="scene-3d">
+
+        <!-- 3D rotating cube orbiting -->
+        <div class="orbit-ring ring-outer">
+          <div class="orbit-dot dot-purple"></div>
+        </div>
+        <div class="orbit-ring ring-inner">
+          <div class="orbit-dot dot-cyan"></div>
+        </div>
+
+        <!-- Central glowing sphere -->
+        <div class="sphere-wrap">
+          <div class="sphere">
+            <div class="sphere-face face-front"></div>
+            <div class="sphere-face face-back"></div>
+            <div class="sphere-shine"></div>
+            <div class="sphere-inner-glow"></div>
+            <div class="sphere-logo">◈</div>
           </div>
-          <span class="card-badge">New</span>
         </div>
-        <div class="card-tags">
-          <span class="tag">React</span>
-          <span class="tag">Spring Boot</span>
-          <span class="tag">Remote</span>
+
+        <!-- Floating cards around the sphere -->
+        <div class="holo-card holo-1">
+          <div class="holo-header">
+            <div class="holo-avatar purple">TC</div>
+            <div>
+              <div class="holo-title">Full Stack Dev</div>
+              <div class="holo-sub">TechCorp · Remote</div>
+            </div>
+            <div class="holo-badge">New</div>
+          </div>
+          <div class="holo-tags">
+            <span class="htag">React</span>
+            <span class="htag">Spring</span>
+            <span class="htag">Remote</span>
+          </div>
+          <div class="holo-footer">
+            <span class="holo-salary">3,500–5,000 TND</span>
+            <div class="match-bar">
+              <div class="match-fill" style="width: 92%"></div>
+            </div>
+            <span class="match-pct">92% match</span>
+          </div>
         </div>
-        <div class="card-footer">
-          <span class="card-salary">3,500 – 5,000 TND</span>
-          <button class="card-btn">Apply</button>
+
+        <div class="holo-card holo-2">
+          <div class="notif-icon cyan">✓</div>
+          <div>
+            <div class="holo-title">Application sent!</div>
+            <div class="holo-sub">2 minutes ago</div>
+          </div>
+        </div>
+
+        <div class="holo-card holo-3">
+          <div class="notif-icon purple">👁</div>
+          <div>
+            <div class="holo-title">Face ID enabled</div>
+            <div class="holo-sub">Secure login active</div>
+          </div>
+        </div>
+
+        <div class="holo-card holo-4">
+          <div class="holo-title" style="font-size:0.7rem; margin-bottom:6px; color:rgba(255,255,255,0.5)">AI MATCH SCORE</div>
+          <div class="score-ring">
+            <svg viewBox="0 0 80 80" width="80" height="80">
+              <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#7c5cfc" stroke-width="6"
+                stroke-dasharray="180 201" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+              <text x="40" y="46" text-anchor="middle" fill="white" font-size="16" font-weight="700">89%</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 3D Cubes floating -->
+        <div class="cube-3d cube-a">
+          <div class="cube-face cf-top"></div>
+          <div class="cube-face cf-front"></div>
+          <div class="cube-face cf-right"></div>
+        </div>
+        <div class="cube-3d cube-b">
+          <div class="cube-face cf-top"></div>
+          <div class="cube-face cf-front"></div>
+          <div class="cube-face cf-right"></div>
+        </div>
+
+        <!-- Floating particles -->
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+        <div class="particle p4"></div>
+        <div class="particle p5"></div>
+        <div class="particle p6"></div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Trusted by logos -->
+  <div class="trust-bar">
+    <span class="trust-label">Trusted by teams at</span>
+    <div class="trust-logos">
+      <span class="trust-logo">Vermeg</span>
+      <span class="trust-logo">Tunisair</span>
+      <span class="trust-logo">Ooredoo</span>
+      <span class="trust-logo">BIAT</span>
+      <span class="trust-logo">Sopra HR</span>
+    </div>
+  </div>
+
+  <!-- ══ HOW IT WORKS ══ -->
+  <section class="how" id="how">
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-title">Hired in 3 steps</h2>
+
+    <div class="steps-track">
+      <div class="step-connector"></div>
+
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-icon-wrap purple-glow">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7c5cfc" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <h3>Create your profile</h3>
+        <p>Upload your CV, set your preferences, and enable Face ID for instant login.</p>
+        <div class="step-visual sv-profile">
+          <div class="sv-avatar"></div>
+          <div class="sv-lines">
+            <div class="sv-line long"></div>
+            <div class="sv-line medium"></div>
+            <div class="sv-tag">React</div>
+            <div class="sv-tag">Python</div>
+          </div>
         </div>
       </div>
 
-      <div class="card-float card-mini card-mini-1">
-        <div class="mini-avatar">✓</div>
-        <div class="mini-text">
-          <span class="mini-name">Application sent</span>
-          <span class="mini-sub">2 minutes ago</span>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-icon-wrap cyan-glow">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00e5c0" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+        </div>
+        <h3>Get AI-matched</h3>
+        <p>Our algorithm analyzes your skills and instantly surfaces the best opportunities.</p>
+        <div class="step-visual sv-match">
+          <div class="match-wave">
+            <div class="mw-bar" style="height:40%"></div>
+            <div class="mw-bar" style="height:70%"></div>
+            <div class="mw-bar" style="height:55%"></div>
+            <div class="mw-bar" style="height:90%"></div>
+            <div class="mw-bar" style="height:65%"></div>
+            <div class="mw-bar" style="height:45%"></div>
+          </div>
+          <div class="match-score-pill">89% match</div>
         </div>
       </div>
 
-      <div class="card-float card-mini card-mini-2">
-        <div class="mini-avatar" style="background: linear-gradient(135deg,#f59e0b,#ef4444);">⚡</div>
-        <div class="mini-text">
-          <span class="mini-name">Match found!</span>
-          <span class="mini-sub">95% compatibility</span>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-icon-wrap pink-glow">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fc5c7d" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3>Apply & get hired</h3>
+        <p>One-click applications. Companies respond within 48 hours.</p>
+        <div class="step-visual sv-hired">
+          <div class="hired-checkmark">
+            <svg width="40" height="40" viewBox="0 0 50 50"><circle cx="25" cy="25" r="23" fill="none" stroke="#00e5c0" stroke-width="2.5"/><polyline points="15,25 22,32 35,18" fill="none" stroke="#00e5c0" stroke-width="2.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="hired-text">Offer received!</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Features — card grid -->
+  <!-- ══ FEATURES ══ -->
   <section class="features" id="features">
-    <h2 class="features-title">Everything you need to hire smarter</h2>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-card-icon">🎯</div>
-        <h3>Smart Matching</h3>
-        <p>AI-powered matching algorithm based on your real skills and experience</p>
+    <div class="section-eyebrow">Platform Features</div>
+    <h2 class="section-title">Everything you need to hire smarter</h2>
+
+    <div class="features-bento">
+
+      <div class="bento-card bento-large">
+        <div class="bento-glow purple"></div>
+        <div class="bento-content">
+          <div class="bento-icon">🤖</div>
+          <h3>AI Matching Engine</h3>
+          <p>Proprietary algorithm trained on 50K+ successful placements. Matches candidates to jobs based on skills, culture fit, and career trajectory.</p>
+        </div>
+        <div class="bento-visual bv-ai">
+          <div class="ai-node n1"><span>Skills</span></div>
+          <div class="ai-node n2"><span>Culture</span></div>
+          <div class="ai-node n3"><span>Growth</span></div>
+          <div class="ai-center"><span>AI</span></div>
+          <svg class="ai-lines" viewBox="0 0 200 150">
+            <line x1="100" y1="75" x2="20" y2="25" stroke="#7c5cfc" stroke-width="1.5" opacity="0.5"/>
+            <line x1="100" y1="75" x2="180" y2="20" stroke="#7c5cfc" stroke-width="1.5" opacity="0.5"/>
+            <line x1="100" y1="75" x2="100" y2="135" stroke="#00e5c0" stroke-width="1.5" opacity="0.5"/>
+          </svg>
+          <div class="ai-node n4"><span>Match 92%</span></div>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-card-icon">🔒</div>
-        <h3>Secure Data</h3>
-        <p>Your information is encrypted and protected at all times</p>
+
+      <div class="bento-card bento-sm">
+        <div class="bento-glow cyan"></div>
+        <div class="bento-icon">👁️</div>
+        <h3>Face ID Login</h3>
+        <p>Log in instantly with facial recognition. No passwords needed — just look at your camera.</p>
+        <div class="face-id-visual">
+          <div class="face-ring">
+            <div class="face-dot" style="top:0; left:50%"></div>
+            <div class="face-dot" style="top:50%; right:0"></div>
+            <div class="face-dot" style="bottom:0; left:50%"></div>
+            <div class="face-dot" style="top:50%; left:0"></div>
+          </div>
+          <div class="face-center">👤</div>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-card-icon">⚡</div>
-        <h3>Fast Response</h3>
-        <p>Companies respond within 48 hours thanks to our automated follow-up system</p>
+
+      <div class="bento-card bento-sm">
+        <div class="bento-glow pink"></div>
+        <div class="bento-icon">⚡</div>
+        <h3>48h Response</h3>
+        <p>Automated follow-up system ensures companies respond to every application within 48 hours.</p>
+        <div class="timer-visual">
+          <div class="timer-block">48<span>h</span></div>
+        </div>
+      </div>
+
+      <div class="bento-card bento-medium">
+        <div class="bento-glow purple"></div>
+        <div class="bento-content">
+          <div class="bento-icon">📊</div>
+          <h3>Real-time Dashboard</h3>
+          <p>Track applications, interviews, and offers in a single view.</p>
+        </div>
+        <div class="dashboard-mini">
+          <div class="dm-row">
+            <span class="dm-label">Applied</span>
+            <div class="dm-bar"><div class="dm-fill" style="width:78%; background:#7c5cfc"></div></div>
+            <span class="dm-val">24</span>
+          </div>
+          <div class="dm-row">
+            <span class="dm-label">Interviews</span>
+            <div class="dm-bar"><div class="dm-fill" style="width:45%; background:#00e5c0"></div></div>
+            <span class="dm-val">11</span>
+          </div>
+          <div class="dm-row">
+            <span class="dm-label">Offers</span>
+            <div class="dm-bar"><div class="dm-fill" style="width:20%; background:#fc5c7d"></div></div>
+            <span class="dm-val">5</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bento-card bento-medium">
+        <div class="bento-glow cyan"></div>
+        <div class="bento-content">
+          <div class="bento-icon">🔒</div>
+          <h3>Bank-grade Security</h3>
+          <p>AES-256 encryption, GDPR compliant, zero-knowledge architecture.</p>
+        </div>
+        <div class="security-grid">
+          <div class="sg-item">🔐 Encrypted</div>
+          <div class="sg-item">✅ GDPR</div>
+          <div class="sg-item">🛡️ Zero-trust</div>
+          <div class="sg-item">🔑 Face ID</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ TESTIMONIALS ══ -->
+  <section class="testimonials" id="testimonials">
+    <div class="section-eyebrow">Reviews</div>
+    <h2 class="section-title">Loved by thousands</h2>
+
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"I landed my dream job in 3 weeks. The AI matching was spot-on — every recommendation felt tailored to my exact profile."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background: linear-gradient(135deg, #7c5cfc, #9b7ffe)">AK</div>
+          <div>
+            <div class="testi-name">Amira Khelifi</div>
+            <div class="testi-role">Frontend Developer · Tunis</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-card featured">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"We hired 12 engineers in one month using RecruitPro. The quality of candidates is exceptional, and the Face ID login saves our team so much time."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background: linear-gradient(135deg, #00e5c0, #0ea5e9)">MB</div>
+          <div>
+            <div class="testi-name">Mohamed Bouzid</div>
+            <div class="testi-role">CTO · TechCorp Tunisia</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The dashboard gives me full visibility. I always know exactly where my applications stand — no more wondering if anyone read my CV."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background: linear-gradient(135deg, #fc5c7d, #f59e0b)">SB</div>
+          <div>
+            <div class="testi-name">Sarra Ben Salem</div>
+            <div class="testi-role">Data Scientist · Remote</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══ -->
+  <section class="cta-section">
+    <div class="cta-glow"></div>
+    <div class="cta-inner">
+      <div class="cta-badge">🚀 Free to start</div>
+      <h2 class="cta-title">Ready to find<br><span class="title-gradient">your next opportunity?</span></h2>
+      <p class="cta-sub">Join 12,000+ professionals and 3,000+ companies already on RecruitPro.</p>
+      <div class="cta-actions">
+        <button class="btn-primary-hero" (click)="goToRegister()">
+          <span>Create free account</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn-ghost-hero" (click)="goToLogin()">Sign in instead</button>
       </div>
     </div>
   </section>
 
   <!-- Footer -->
   <footer class="footer">
-    <span class="footer-logo"></span>
+    <div class="footer-logo">
+      <span class="logo-icon">◈</span>
+      <span>Recruit<strong>Pro</strong></span>
+    </div>
+    <p class="footer-copy">© 2025 RecruitPro. Built with ❤️ in Tunisia.</p>
   </footer>
 
 </div>

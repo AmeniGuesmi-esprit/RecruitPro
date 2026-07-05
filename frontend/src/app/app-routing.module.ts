@@ -107,6 +107,11 @@ const routes: Routes = [
         path: 'post',
         loadComponent: () =>
           import('./frontoffice/post/post.component').then(c => c.PostComponent)
+      },
+      {
+         path: 'jobs',
+         loadComponent: () => 
+          import('./frontoffice/jobs/jobs.component').then(c => c.JobsComponent) 
       }
     ]
   },

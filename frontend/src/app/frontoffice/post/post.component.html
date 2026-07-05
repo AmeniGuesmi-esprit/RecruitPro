@@ -1,0 +1,331 @@
+<div class="post-page">
+
+
+
+  <!-- ══ FILTER BAR — GALAXY BOX ═════════════════════════════════════════════ -->
+  <div class="galaxy-toolbar">
+    <div class="filter-group">
+      <button class="btn-filter" [class.active]="activeFilter === 'ALL'" (click)="setFilter('ALL')">
+        <i class="ti ti-layout-grid"></i>
+        <span>Tout</span>
+        <span class="count">{{ myJobs.length }}</span>
+      </button>
+      <button class="btn-filter" [class.active]="activeFilter === 'PUBLISHED'" (click)="setFilter('PUBLISHED')">
+        <i class="ti ti-circle-check"></i>
+        <span>Publiées</span>
+        <span class="count">{{ publishedCount }}</span>
+      </button>
+      <button class="btn-filter" [class.active]="activeFilter === 'ARCHIVED'" (click)="setFilter('ARCHIVED')">
+        <i class="ti ti-archive"></i>
+        <span>Archivées</span>
+        <span class="count">{{ archivedCount }}</span>
+      </button>
+    </div>
+    <button class="btn-new" (click)="openForm()">
+      <i class="ti ti-plus"></i>
+      <span>Ajouter offre</span>
+    </button>
+  </div>
+
+  <!-- ══ DÉTAIL OFFRE — MINI PANNEAU AU-DESSUS DE LA PAGE ═══════════════════ -->
+  @if (selectedJob) {
+    <div class="detail-overlay" (click)="closeDetail()">
+      <div class="detail-page" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeDetail()"><i class="ti ti-x"></i></button>
+
+        <div class="modal-header">
+          @if (selectedJob.logoUrl) {
+            <img [src]="selectedJob.logoUrl" [alt]="selectedJob.companyName" class="modal-logo" />
+          } @else {
+            <div class="modal-logo modal-logo-placeholder"><i class="ti ti-building"></i></div>
+          }
+          <div>
+            <h2>{{ selectedJob.title }}</h2>
+            <p class="company-name">{{ selectedJob.companyName }}</p>
+            <span class="badge-type">{{ selectedJob.workSchedule }}</span>
+            <span class="badge-status" [class.archived]="isArchived(selectedJob)">{{ statusLabel(selectedJob.status) }}</span>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <section>
+            <h4><i class="ti ti-align-left me-1"></i>Description</h4>
+            <p class="description-text">{{ selectedJob.description }}</p>
+          </section>
+
+          <section>
+            <h4><i class="ti ti-tools me-1"></i>Compétences requises</h4>
+            <div class="skills-tags">
+              @for (skill of selectedJob.skills; track skill) {
+                <span class="skill-tag">{{ skill }}</span>
+              }
+            </div>
+          </section>
+
+          <section class="info-grid">
+            <div class="info-item">
+              <i class="ti ti-currency-dollar"></i>
+              <div>
+                <label>Salaire</label>
+                <span>{{ selectedJob.salaryMin | number:'1.0-0' }} – {{ selectedJob.salaryMax | number:'1.0-0' }} TND / mois</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="ti ti-clock"></i>
+              <div>
+                <label>Régime horaire</label>
+                <span>{{ selectedJob.workSchedule }}</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="ti ti-mail"></i>
+              <div>
+                <label>Email</label>
+                <a [href]="'mailto:' + selectedJob.contactEmail">{{ selectedJob.contactEmail }}</a>
+              </div>
+            </div>
+            @if (selectedJob.contactPhone) {
+              <div class="info-item">
+                <i class="ti ti-phone"></i>
+                <div>
+                  <label>Téléphone</label>
+                  <a [href]="'tel:' + selectedJob.contactPhone">{{ selectedJob.contactPhone }}</a>
+                </div>
+              </div>
+            }
+            <div class="info-item">
+              <i class="ti ti-calendar-event"></i>
+              <div>
+                <label>Période</label>
+                <span>Du {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} au {{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══ EMPTY STATE ══════════════════════════════════════════════════════════ -->
+  @if (filteredJobs.length === 0 && !showForm) {
+    <div class="empty-state">
+      <div class="empty-icon"><i class="ti ti-briefcase"></i></div>
+      @if (activeFilter === 'ALL') {
+        <h2>Aucune offre publiée</h2>
+        <p>Commencez par créer votre première offre d'emploi.</p>
+      } @else if (activeFilter === 'PUBLISHED') {
+        <h2>Aucune offre publiée</h2>
+        <p>Toutes vos offres sont actuellement archivées.</p>
+      } @else {
+        <h2>Aucune offre archivée</h2>
+        <p>Les offres archivées apparaîtront ici.</p>
+      }
+      <button class="btn-new" (click)="openForm()">
+        <i class="ti ti-plus"></i><span>Ajouter offre</span>
+      </button>
+    </div>
+  }
+
+  <!-- ══ CARDS GRID ═══════════════════════════════════════════════════════════ -->
+  @if (filteredJobs.length > 0) {
+    <div class="jobs-grid">
+      @for (job of filteredJobs; track job.id) {
+        <div class="job-card" [class.is-archived]="isArchived(job)" (click)="openDetail(job)">
+
+          <!-- Bannière : logoUrl + badge workSchedule + badge status -->
+          <div class="card-banner">
+            @if (job.logoUrl) {
+              <img [src]="job.logoUrl" [alt]="job.companyName" class="banner-img" />
+            } @else {
+              <div class="banner-placeholder">
+                <i class="ti ti-building-skyscraper"></i>
+              </div>
+            }
+            <span class="badge-type">{{ job.workSchedule }}</span>
+            <span class="badge-status" [class.archived]="isArchived(job)">{{ statusLabel(job.status) }}</span>
+          </div>
+
+          <!-- Corps -->
+          <div class="card-body">
+            <!-- Titre : title -->
+            <h3 class="card-title">{{ job.title }}</h3>
+            <!-- Sous-titre : companyName -->
+            <p class="card-company">{{ job.companyName }}</p>
+            <!-- Description : description -->
+            <p class="card-desc">{{ job.description | slice:0:110 }}{{ job.description.length > 110 ? '…' : '' }}</p>
+
+            <div class="card-meta">
+              <!-- Méta 1 : salaryMin / salaryMax -->
+              <div class="meta-row">
+                <i class="ti ti-currency-dollar"></i>
+                <span>{{ job.salaryMin | number }} – {{ job.salaryMax | number }} TND / mois</span>
+              </div>
+              <!-- Méta 2 : skills -->
+              <div class="meta-row">
+                <i class="ti ti-tools"></i>
+                <span>
+                  @for (skill of job.skills.slice(0, 3); track skill) {
+                    {{ skill }}@if (!$last) { · }
+                  }
+                  @if (job.skills.length > 3) { · +{{ job.skills.length - 3 }} }
+                </span>
+              </div>
+              <!-- Méta 3 : contactEmail -->
+              <div class="meta-row">
+                <i class="ti ti-mail"></i>
+                <span>{{ job.contactEmail }}</span>
+              </div>
+              <!-- Méta 4 : dateDebut / dateCloture -->
+              <div class="meta-row">
+                <i class="ti ti-calendar-event"></i>
+                <span>Du {{ job.dateDebut | date:'dd/MM/yyyy' }} au {{ job.dateCloture | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer : modifier / archiver -->
+          <div class="card-footer" (click)="$event.stopPropagation()">
+            <button class="btn-edit-card" (click)="editJob(job)">
+              <i class="ti ti-edit"></i>
+              Modifier
+            </button>
+            <button class="btn-archive-card" [disabled]="isArchived(job)" (click)="archiveJob(job.id)">
+              <i class="ti ti-archive"></i>
+              {{ isArchived(job) ? 'Archivée' : 'Archiver' }}
+            </button>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══ FORM OVERLAY ════════════════════════════════════════════════════════ -->
+  @if (showForm) {
+    <div class="overlay" (click)="closeForm()"></div>
+    <aside class="form-panel" [class.open]="showForm">
+
+      <div class="panel-header">
+        <div>
+          <p class="panel-eyebrow">{{ editingId ? 'Modification' : 'Nouvelle offre' }}</p>
+          <h2 class="panel-title">{{ editingId ? 'Modifier l\'offre' : 'Publier une offre' }}</h2>
+        </div>
+        <button class="close-btn" (click)="closeForm()"><i class="ti ti-x"></i></button>
+      </div>
+
+      @if (successMsg) {
+        <div class="alert-success"><i class="ti ti-circle-check"></i>{{ successMsg }}</div>
+      }
+      @if (errorMsg) {
+        <div class="alert-error"><i class="ti ti-alert-circle"></i>{{ errorMsg }}</div>
+      }
+
+      <div class="panel-body">
+
+        <div class="field full">
+          <label>Titre du poste <span class="req">*</span></label>
+          <input type="text" [(ngModel)]="form.title" placeholder="Ex : Développeur Full Stack" />
+        </div>
+
+        <div class="field full">
+          <label>Description <span class="req">*</span></label>
+          <textarea [(ngModel)]="form.description" rows="4"
+                    placeholder="Décrivez les responsabilités, le contexte, l'environnement…"></textarea>
+        </div>
+
+        <div class="field half">
+          <label>Société <span class="req">*</span></label>
+          <input type="text" [(ngModel)]="form.companyName" placeholder="Ex : TechCorp Tunisia" />
+        </div>
+
+        <div class="field half">
+          <label>Régime <span class="req">*</span></label>
+          <select [(ngModel)]="form.workSchedule">
+            <option value="">-- Choisir --</option>
+            <option value="CDI">CDI</option>
+            <option value="CDD">CDD</option>
+            <option value="Temps partiel">Temps partiel</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Stage">Stage</option>
+            <option value="Alternance">Alternance</option>
+          </select>
+        </div>
+
+        <div class="field half">
+          <label>Salaire min (TND/mois) <span class="req">*</span></label>
+          <input type="number" [(ngModel)]="form.salaryMin" min="0" placeholder="1 500" />
+        </div>
+
+        <div class="field half">
+          <label>Salaire max (TND/mois) <span class="req">*</span></label>
+          <input type="number" [(ngModel)]="form.salaryMax" min="0" placeholder="3 000" />
+        </div>
+
+        <div class="field half">
+          <label>Email de contact <span class="req">*</span></label>
+          <input type="email" [(ngModel)]="form.contactEmail" placeholder="rh@societe.com" />
+        </div>
+
+        <div class="field half">
+          <label>Téléphone</label>
+          <input type="tel" [(ngModel)]="form.contactPhone" placeholder="+216 XX XXX XXX" />
+        </div>
+
+        <div class="field half">
+          <label>Date de clôture <span class="req">*</span></label>
+          <input type="datetime-local" [(ngModel)]="form.dateCloture" [min]="minDateCloture()" />
+          <small class="hint">Doit être postérieure à la date actuelle. Au-delà, l'offre s'archive automatiquement.</small>
+        </div>
+
+        <div class="field full">
+          <label>Compétences <span class="req">*</span></label>
+          <div class="skills-row">
+            <input type="text" [(ngModel)]="skillInput"
+                   (keydown.enter)="addSkill($event)"
+                   placeholder="Tapez une compétence + Entrée" />
+            <button class="add-skill-btn" (click)="addSkillBtn()">
+              <i class="ti ti-plus"></i>
+            </button>
+          </div>
+          @if (form.skills.length > 0) {
+            <div class="skills-tags">
+              @for (skill of form.skills; track skill; let i = $index) {
+                <span class="skill-tag">
+                  {{ skill }}
+                  <i class="ti ti-x" (click)="removeSkill(i)"></i>
+                </span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="field full">
+          <label>Logo / Image de la société</label>
+          <div class="logo-drop" (click)="logoInput.click()">
+            @if (logoPreview) {
+              <img [src]="logoPreview" alt="Aperçu logo" class="logo-preview" />
+              <div class="logo-replace"><i class="ti ti-refresh"></i> Changer</div>
+            } @else {
+              <i class="ti ti-photo-up"></i>
+              <span>Cliquez pour uploader une image</span>
+              <small>PNG, JPG, SVG — max 2 Mo</small>
+            }
+          </div>
+          <input #logoInput type="file" accept="image/*" (change)="onLogoChange($event)" hidden />
+        </div>
+
+      </div>
+
+      <div class="panel-footer">
+        <button class="btn-cancel" (click)="closeForm()">Annuler</button>
+        <button class="btn-submit" (click)="submit()" [disabled]="submitting">
+          @if (submitting) { <span class="spin"></span> }
+          {{ editingId ? 'Enregistrer les modifications' : 'Publier l\'offre' }}
+        </button>
+      </div>
+
+    </aside>
+  }
+
+
+</div>

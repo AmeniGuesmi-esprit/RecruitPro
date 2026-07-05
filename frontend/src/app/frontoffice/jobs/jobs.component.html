@@ -1,0 +1,253 @@
+<div class="jobs-page">
+  
+
+  <!-- ══ BARRE DE RECHERCHE UNIFIÉE ══════════════════════════════════════════ -->
+  <!-- IMPORTANT : ce bloc ne doit JAMAIS être conditionné par "searching" ou par
+       une variable qui change à chaque frappe, sinon l'input est détruit/recréé
+       et perd le focus. Seul le chargement initial (loading) le cache. -->
+  @if (!loading) {
+    <div class="smart-search-wrapper">
+      <div class="smart-search-galaxy" [class.focused]="searchFocused">
+        <!-- Étoiles + nébuleuses en pur CSS (background), ne clippe jamais
+             le dropdown de suggestions (voir .smart-search-galaxy en scss). -->
+        <div class="smart-search-bar" [class.focused]="searchFocused">
+          <i class="ti search-icon" [class.ti-search]="!searching" [class.ti-loader-2]="searching"></i>
+
+          <input
+            type="text"
+            class="smart-search-input"
+            placeholder="Chercher par société, compétence, régime (CDI, Stage…) ou salaire (ex: 2000)…"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearchInput()"
+            (focus)="onSearchFocus()"
+            (blur)="hideSuggestions()"
+            autocomplete="off"
+          />
+
+          @if (hasActiveFilters) {
+            <button class="btn-clear-search" (click)="resetFilters()" title="Effacer">
+              <i class="ti ti-x"></i>
+            </button>
+          }
+        </div>
+
+        <!-- Suggestions dropdown : à l'intérieur de la box galaxy, dans le
+             flux normal (pas de position absolute) => reste dans le cadre.
+             Reste ouvert tant que le champ a le focus et qu'une recherche
+             est en cours, même sans suggestion qui matche (=> ne se cache
+             plus en tapant). -->
+        @if (searchFocused && searchQuery.trim().length > 0) {
+          <div class="suggestions-dropdown">
+            @if (suggestions.length > 0) {
+              @for (s of suggestions; track s) {
+                <div class="suggestion-item" (mousedown)="applySuggestion(s)">
+                  <i class="ti ti-arrow-right"></i>
+                  {{ s }}
+                </div>
+              }
+            } @else {
+              <div class="suggestion-item no-match">
+                <i class="ti ti-corner-down-left"></i>
+                Appuyez sur Entrée pour rechercher « {{ searchQuery.trim() }} »
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Aide contextuelle : dans la box galaxy, sous la barre -->
+        @if (!hasActiveFilters) {
+          <div class="search-hint">
+            <span><i class="ti ti-bulb"></i> Astuce :</span>
+            tapez un nom de société, une compétence, un régime
+            (<strong>CDI</strong>, <strong>Stage</strong>, <strong>Freelance</strong>…)
+            ou un montant (<strong>1500</strong>) pour le salaire minimum
+          </div>
+        }
+      </div>
+
+      <!-- Badges filtres détectés -->
+      @if (activeFilterBadges.length > 0) {
+        <div class="detected-filters">
+          <span class="detected-label">Filtres détectés :</span>
+          @for (badge of activeFilterBadges; track badge.label) {
+            <span class="detected-badge" [class]="'badge-' + badge.type">
+              <i class="ti"
+                 [class.ti-clock]="badge.type === 'schedule'"
+                 [class.ti-currency-dollar]="badge.type === 'salary'"
+                 [class.ti-building]="badge.type === 'text'"></i>
+              {{ badge.label }}
+            </span>
+          }
+          <button class="btn-reset-small" (click)="resetFilters()">
+            <i class="ti ti-refresh"></i> Réinitialiser
+          </button>
+        </div>
+      }
+
+    </div>
+  }
+
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p>Chargement des offres…</p>
+    </div>
+  }
+
+  @if (!loading && totalCount === 0) {
+    <div class="empty-state">
+      <i class="ti ti-mood-empty"></i>
+      <p>Aucune offre disponible pour le moment.</p>
+    </div>
+  }
+
+  @if (!loading && totalCount > 0 && filteredJobs.length === 0) {
+    <div class="empty-state">
+      <i class="ti ti-filter-x"></i>
+      <p>Aucune offre ne correspond à votre recherche.</p>
+      <button class="btn-reset" (click)="resetFilters()">
+        <i class="ti ti-refresh"></i> Réinitialiser
+      </button>
+    </div>
+  }
+
+  <!-- ══ GRILLE DES OFFRES ════════════════════════════════════════════════════ -->
+  <div class="jobs-grid">
+    @for (job of filteredJobs; track job.id) {
+      <div class="job-card" (click)="openDetail(job)">
+        <!-- Bannière : logo en pleine largeur, comme sur la page "Publier une offre" -->
+        <div class="card-banner">
+          @if (job.logoUrl) {
+            <img [src]="job.logoUrl" [alt]="job.companyName" class="banner-img" />
+          } @else {
+            <div class="banner-placeholder">
+              <i class="ti ti-building-skyscraper"></i>
+            </div>
+          }
+          <span class="schedule-badge" [attr.data-schedule]="job.workSchedule">{{ job.workSchedule }}</span>
+        </div>
+
+        <!-- Corps -->
+        <div class="card-body">
+          <h3 class="job-title">{{ job.title }}</h3>
+          <p class="company-name">{{ job.companyName }}</p>
+
+          <!-- Description -->
+          <p class="job-desc">{{ job.description | slice:0:90 }}{{ job.description.length > 90 ? '…' : '' }}</p>
+
+          <!-- Skills -->
+          <div class="skills-list">
+            @for (skill of job.skills.slice(0, 4); track skill) {
+              <span class="skill-tag">{{ skill }}</span>
+            }
+            @if (job.skills.length > 4) {
+              <span class="skill-tag more">+{{ job.skills.length - 4 }}</span>
+            }
+          </div>
+
+          <!-- Salary -->
+          <div class="salary-row">
+            <i class="ti ti-currency-dollar"></i>
+            <span>{{ job.salaryMin | number:'1.0-0' }} – {{ job.salaryMax | number:'1.0-0' }} TND / mois</span>
+          </div>
+
+          <!-- Période -->
+          <div class="period-row">
+            <i class="ti ti-calendar-event"></i>
+            <span>Du {{ job.dateDebut | date:'dd/MM/yyyy' }} au {{ job.dateCloture | date:'dd/MM/yyyy' }}</span>
+          </div>
+
+          <!-- Contact -->
+          <div class="contact-row">
+            <span><i class="ti ti-mail me-1"></i>{{ job.contactEmail }}</span>
+            @if (job.contactPhone) {
+              <span><i class="ti ti-phone me-1"></i>{{ job.contactPhone }}</span>
+            }
+          </div>
+
+          <!-- CTA visible au survol -->
+          <div class="card-cta">
+            <span>Voir l'offre</span>
+            <i class="ti ti-arrow-right"></i>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- ══ MODAL DÉTAIL ══════════════════════════════════════════════════════════ -->
+@if (selectedJob) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeDetail()"><i class="ti ti-x"></i></button>
+
+      <div class="modal-header">
+        @if (selectedJob.logoUrl) {
+          <img [src]="selectedJob.logoUrl" [alt]="selectedJob.companyName" class="modal-logo" />
+        }
+        <div>
+          <h2>{{ selectedJob.title }}</h2>
+          <p class="company-name">{{ selectedJob.companyName }}</p>
+          <span class="schedule-badge" [attr.data-schedule]="selectedJob.workSchedule">{{ selectedJob.workSchedule }}</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <section>
+          <h4><i class="ti ti-align-left me-1"></i>Description</h4>
+          <p class="description-text">{{ selectedJob.description }}</p>
+        </section>
+
+        <section>
+          <h4><i class="ti ti-tools me-1"></i>Compétences requises</h4>
+          <div class="skills-list">
+            @for (skill of selectedJob.skills; track skill) {
+              <span class="skill-tag">{{ skill }}</span>
+            }
+          </div>
+        </section>
+
+        <section class="info-grid">
+          <div class="info-item">
+            <i class="ti ti-currency-dollar"></i>
+            <div>
+              <label>Salaire</label>
+              <span>{{ selectedJob.salaryMin | number:'1.0-0' }} – {{ selectedJob.salaryMax | number:'1.0-0' }} TND / mois</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <i class="ti ti-clock"></i>
+            <div>
+              <label>Régime horaire</label>
+              <span>{{ selectedJob.workSchedule }}</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <i class="ti ti-mail"></i>
+            <div>
+              <label>Email</label>
+              <a [href]="'mailto:' + selectedJob.contactEmail">{{ selectedJob.contactEmail }}</a>
+            </div>
+          </div>
+          @if (selectedJob.contactPhone) {
+            <div class="info-item">
+              <i class="ti ti-phone"></i>
+              <div>
+                <label>Téléphone</label>
+                <a [href]="'tel:' + selectedJob.contactPhone">{{ selectedJob.contactPhone }}</a>
+              </div>
+            </div>
+          }
+          <div class="info-item">
+            <i class="ti ti-calendar-event"></i>
+            <div>
+              <label>Période</label>
+              <span>Du {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} au {{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+}

@@ -11,6 +11,7 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
+        # ── user-service ─────────────────────────────────────────────────────────
         - id: user-service-public
           uri: lb://user-service
           predicates:
@@ -32,6 +33,23 @@ spring:
           filters:
             - StripPrefix=0
             - AuthenticationFilter
+
+        # ── job-service ──────────────────────────────────────────────────────────
+        # Lecture publique (GET /api/jobs, /api/jobs/{id}, /api/jobs/files/**)
+        - id: job-service-public
+          uri: lb://job-service
+          predicates:
+            - Path=/api/jobs/files/**
+          filters:
+            - StripPrefix=0
+
+        # Mes offres + CRUD → protégé par JWT
+        - id: job-service-protected
+          uri: lb://job-service
+          predicates:
+            - Path=/api/jobs/**
+          filters:
+            - StripPrefix=0
 
 eureka:
   client:

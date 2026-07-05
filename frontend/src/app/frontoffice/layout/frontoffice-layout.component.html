@@ -3,31 +3,59 @@
     <!-- Logo -->
     <a href="#" class="nav-logo">
       <span class="logo-icon">◈</span>
-      RecruitPro
+      <span class="logo-text">Recruit<span class="logo-accent">Pro</span></span>
     </a>
 
     <!-- Navigation Links -->
     <div class="nav-links">
       @if (user?.role === 'CANDIDATE') {
-        <a routerLink="/frontoffice/dashboard" routerLinkActive="active">Dashboard</a>
-        <a routerLink="/frontoffice/projects" routerLinkActive="active">Projets</a>
-        <a routerLink="/frontoffice/recommendations" routerLinkActive="active">Recommandations</a>
-        <a routerLink="/frontoffice/applications" routerLinkActive="active">Candidatures</a>
+        <a routerLink="/frontoffice/dashboard" routerLinkActive="active">
+          <i class="ti ti-layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a routerLink="/frontoffice/jobs" routerLinkActive="active">
+          <i class="ti ti-briefcase"></i><span>Offres d'emploi</span>
+        </a>
+        <a routerLink="/frontoffice/recommendations" routerLinkActive="active">
+          <i class="ti ti-sparkles"></i><span>Recommandations</span>
+        </a>
+        <a routerLink="/frontoffice/applications" routerLinkActive="active">
+          <i class="ti ti-file-text"></i><span>Candidatures</span>
+        </a>
       }
       @if (user?.role === 'COMPANY') {
-        <a routerLink="/frontoffice/dashboard" routerLinkActive="active">Dashboard</a>
-        <a routerLink="/frontoffice/post" routerLinkActive="active">Publier une offre</a>
+        <a routerLink="/frontoffice/dashboard" routerLinkActive="active">
+          <i class="ti ti-layout-dashboard"></i><span>Dashboard</span>
+        </a>
+        <a routerLink="/frontoffice/post" routerLinkActive="active">
+          <i class="ti ti-plus"></i><span>Publier une offre</span>
+        </a>
       }
     </div>
 
     <!-- Avatar + Dropdown -->
-    <div class="user-avatar" (click)="toggleDropdown($event)">
-      <img [src]="getAvatarUrl()" alt="Avatar" class="avatar">
+    <div class="user-avatar" (click)="toggleDropdown($event)" [class.open]="dropdownOpen">
+      <div class="avatar-frame">
+        <img [src]="getAvatarUrl()" alt="Avatar" class="avatar">
+        <span class="online-dot"></span>
+      </div>
+      <div class="user-meta">
+        <span class="user-name">{{ user?.firstName }}</span>
+        <span class="user-role">{{ user?.role === 'CANDIDATE' ? 'Candidat' : 'Recruteur' }}</span>
+      </div>
+      <i class="ti ti-chevron-down caret"></i>
     </div>
 
     <!-- Dropdown Menu -->
     @if (dropdownOpen) {
       <div class="dropdown-menu">
+        <div class="dropdown-user">
+          <img [src]="getAvatarUrl()" alt="Avatar" class="dropdown-avatar">
+          <div>
+            <p class="dropdown-fullname">{{ user?.firstName }} {{ user?.lastName }}</p>
+            <p class="dropdown-email">{{ user?.email }}</p>
+          </div>
+        </div>
+        <div class="dropdown-divider"></div>
         <a routerLink="/frontoffice/profile" 
            (click)="toggleDropdown($event)" 
            class="dropdown-item">
