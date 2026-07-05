@@ -9,21 +9,16 @@ export interface NavigationItem {
 
 export const NavigationItems: NavigationItem[] = [
   {
-    id: 'dashboard', title: 'Dashboard', type: 'group', icon: 'icon-navigation',
+    id: 'administration', title: 'Administration', type: 'group', icon: 'icon-navigation',
     children: [
       { id: 'admin-dashboard', title: 'Tableau de bord', type: 'item',
-        classes: 'nav-item', url: '/backoffice/dashboard', icon: 'ti ti-dashboard', breadcrumbs: false }
-    ]
-  },
-  {
-    id: 'users', title: 'Gestion', type: 'group', icon: 'icon-navigation',
-    children: [
-      { id: 'users-list', title: 'Utilisateurs', type: 'item',
-        classes: 'nav-item', url: '/backoffice/users', icon: 'ti ti-users' },
-      { id: 'companies', title: 'Sociétés', type: 'item',
-        classes: 'nav-item', url: '/backoffice/companies', icon: 'ti ti-building' },
-      { id: 'jobs', title: 'Offres d\'emploi', type: 'item',
-        classes: 'nav-item', url: '/backoffice/jobs', icon: 'ti ti-briefcase' }
+        classes: 'nav-item', url: '/backoffice/dashboard', icon: 'ti ti-dashboard', breadcrumbs: false },
+      { id: 'admin-users', title: 'Users', type: 'item',
+        classes: 'nav-item', url: '/backoffice/users', icon: 'ti ti-users', breadcrumbs: false },
+      { id: 'admin-offers', title: 'Offers', type: 'item',
+        classes: 'nav-item', url: '/backoffice/offers', icon: 'ti ti-briefcase', breadcrumbs: false },
+      { id: 'admin-subscription', title: 'Abonnement', type: 'item',
+        classes: 'nav-item', url: '/backoffice/abonnement', icon: 'ti ti-credit-card', breadcrumbs: false }
     ]
   }
 ];

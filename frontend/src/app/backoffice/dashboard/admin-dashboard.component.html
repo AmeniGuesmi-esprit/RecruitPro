@@ -1,64 +1,106 @@
-<div class="row g-4">
-  <!-- Stats Row -->
-  <div class="col-xl-3 col-md-6">
-    <div class="card earning-card bg-secondary-dark text-white overflow-hidden">
-      <span class="round secondary-round small"></span>
-      <span class="round secondary-round big"></span>
-      <div class="card-body">
-        <div class="avatar avatar-lg mb-2">
-          <i class="text-white ti ti-users f-24"></i>
+@if (loading) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="text-muted mt-2">Chargement des statistiques...</p>
+  </div>
+} @else if (error) {
+  <div class="alert alert-danger">{{ error }}</div>
+} @else {
+  <div class="row g-4">
+    <!-- Vue d'ensemble colorée : offres & candidatures -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="ti ti-chart-bar me-2"></i>Vue d'ensemble des offres et candidatures</h5>
         </div>
-        <span class="text-white d-block f-34 f-w-500">0</span>
-        <p class="mb-0 opacity-50">Utilisateurs totaux</p>
+        <div class="card-body">
+          @if (jobsOverviewChart.series) {
+            <apx-chart
+              [series]="jobsOverviewChart.series"
+              [chart]="jobsOverviewChart.chart"
+              [plotOptions]="jobsOverviewChart.plotOptions"
+              [colors]="jobsOverviewChart.colors"
+              [legend]="jobsOverviewChart.legend"
+              [dataLabels]="jobsOverviewChart.dataLabels"
+              [xaxis]="jobsOverviewChart.xaxis"
+              [yaxis]="jobsOverviewChart.yaxis"
+              [grid]="jobsOverviewChart.grid"
+              [tooltip]="jobsOverviewChart.tooltip"
+            ></apx-chart>
+          }
+        </div>
       </div>
     </div>
-  </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="card bg-primary-dark text-white overflow-hidden">
-      <div class="card-body">
-        <div class="avatar avatar-lg mb-2">
-          <i class="text-white ti ti-building f-24"></i>
-        </div>
-        <span class="text-white d-block f-34 f-w-500">0</span>
-        <p class="mb-0 opacity-50">Sociétés</p>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="card text-white overflow-hidden" style="background:#4caf50">
-      <div class="card-body">
-        <div class="avatar avatar-lg mb-2">
-          <i class="text-white ti ti-user-check f-24"></i>
-        </div>
-        <span class="text-white d-block f-34 f-w-500">0</span>
-        <p class="mb-0 opacity-50">Candidats</p>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="card text-white overflow-hidden" style="background:#ff9800">
-      <div class="card-body">
-        <div class="avatar avatar-lg mb-2">
-          <i class="text-white ti ti-briefcase f-24"></i>
-        </div>
-        <span class="text-white d-block f-34 f-w-500">0</span>
-        <p class="mb-0 opacity-50">Offres actives</p>
-      </div>
-    </div>
-  </div>
 
-  <!-- Recent Users Table -->
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0"><i class="ti ti-users me-2"></i>Activité récente</h5>
+    <!-- Statistiques graphiques -->
+    <div class="col-xl-7 col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="ti ti-chart-line me-2"></i>Offres créées par mois</h5>
+        </div>
+        <div class="card-body">
+          @if (jobsByMonthChart.series) {
+            <apx-chart
+              [series]="jobsByMonthChart.series"
+              [chart]="jobsByMonthChart.chart"
+              [dataLabels]="jobsByMonthChart.dataLabels"
+              [stroke]="jobsByMonthChart.stroke"
+              [colors]="jobsByMonthChart.colors"
+              [xaxis]="jobsByMonthChart.xaxis"
+              [yaxis]="jobsByMonthChart.yaxis"
+              [markers]="jobsByMonthChart.markers"
+              [grid]="jobsByMonthChart.grid"
+              [tooltip]="jobsByMonthChart.tooltip"
+            ></apx-chart>
+          }
+        </div>
       </div>
-      <div class="card-body">
-        <p class="text-muted text-center py-4">
-          <i class="ti ti-database-off f-30 d-block mb-2"></i>
-          Données à venir — connectez le service
-        </p>
+    </div>
+    <div class="col-xl-5 col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="ti ti-chart-donut me-2"></i>Répartition des utilisateurs par rôle</h5>
+        </div>
+        <div class="card-body">
+          @if (usersByRoleChart.series) {
+            <apx-chart
+              [series]="usersByRoleChart.series"
+              [chart]="usersByRoleChart.chart"
+              [labels]="usersByRoleChart.labels"
+              [colors]="usersByRoleChart.colors"
+              [legend]="usersByRoleChart.legend"
+              [dataLabels]="usersByRoleChart.dataLabels"
+              [plotOptions]="usersByRoleChart.plotOptions"
+              [tooltip]="usersByRoleChart.tooltip"
+            ></apx-chart>
+          } @else {
+            <p class="text-muted text-center py-4">Aucune donnée à afficher</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="ti ti-chart-bar me-2"></i>Comptes créés par mois</h5>
+        </div>
+        <div class="card-body">
+          @if (usersByMonthChart.series) {
+            <apx-chart
+              [series]="usersByMonthChart.series"
+              [chart]="usersByMonthChart.chart"
+              [dataLabels]="usersByMonthChart.dataLabels"
+              [colors]="usersByMonthChart.colors"
+              [plotOptions]="usersByMonthChart.plotOptions"
+              [xaxis]="usersByMonthChart.xaxis"
+              [yaxis]="usersByMonthChart.yaxis"
+              [grid]="usersByMonthChart.grid"
+              [tooltip]="usersByMonthChart.tooltip"
+            ></apx-chart>
+          }
+        </div>
       </div>
     </div>
   </div>
-</div>
+}

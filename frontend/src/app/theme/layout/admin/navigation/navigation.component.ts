@@ -1,10 +1,11 @@
 // Angular import
 import { Component, output } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 // project import
 
 import { NavContentComponent } from './nav-content/nav-content.component';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-navigation',
@@ -20,6 +21,8 @@ export class NavigationComponent {
   windowWidth = window.innerWidth;
   themeMode!: string;
 
+  constructor(private auth: AuthService, private router: Router) {}
+
   // public method
   navCollapseMob() {
     if (this.windowWidth < 1025) {
@@ -29,5 +32,9 @@ export class NavigationComponent {
 
   navSubmenuCollapse() {
     document.querySelector('app-navigation.coded-navbar')?.classList.add('coded-trigger');
+  }
+
+  logout() {
+    this.auth.logout();
   }
 }

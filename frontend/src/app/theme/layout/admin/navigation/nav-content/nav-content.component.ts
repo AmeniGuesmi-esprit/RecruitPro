@@ -12,6 +12,7 @@ import { NavigationItem, NavigationItems } from '../navigation';
 import { NavCollapseComponent } from './nav-collapse/nav-collapse.component';
 import { NavGroupComponent } from './nav-group/nav-group.component';
 import { NavItemComponent } from './nav-item/nav-item.component';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 // NgScrollbarModule
 import { SharedModule } from 'src/app/theme/shared/shared.module';
@@ -24,6 +25,7 @@ import { SharedModule } from 'src/app/theme/shared/shared.module';
 })
 export class NavContentComponent implements OnInit {
   private location = inject(Location);
+  private auth = inject(AuthService);
 
   // public props
   NavCollapsedMob = output();
@@ -49,6 +51,10 @@ export class NavContentComponent implements OnInit {
         (document.querySelector('.coded-navbar') as HTMLDivElement).classList.add('menupos-static');
       }, 500);
     }
+  }
+
+  logout() {
+    this.auth.logout();
   }
 
   fireOutClick() {

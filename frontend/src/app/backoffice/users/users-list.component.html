@@ -1,0 +1,78 @@
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h5 class="mb-0"><i class="ti ti-users me-2"></i>Utilisateurs ({{ allUsers.length }})</h5>
+        <div class="d-flex flex-wrap gap-2">
+          <select class="form-select form-select-sm" style="width:auto" [(ngModel)]="roleFilter" (ngModelChange)="onRoleFilterChange()">
+            <option value="ALL">Tous les rôles</option>
+            <option value="ADMIN">Admin ({{ countByRole('ADMIN') }})</option>
+            <option value="COMPANY">Société ({{ countByRole('COMPANY') }})</option>
+            <option value="CANDIDATE">Candidat ({{ countByRole('CANDIDATE') }})</option>
+          </select>
+          <input type="text" class="form-control form-control-sm" style="width:220px"
+                 placeholder="Rechercher (nom, email)..."
+                 [(ngModel)]="search" (ngModelChange)="onSearchChange()">
+          <button class="btn btn-sm btn-outline-primary" (click)="loadUsers()">
+            <i class="ti ti-refresh"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        @if (loading) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="text-muted mt-2">Chargement des utilisateurs...</p>
+          </div>
+        } @else if (error) {
+          <div class="alert alert-danger">{{ error }}</div>
+        } @else if (filteredUsers.length === 0) {
+          <p class="text-muted text-center py-4">
+            <i class="ti ti-database-off f-30 d-block mb-2"></i>
+            Aucun utilisateur ne correspond à votre recherche
+          </p>
+        } @else {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nom complet</th>
+                  <th>Email</th>
+                  <th>Téléphone</th>
+                  <th>Rôle</th>
+                  <th>Email vérifié</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (u of filteredUsers; track u.id) {
+                  <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.firstName }} {{ u.lastName }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.phone || '—' }}</td>
+                    <td>
+                      <span class="badge"
+                        [ngClass]="{
+                          'bg-primary': u.role === 'ADMIN',
+                          'bg-info': u.role === 'COMPANY',
+                          'bg-success': u.role === 'CANDIDATE'
+                        }">{{ u.role }}</span>
+                    </td>
+                    <td>
+                      @if (u.emailVerified) {
+                        <span class="badge bg-success"><i class="ti ti-circle-check me-1"></i>Vérifié</span>
+                      } @else {
+                        <span class="badge bg-danger"><i class="ti ti-circle-x me-1"></i>Non vérifié</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

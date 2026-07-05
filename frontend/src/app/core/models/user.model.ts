@@ -6,6 +6,7 @@ export interface User {
   firstName: string; lastName: string;
   email: string; phone: string; role: Role;
   emailVerified: boolean; cvPath?: string; imagePath?: string;
+  createdAt?: string;
 }
 
 export interface AuthResponse {

@@ -95,6 +95,22 @@ public class ApplicationService {
                 .toList();
     }
 
+    // ── ADMIN : candidats d'une offre, sans vérification de propriétaire ─────
+    public List<ApplicationResponse> getApplicationsForJobAdmin(Long jobId) {
+        JobInfo job = jobClient.getJob(jobId);
+        if (job == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Offre introuvable");
+        }
+        return repository.findByJobIdOrderByAppliedAtDesc(jobId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // ── ADMIN : nombre total de candidatures sur la plateforme ───────────────
+    public long countAll() {
+        return repository.count();
+    }
+
     // ── Changer le statut d'une candidature (COMPANY, doit être le recruteur propriétaire) ─
     @Transactional
     public ApplicationResponse updateStatus(Long applicationId, Long recruiterId, ApplicationStatus newStatus) {

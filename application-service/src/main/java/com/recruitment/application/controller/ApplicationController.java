@@ -62,6 +62,20 @@ public class ApplicationController {
         return ResponseEntity.ok(ApiResponse.ok("Candidats", applicationService.getApplicationsForJob(jobId, recruiterId)));
     }
 
+    // ── ADMIN : candidatures d'une offre, sans vérification de propriétaire ──
+    @GetMapping("/admin/job/{jobId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> forJobAdmin(@PathVariable Long jobId) {
+        return ResponseEntity.ok(ApiResponse.ok("Candidats", applicationService.getApplicationsForJobAdmin(jobId)));
+    }
+
+    // ── ADMIN : nombre total de candidatures sur la plateforme ───────────────
+    @GetMapping("/admin/count")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Long>> countAll() {
+        return ResponseEntity.ok(ApiResponse.ok("Total candidatures", applicationService.countAll()));
+    }
+
     // ── COMPANY : changer le statut d'une candidature (accepter / refuser) ───
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('COMPANY')")

@@ -118,6 +118,19 @@ public class JobService {
         return toResponse(findOrThrow(id));
     }
 
+    /** ADMIN : toutes les offres, tous statuts confondus (PUBLISHED, CLOTURE, ARCHIVED). */
+    @Transactional
+    public List<JobResponse> getAllJobsAdmin() {
+        List<Job> expired = jobRepository.findByStatusAndDateClotureBefore(JobStatus.PUBLISHED, LocalDateTime.now());
+        if (!expired.isEmpty()) {
+            expired.forEach(j -> j.setStatus(JobStatus.CLOTURE));
+            jobRepository.saveAll(expired);
+        }
+        return jobRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     // ── Mise à jour ──────────────────────────────────────────────────────────────
 
     public JobResponse updateJob(Long id, JobRequest req, MultipartFile logo, Long recruiterId) throws IOException {

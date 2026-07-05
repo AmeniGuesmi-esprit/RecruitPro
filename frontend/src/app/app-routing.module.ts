@@ -67,6 +67,26 @@ const routes: Routes = [
         path: 'dashboard',
         loadComponent: () =>
           import('./backoffice/dashboard/admin-dashboard.component').then(c => c.AdminDashboardComponent)
+      },
+      {
+        path: 'users',
+        loadComponent: () =>
+          import('./backoffice/users/users-list.component').then(c => c.UsersListComponent)
+      },
+      {
+        path: 'offers',
+        loadComponent: () =>
+          import('./backoffice/offers/offers-list.component').then(c => c.OffersListComponent)
+      },
+      {
+        path: 'abonnement',
+        loadComponent: () =>
+          import('./backoffice/subscription/subscription.component').then(c => c.SubscriptionComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./backoffice/profile/admin-profile.component').then(c => c.AdminProfileComponent)
       }
     ]
   },

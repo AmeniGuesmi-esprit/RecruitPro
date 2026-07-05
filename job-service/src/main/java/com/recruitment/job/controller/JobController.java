@@ -78,6 +78,16 @@ public class JobController {
                 .body(resource);
     }
 
+    // ── ADMIN : toutes les offres, tous statuts confondus ────────────────────────
+    @GetMapping("/admin/all")
+    public ResponseEntity<ApiResponse<List<JobResponse>>> getAllJobsAdmin() {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .header(HttpHeaders.PRAGMA, "no-cache")
+                .header(HttpHeaders.EXPIRES, "0")
+                .body(ApiResponse.ok("Toutes les offres", jobService.getAllJobsAdmin()));
+    }
+
     // ── COMPANY : mes offres ─────────────────────────────────────────────────────
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<List<JobResponse>>> getMyJobs(Authentication auth) {

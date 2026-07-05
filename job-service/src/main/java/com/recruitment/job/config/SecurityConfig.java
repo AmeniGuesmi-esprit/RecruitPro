@@ -44,6 +44,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/jobs/**").hasRole("COMPANY")
                         // offres du recruteur connecté
                         .requestMatchers("/api/jobs/my").hasRole("COMPANY")
+                        // ADMIN : toutes les offres, tous statuts
+                        .requestMatchers("/api/jobs/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
