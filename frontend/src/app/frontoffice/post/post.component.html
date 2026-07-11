@@ -32,6 +32,12 @@
 
   <!-- ══ FILTER BAR — GALAXY BOX ═════════════════════════════════════════════ -->
   <div class="galaxy-toolbar">
+    <!-- ══ En-tête de la box (même style eyebrow + titre que les autres pages) ══ -->
+    <div class="galaxy-heading">
+      <span class="galaxy-eyebrow"><i class="ti ti-briefcase"></i> Mes offres</span>
+      <h2 class="galaxy-title">Gérez vos offres d'emploi</h2>
+    </div>
+
     <div class="filter-group">
       <button class="btn-filter" [class.active]="activeFilter === 'ALL'" (click)="setFilter('ALL')">
         <i class="ti ti-layout-grid"></i>
@@ -74,19 +80,25 @@
           }
           <div>
             <h2>{{ selectedJob.title }}</h2>
-            <p class="company-name">{{ selectedJob.companyName }}</p>
-            <span class="badge-type">{{ selectedJob.workSchedule }}</span>
-            <span class="badge-status" [class.archived]="isArchived(selectedJob)" [class.cloture]="isCloture(selectedJob)">{{ statusLabel(selectedJob.status) }}</span>
+            <p class="company-name"><i class="ti ti-building-skyscraper"></i>{{ selectedJob.companyName }}</p>
+            <div class="header-badges">
+              <span class="badge-type"><i class="ti ti-briefcase"></i>{{ selectedJob.workSchedule }}</span>
+              <span class="badge-status" [class.archived]="isArchived(selectedJob)" [class.cloture]="isCloture(selectedJob)">
+                <i class="ti" [class]="statusIcon(selectedJob.status)"></i>{{ statusLabel(selectedJob.status) }}
+              </span>
+            </div>
           </div>
         </div>
 
         <div class="modal-body">
-          <section>
+          <section class="detail-section">
             <h4><i class="ti ti-align-left me-1"></i>Description</h4>
-            <p class="description-text">{{ selectedJob.description }}</p>
+            <div class="description-box">
+              <p class="description-text">{{ selectedJob.description }}</p>
+            </div>
           </section>
 
-          <section>
+          <section class="detail-section">
             <h4><i class="ti ti-tools me-1"></i>Compétences requises</h4>
             <div class="skills-tags">
               @for (skill of selectedJob.skills; track skill) {
@@ -95,49 +107,52 @@
             </div>
           </section>
 
-          <section class="info-grid">
-            <div class="info-item">
-              <i class="ti ti-currency-dollar"></i>
-              <div>
-                <label>Salaire</label>
-                <span>{{ selectedJob.salary | number:'1.0-0' }} TND / mois</span>
-              </div>
-            </div>
-            <div class="info-item">
-              <i class="ti ti-clock"></i>
-              <div>
-                <label>Régime horaire</label>
-                <span>{{ selectedJob.workSchedule }}</span>
-              </div>
-            </div>
-            <div class="info-item">
-              <i class="ti ti-mail"></i>
-              <div>
-                <label>Email</label>
-                <a [href]="'mailto:' + selectedJob.contactEmail">{{ selectedJob.contactEmail }}</a>
-              </div>
-            </div>
-            @if (selectedJob.contactPhone) {
-              <div class="info-item">
-                <i class="ti ti-phone"></i>
+          <section class="detail-section">
+            <h4><i class="ti ti-info-circle me-1"></i>Informations</h4>
+            <div class="info-grid">
+              <div class="info-item info-item--salary">
+                <div class="info-icon"><i class="ti ti-currency-dollar"></i></div>
                 <div>
-                  <label>Téléphone</label>
-                  <a [href]="'tel:' + selectedJob.contactPhone">{{ selectedJob.contactPhone }}</a>
+                  <label>Salaire</label>
+                  <span>{{ selectedJob.salary | number:'1.0-0' }} TND / mois</span>
                 </div>
               </div>
-            }
-            <div class="info-item">
-              <i class="ti ti-calendar-event"></i>
-              <div>
-                <label>Période</label>
-                <span>Du {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} au {{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
+              <div class="info-item info-item--schedule">
+                <div class="info-icon"><i class="ti ti-clock"></i></div>
+                <div>
+                  <label>Régime horaire</label>
+                  <span>{{ selectedJob.workSchedule }}</span>
+                </div>
               </div>
-            </div>
-            <div class="info-item">
-              <i class="ti ti-calendar-time"></i>
-              <div>
-                <label>Date d'entretien</label>
-                <span>{{ selectedJob.dateEntretien | date:'dd/MM/yyyy' }}</span>
+              <div class="info-item info-item--email">
+                <div class="info-icon"><i class="ti ti-mail"></i></div>
+                <div>
+                  <label>Email</label>
+                  <a [href]="'mailto:' + selectedJob.contactEmail">{{ selectedJob.contactEmail }}</a>
+                </div>
+              </div>
+              @if (selectedJob.contactPhone) {
+                <div class="info-item info-item--phone">
+                  <div class="info-icon"><i class="ti ti-phone"></i></div>
+                  <div>
+                    <label>Téléphone</label>
+                    <a [href]="'tel:' + selectedJob.contactPhone">{{ selectedJob.contactPhone }}</a>
+                  </div>
+                </div>
+              }
+              <div class="info-item info-item--period">
+                <div class="info-icon"><i class="ti ti-calendar-event"></i></div>
+                <div>
+                  <label>Période</label>
+                  <span>Du {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} au {{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+              <div class="info-item info-item--interview">
+                <div class="info-icon"><i class="ti ti-calendar-time"></i></div>
+                <div>
+                  <label>Date d'entretien</label>
+                  <span>{{ selectedJob.dateEntretien | date:'dd/MM/yyyy' }}</span>
+                </div>
               </div>
             </div>
           </section>
@@ -172,8 +187,12 @@
   <!-- ══ CARDS GRID ═══════════════════════════════════════════════════════════ -->
   @if (filteredJobs.length > 0) {
     <div class="jobs-grid">
-      @for (job of filteredJobs; track job.id) {
-        <div class="job-card" [class.is-archived]="isInactive(job)" (click)="openDetail(job)">
+      @for (job of paginatedJobs; track job.id) {
+        <div class="job-card"
+             [class.is-published]="!isInactive(job)"
+             [class.is-cloture]="isCloture(job)"
+             [class.is-archived]="isArchived(job)"
+             (click)="openDetail(job)">
 
           <!-- Bannière : logoUrl + badge workSchedule + badge status -->
           <div class="card-banner">
@@ -184,8 +203,10 @@
                 <i class="ti ti-building-skyscraper"></i>
               </div>
             }
-            <span class="badge-type">{{ job.workSchedule }}</span>
-            <span class="badge-status" [class.archived]="isArchived(job)" [class.cloture]="isCloture(job)">{{ statusLabel(job.status) }}</span>
+            <span class="badge-type"><i class="ti ti-briefcase"></i>{{ job.workSchedule }}</span>
+            <span class="badge-status" [class.archived]="isArchived(job)" [class.cloture]="isCloture(job)">
+              <i class="ti" [class]="statusIcon(job.status)"></i>{{ statusLabel(job.status) }}
+            </span>
           </div>
 
           <!-- Corps -->
@@ -221,7 +242,7 @@
               <!-- Méta 4 : dateDebut / dateCloture -->
               <div class="meta-row">
                 <i class="ti ti-calendar-event"></i>
-                <span>Du {{ job.dateDebut | date:'dd/MM/yyyy' }} au {{ job.dateCloture | date:'dd/MM/yyyy' }}</span>
+                <span>Ouvert du {{ job.dateDebut | date:'dd/MM/yyyy' }} au {{ job.dateCloture | date:'dd/MM/yyyy' }}</span>
               </div>
               <!-- Méta 5 : dateEntretien -->
               <div class="meta-row">
@@ -263,6 +284,25 @@
         </div>
       }
     </div>
+
+    <!-- ══ PAGINATION ═══════════════════════════════════════════════════════════ -->
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="pagination__nav" [disabled]="currentPage === 1" (click)="prevPage()">
+          <i class="ti ti-chevron-left"></i>
+        </button>
+
+        @for (page of pageNumbers; track page) {
+          <button class="pagination__page" [class.active]="page === currentPage" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        }
+
+        <button class="pagination__nav" [disabled]="currentPage === totalPages" (click)="nextPage()">
+          <i class="ti ti-chevron-right"></i>
+        </button>
+      </div>
+    }
   }
 
   <!-- ══ LISTE DES CANDIDATS ═════════════════════════════════════════════════ -->

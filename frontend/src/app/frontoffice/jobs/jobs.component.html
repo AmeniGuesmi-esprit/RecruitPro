@@ -8,6 +8,12 @@
   @if (!loading) {
     <div class="smart-search-wrapper">
       <div class="smart-search-galaxy" [class.focused]="searchFocused">
+        <!-- ══ En-tête de la box (même style eyebrow + titre que les autres pages) ══ -->
+        <div class="galaxy-heading">
+          <span class="galaxy-eyebrow"><i class="ti ti-briefcase"></i> Offres d'emploi</span>
+          <h2 class="galaxy-title">Trouvez votre prochaine opportunité</h2>
+        </div>
+
         <!-- Étoiles + nébuleuses en pur CSS (background), ne clippe jamais
              le dropdown de suggestions (voir .smart-search-galaxy en scss). -->
         <div class="smart-search-bar" [class.focused]="searchFocused">
@@ -54,15 +60,7 @@
           </div>
         }
 
-        <!-- Aide contextuelle : dans la box galaxy, sous la barre -->
-        @if (!hasActiveFilters) {
-          <div class="search-hint">
-            <span><i class="ti ti-bulb"></i> Astuce :</span>
-            tapez un nom de société, une compétence, un régime
-            (<strong>CDI</strong>, <strong>Stage</strong>, <strong>Freelance</strong>…)
-            ou un montant (<strong>1500</strong>) pour le salaire minimum
-          </div>
-        }
+
       </div>
 
       <!-- Badges filtres détectés -->
@@ -113,8 +111,8 @@
 
   <!-- ══ GRILLE DES OFFRES ════════════════════════════════════════════════════ -->
   <div class="jobs-grid">
-    @for (job of filteredJobs; track job.id) {
-      <div class="job-card" (click)="openDetail(job)">
+    @for (job of paginatedJobs; track job.id) {
+      <div class="job-card" [class.is-published]="!isCloture(job)" [class.is-cloture]="isCloture(job)" (click)="openDetail(job)">
         <!-- Bannière : logo en pleine largeur, comme sur la page "Publier une offre" -->
         <div class="card-banner">
           @if (job.logoUrl) {
@@ -124,10 +122,10 @@
               <i class="ti ti-building-skyscraper"></i>
             </div>
           }
-          <span class="schedule-badge" [attr.data-schedule]="job.workSchedule">{{ job.workSchedule }}</span>
-          @if (job.status !== 'PUBLISHED') {
-            <span class="status-badge closed"><i class="ti ti-lock"></i> Clôturée</span>
-          }
+          <span class="badge-type"><i class="ti ti-briefcase"></i>{{ job.workSchedule }}</span>
+          <span class="badge-status" [class.cloture]="isCloture(job)">
+            <i class="ti" [class]="jobStatusIcon(job)"></i>{{ jobStatusLabel(job) }}
+          </span>
         </div>
 
         <!-- Corps -->
@@ -209,6 +207,23 @@
       </div>
     }
   </div>
+
+  <!-- ══ PAGINATION (3 lignes de 3 cartes = 9 offres / page) ═══════════════════ -->
+  @if (!loading && totalPages > 1) {
+    <div class="jobs-pagination">
+      <button class="page-nav" [disabled]="currentPage === 1" (click)="prevPage()">
+        <i class="ti ti-chevron-left"></i>
+      </button>
+
+      @for (p of pageNumbers; track p) {
+        <button class="page-number" [class.active]="p === currentPage" (click)="goToPage(p)">{{ p }}</button>
+      }
+
+      <button class="page-nav" [disabled]="currentPage === totalPages" (click)="nextPage()">
+        <i class="ti ti-chevron-right"></i>
+      </button>
+    </div>
+  }
 </div>
 
 <!-- ══ MODAL DÉTAIL ══════════════════════════════════════════════════════════ -->
@@ -224,10 +239,10 @@
         <div>
           <h2>{{ selectedJob.title }}</h2>
           <p class="company-name">{{ selectedJob.companyName }}</p>
-          <span class="schedule-badge" [attr.data-schedule]="selectedJob.workSchedule">{{ selectedJob.workSchedule }}</span>
-          @if (selectedJob.status !== 'PUBLISHED') {
-            <span class="status-badge closed"><i class="ti ti-lock"></i> Clôturée</span>
-          }
+          <span class="badge-type"><i class="ti ti-briefcase"></i>{{ selectedJob.workSchedule }}</span>
+          <span class="badge-status" [class.cloture]="isCloture(selectedJob)">
+            <i class="ti" [class]="jobStatusIcon(selectedJob)"></i>{{ jobStatusLabel(selectedJob) }}
+          </span>
         </div>
       </div>
 

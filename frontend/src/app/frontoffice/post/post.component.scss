@@ -22,22 +22,12 @@ $radius-sm : 6px;
 $shadow    : 0 1px 3px rgba(31, 20, 90, 0.06);
 $shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
 
-// ── Galaxy palette (utilisée uniquement pour la toolbar) ────────────────────
-$galaxy-deep : #030a26;
-$galaxy-blue : #071238;
-$galaxy-mid  : #0c1c52;
-$galaxy-glow : #2f6bff;
-
-@keyframes galaxy-twinkle {
-  0%, 100% { opacity: .55; }
-  50%      { opacity: 1; }
-}
-
 // ── Page wrapper ───────────────────────────────────────────────────────────
-// FIX: on garde le fond clair d'origine de la page (comme demandé) — le
-// style "galaxie" est désormais isolé dans la toolbar (.galaxy-toolbar) plus bas.
+// FIX: on garde le fond clair d'origine de la page (comme demandé) — la
+// toolbar (.galaxy-toolbar) reprend le dégradé violet → teal du hero de la
+// page Abonnement, plus bas.
 .post-page {
-  padding: 100px 32px 32px; // 72px top = espace sous la navbar
+  padding: 4px; // même espace avec la nav que la page Abonnement (.abonnement-page)
   min-height: 100vh;
   background:
     radial-gradient(900px 420px at 100% -5%, rgba(0, 194, 168, 0.07), transparent 60%),
@@ -90,38 +80,32 @@ $galaxy-glow : #2f6bff;
   }
 }
 
-// ── Galaxy toolbar (boîte bleue contenant les 4 boutons) ────────────────────
+// ── Toolbar (boîte dégradée contenant les filtres) — même style que le hero
+//    de la page Abonnement : dégradé violet → teal, même ombre, même texture. ─
 .galaxy-toolbar {
   position: relative;
   display: grid;
   grid-template-columns: 1fr auto 1fr; // FIX: colonne centrale pour centrer les filtres
+  grid-template-rows: auto auto;
   align-items: center;
   gap: 12px;
-  padding: 14px 18px;
+  padding: 36px 40px; // même padding que .sub-hero de la page Abonnement
   border-radius: $radius-lg;
-  margin-bottom: 28px;
+  margin-bottom: 40px; // même marge que .sub-hero de la page Abonnement
   overflow: hidden;
+  color: #fff;
 
-  background-color: $galaxy-deep;
-  background-image:
-    radial-gradient(1.5px 1.5px at 8% 25%,  rgba(255,255,255,.85), transparent 60%),
-    radial-gradient(1.5px 1.5px at 22% 70%, rgba(255,255,255,.6),  transparent 60%),
-    radial-gradient(1.5px 1.5px at 40% 20%, rgba(255,255,255,.7),  transparent 60%),
-    radial-gradient(1.5px 1.5px at 58% 65%, rgba(255,255,255,.55), transparent 60%),
-    radial-gradient(1.5px 1.5px at 74% 30%, rgba(255,255,255,.7),  transparent 60%),
-    radial-gradient(1.5px 1.5px at 88% 60%, rgba(255,255,255,.5),  transparent 60%),
-    radial-gradient(1.5px 1.5px at 95% 20%, rgba(255,255,255,.65), transparent 60%),
-    radial-gradient(600px 260px at 5% 0%,   rgba($galaxy-glow, .5), transparent 60%),
-    radial-gradient(500px 240px at 100% 100%, rgba(124, 92, 252, .4), transparent 60%),
-    linear-gradient(135deg, $galaxy-deep 0%, $galaxy-blue 55%, $galaxy-mid 100%);
-  box-shadow: 0 10px 28px rgba(7, 18, 56, .3);
+  background: linear-gradient(120deg, darken($primary, 12%) 0%, $primary 55%, $accent 130%);
+  box-shadow: 0 20px 48px rgba(91, 61, 240, .28);
 
+  // Texture radiale discrète, identique au hero de la page Abonnement
   &::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: inherit;
-    animation: galaxy-twinkle 4s ease-in-out infinite alternate;
+    background:
+      radial-gradient(480px 220px at 88% -10%, rgba(255,255,255,.16), transparent 65%),
+      radial-gradient(320px 200px at 8% 120%, rgba(255,255,255,.10), transparent 60%);
     pointer-events: none;
     z-index: 0;
   }
@@ -129,14 +113,46 @@ $galaxy-glow : #2f6bff;
   > * { position: relative; z-index: 1; }
 }
 
-// ── Filtres (dans la toolbar galaxie) ────────────────────────────────────────
+// ── En-tête de la box (eyebrow + titre), même motif que le hero des pages
+//    Abonnement / Candidatures / Jobs pour une cohérence visuelle totale ────
+.galaxy-heading {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  margin-bottom: 8px;
+}
+
+.galaxy-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .85);
+  background: rgba(255, 255, 255, .14);
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  i { font-size: 14px; }
+}
+
+.galaxy-title {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+// ── Filtres (dans la toolbar) ────────────────────────────────────────────────
 .filter-group {
   grid-column: 2;
+  grid-row: 2;
   justify-self: center; // FIX: centre les 3 boutons dans la toolbar
   display: flex;
   align-items: center;
   gap: 8px;
-  // FIX: suppression de la boîte intérieure (fond, bordure, blur)
   padding: 0;
   border-radius: 0;
   background: transparent;
@@ -146,65 +162,67 @@ $galaxy-glow : #2f6bff;
 
 .btn-new {
   grid-column: 3;
+  grid-row: 2;
   justify-self: end; // reste aligné à droite
 }
 
 .btn-filter {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
-  border-radius: 10px;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, .7);
-  font-size: 13px;
+  gap: 9px;
+  padding: 13px 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .16);
+  color: rgba(255, 255, 255, .85);
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: background .2s, color .2s, box-shadow .2s;
+  transition: background .2s, color .2s, box-shadow .2s, border-color .2s;
 
-  i { font-size: 15px; }
+  i { font-size: 18px; }
 
   .count {
-    padding: 1px 7px;
+    padding: 2px 9px;
     border-radius: 20px;
-    background: rgba(255, 255, 255, .12);
-    font-size: 11px;
+    background: rgba(255, 255, 255, .18);
+    font-size: 12px;
     font-weight: 700;
   }
 
   &:hover {
-    background: rgba(255, 255, 255, .08);
+    background: rgba(255, 255, 255, .2);
     color: #fff;
   }
 
   &.active {
-    background: linear-gradient(135deg, $galaxy-glow, $primary);
-    color: #fff;
-    box-shadow: 0 6px 18px rgba(47, 107, 255, .4);
+    background: #fff;
+    border-color: #fff;
+    color: darken($primary, 12%);
+    box-shadow: 0 6px 16px rgba(31, 20, 90, .22);
 
-    .count { background: rgba(255, 255, 255, .22); }
+    .count { background: rgba($primary, .14); color: darken($primary, 12%); }
   }
 }
 
-// ── New button ─────────────────────────────────────────────────────────────
+// ── Bouton "Ajouter offre" ────────────────────────────────────────────────────
 .btn-new {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 20px;
+  gap: 9px;
+  padding: 15px 26px;
   border-radius: $radius-md;
-  background: linear-gradient(135deg, $galaxy-glow, $primary);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
+  background: #fff;
+  color: darken($primary, 12%);
+  font-size: 15px;
+  font-weight: 700;
   border: none;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(47, 107, 255, .35);
-  transition: box-shadow .2s, transform .15s, filter .2s;
+  box-shadow: 0 8px 20px rgba(31, 20, 90, .22);
+  transition: box-shadow .2s, transform .15s;
 
-  &:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(124, 92, 252, .32); }
-  i { font-size: 16px; }
+  &:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(31, 20, 90, .28); }
+  i { font-size: 18px; }
 }
 
 // ── Empty state ────────────────────────────────────────────────────────────
@@ -234,16 +252,73 @@ $galaxy-glow : #2f6bff;
 // ══════════════════════════════════════════════════════════════════════════
 .jobs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 
+@media (max-width: 992px) {
+  .jobs-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .jobs-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 576px) {
+  .galaxy-title { font-size: 1.35rem; }
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 32px;
+
+  &__nav,
+  &__page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 6px;
+    border: 1px solid $border;
+    background: $card-bg;
+    border-radius: $radius-sm;
+    font-size: .85rem;
+    font-weight: 600;
+    color: $text;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: $primary;
+      color: $primary;
+      transform: translateY(-1px);
+    }
+    &:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__page.active {
+    background: linear-gradient(135deg, $primary, darken($primary, 12%));
+    border-color: transparent;
+    color: #fff;
+  }
+}
+
 // ── Job card ───────────────────────────────────────────────────────────────
+// Contour repris de la carte "Abonnement actuel" : liseré violet, coins
+// arrondis prononcés, léger halo — pour une cohérence visuelle entre les
+// pages Post et Abonnement.
 .job-card {
+  position: relative;
   background: $card-bg;
   border-radius: $radius-lg;
   box-shadow: $shadow;
-  border: 1px solid $border;
+  border: 1.5px solid rgba($primary, .28);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -252,8 +327,68 @@ $galaxy-glow : #2f6bff;
 
   &:hover {
     box-shadow: $shadow-hover;
-    border-color: rgba($primary, .25);
+    border-color: $primary;
     transform: translateY(-3px);
+  }
+
+  // Contour + halo colorés selon le statut (comme la carte "Abonnement
+  // actuel"), un jeu de couleurs distinct par statut :
+  //  - Publiée   → violet (couleur primaire, "actuelle/active")
+  //  - Clôturée  → gris ardoise (expirée automatiquement)
+  //  - Archivée  → ambre/orange (archivage manuel)
+  &.is-published {
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, .12), $shadow;
+    &:hover { box-shadow: 0 0 0 3px rgba($primary, .16), $shadow-hover; }
+  }
+
+  &.is-cloture {
+    border-color: #6b7280;
+    box-shadow: 0 0 0 3px rgba(#6b7280, .14), $shadow;
+    &:hover { box-shadow: 0 0 0 3px rgba(#6b7280, .18), $shadow-hover; }
+  }
+
+  &.is-archived {
+    border-color: $warning;
+    box-shadow: 0 0 0 3px rgba($warning, .16), $shadow;
+    &:hover { box-shadow: 0 0 0 3px rgba($warning, .2), $shadow-hover; }
+  }
+}
+
+// ── Badges "ribbon" — repris du pill "✓ Abonnement actuel" de la page
+// Abonnement : icône + texte, fond dégradé plein, texte blanc, coins 999px.
+// Déclarés au niveau global pour être réutilisés aussi bien sur la bannière
+// de la card que dans l'en-tête du panneau de détail (modal-header).
+.badge-type,
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(0,0,0,.16);
+
+  i { font-size: 12px; }
+}
+
+.badge-type {
+  background: linear-gradient(135deg, $accent, darken($accent, 14%));
+}
+
+.badge-status {
+  background: linear-gradient(135deg, $primary, darken($primary, 12%));
+
+  &.archived {
+    background: linear-gradient(135deg, $warning, darken($warning, 12%));
+  }
+
+  &.cloture {
+    background: linear-gradient(135deg, #6b7280, #374151);
   }
 }
 
@@ -276,47 +411,25 @@ $galaxy-glow : #2f6bff;
     i { font-size: 48px; color: rgba($primary, .35); }
   }
 
-  .badge-type {
+  // Sur la bannière, les badges flottent en position absolue + un léger flou
+  .badge-type,
+  .badge-status {
     position: absolute;
-    top: 10px; left: 10px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    background: rgba(255,255,255,.92);
-    color: darken($accent, 8%);
     backdrop-filter: blur(6px);
+  }
+
+  .badge-type {
+    top: 10px; left: 10px;
   }
 
   .badge-status {
-    position: absolute;
     top: 10px; right: 10px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    background: rgba($success, .15);
-    color: darken($success, 10%);
-    backdrop-filter: blur(6px);
-
-    &.archived {
-      background: rgba($warning, .18);
-      color: darken($warning, 12%);
-    }
-
-    &.cloture {
-      background: rgba(#6b7280, .18);
-      color: #374151;
-    }
   }
 }
 
-// ── Archived card dimming ────────────────────────────────────────────────
-.job-card.is-archived {
+// ── Archived / cloture card dimming ─────────────────────────────────────
+.job-card.is-archived,
+.job-card.is-cloture {
   .banner-img, .banner-placeholder { filter: grayscale(.35); opacity: .85; }
   .card-title, .card-company { opacity: .7; }
 }
@@ -946,12 +1059,12 @@ $galaxy-glow : #2f6bff;
 .detail-page {
   position: relative;
   width: 100%;
-  max-width: 460px; // FIX: mini panneau, plus compact qu'une pleine section
+  max-width: 520px; // élargi pour accueillir la grille d'infos en 2 colonnes
   max-height: calc(100vh - 130px);
   overflow-y: auto;
   background: $card-bg;
   border-radius: $radius-lg;
-  padding: 20px;
+  padding: 0 0 20px;
   box-shadow: 0 20px 50px rgba(7, 12, 38, .35);
   animation: detail-fade-in .2s ease;
 
@@ -961,53 +1074,70 @@ $galaxy-glow : #2f6bff;
 
 .modal-close {
   position: absolute; top: 14px; right: 14px;
-  background: $primary-lt; border: none;
+  background: rgba(255,255,255,.85); border: none;
   color: $primary; border-radius: 8px;
-  width: 28px; height: 28px;
+  width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; font-size: 14px;
-  transition: background .2s;
+  box-shadow: 0 2px 8px rgba(31,20,90,.12);
+  transition: background .2s, transform .15s;
   z-index: 2;
-  &:hover { background: darken($primary-lt, 6%); }
+  &:hover { background: #fff; transform: rotate(90deg); }
 }
 
 .modal-header {
-  display: flex; align-items: flex-start; gap: 12px;
-  margin: -20px -20px 18px; padding: 18px 20px; padding-right: 46px;
+  display: flex; align-items: center; gap: 14px;
+  padding: 22px 24px;
   background: linear-gradient(120deg, $primary-lt 0%, $accent-lt 100%);
   border-radius: $radius-lg $radius-lg 0 0;
+  border-bottom: 1px solid rgba($primary, .12);
 
   .modal-logo {
-    width: 48px; height: 48px;
-    border-radius: $radius-sm;
+    width: 56px; height: 56px;
+    border-radius: $radius-md;
     object-fit: cover;
     flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(31,20,90,.14);
+    background: #fff;
   }
   .modal-logo-placeholder {
     display: flex; align-items: center; justify-content: center;
-    background: $primary-lt;
-    i { font-size: 20px; color: $primary; }
+    background: #fff;
+    i { font-size: 22px; color: $primary; }
   }
 
-  h2 { margin: 0 0 3px; font-size: 16px; font-weight: 700; color: $text; }
-  .company-name { margin: 0 0 6px; font-size: 12px; font-weight: 600; color: $primary; }
+  h2 { margin: 0 0 4px; font-size: 17px; font-weight: 800; color: $text; line-height: 1.25; }
+  .company-name {
+    margin: 0 0 10px; font-size: 12.5px; font-weight: 600; color: $primary;
+    display: flex; align-items: center; gap: 5px;
+    i { font-size: 13px; }
+  }
+
+  .header-badges {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
 
   .badge-type, .badge-status {
-    position: static;
-    display: inline-block;
-    margin-right: 6px;
-    backdrop-filter: none;
     font-size: 10px;
+    box-shadow: 0 3px 8px rgba(0,0,0,.12);
   }
 }
 
 .modal-body {
-  display: flex; flex-direction: column; gap: 14px;
+  display: flex; flex-direction: column; gap: 18px;
+  padding: 20px 24px 0;
 
-  section h4 {
+  .detail-section h4 {
     font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .05em; color: $primary; margin: 0 0 8px;
+    letter-spacing: .05em; color: $primary; margin: 0 0 10px;
     display: flex; align-items: center;
+  }
+
+  .description-box {
+    background: $primary-lt;
+    border-left: 3px solid $primary;
+    border-radius: $radius-sm;
+    padding: 12px 14px;
   }
 
   .description-text {
@@ -1016,16 +1146,45 @@ $galaxy-glow : #2f6bff;
   }
 }
 
-.modal-body .info-grid {
-  display: grid; grid-template-columns: 1fr; gap: 10px;
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
 
   .info-item {
-    display: flex; gap: 9px; align-items: flex-start;
-    i { font-size: 15px; color: $primary; margin-top: 2px; }
-    label { display: block; font-size: 10px; color: $text-muted; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
-    span, a { font-size: 12.5px; color: $text; text-decoration: none; }
-    a:hover { color: $primary; }
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #fff;
+    border: 1px solid $border;
+    border-radius: $radius-md;
+    padding: 10px 12px;
+    transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(31,20,90,.08);
+    }
   }
+
+  .info-icon {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: rgba($primary, .12);
+    i { font-size: 15px; color: $primary; }
+  }
+
+  label { display: block; font-size: 10px; color: $text-muted; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  span, a { font-size: 12.5px; color: $text; text-decoration: none; font-weight: 600; }
+  a:hover { color: $primary; }
+
+  // Une couleur distincte par type d'information, pour repérer d'un coup d'œil
+  .info-item--salary   .info-icon { background: rgba($success, .14); i { color: darken($success, 6%); } }
+  .info-item--schedule .info-icon { background: rgba($primary, .12); i { color: $primary; } }
+  .info-item--email    .info-icon { background: rgba($accent, .16);  i { color: darken($accent, 12%); } }
+  .info-item--phone    .info-icon { background: rgba($primary, .12); i { color: $primary; } }
+  .info-item--period   .info-icon { background: rgba($warning, .16); i { color: darken($warning, 8%); } }
+  .info-item--interview .info-icon { background: rgba(#ec4899, .14); i { color: #db2777; } }
 }
 
 .modal-footer {

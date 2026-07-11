@@ -1,252 +1,641 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// APPLICATIONS COMPONENT — même thème visuel que la page Offres d'emploi
+// APPLICATIONS (Mes candidatures) — SCSS
+// Box hero façon page Abonnement (rings de stats) + grille de cartes et modal
+// détail repris exactement de la page Jobs, pour une cohérence visuelle totale.
 // ═══════════════════════════════════════════════════════════════════════════
 
 $accent:      #7c5cfc;
 $accent-dark: #5b3de8;
 $teal:        #00c2a8;
 $success:     #12b76a;
+$danger:      #f04438;
 $warning:     #f59e0b;
-$pink:        #ec4899;
-$bg:          #f7f6fd;
-$surface:     #f3f1fb;
 $card:        #ffffff;
+$surface:     #f3f1fb;
 $border:      #e9e6f7;
 $text:        #1f2937;
 $muted:       #6b7280;
+$radius-lg:   20px;
+$radius-md:   14px;
+$radius-sm:   10px;
 
 .applications-page {
-  padding: 96px 2rem 3rem;
-  min-height: 100vh;
-  background:
-    radial-gradient(900px 420px at 100% -5%, rgba(0, 194, 168, 0.08), transparent 60%),
-    radial-gradient(900px 420px at -5% 0%, rgba(124, 92, 252, 0.09), transparent 55%),
-    $bg;
-}
+  padding: 4px;
 
-.page-title {
-  margin-bottom: 2rem;
-
-  h4 {
-    display: flex; align-items: center;
-    font-size: 1.3rem; font-weight: 700; color: $text;
-    margin: 0 0 .35rem;
-    i { color: $accent; }
+  .global-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: $radius-sm;
+    font-size: .88rem;
+    font-weight: 500;
+    margin-bottom: 18px;
+    background: rgba($danger, .1);
+    color: darken($danger, 8%);
+    i { font-size: 17px; flex-shrink: 0; }
   }
-  p { margin: 0; color: $muted; font-size: .92rem; }
+
+  // ── États (chargement / erreur) ─────────────────────────────────────────
+  .loading-state, .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 1rem; padding: 4.5rem 0; color: $muted;
+
+    i { font-size: 3.2rem; background: linear-gradient(135deg, $accent, $teal); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; opacity: .5; }
+    p { font-size: .95rem; }
+  }
+  .loading-state .spinner-border { color: $accent !important; }
+
+  .btn-retry {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: linear-gradient(135deg, $accent, $accent-dark);
+    border: none; color: #fff;
+    font-size: .84rem; font-weight: 600;
+    padding: 0 1.1rem; height: 44px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba($accent, .25);
+    transition: transform .15s, box-shadow .2s;
+    &:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba($accent, .32); }
+  }
+
+  // ── HERO : box statistiques (identique en structure au .sub-hero de la
+  //    page Abonnement, avec 3 rings : total / acceptées / refusées) ───────
+  .app-hero {
+    position: relative;
+    border-radius: $radius-lg;
+    background: linear-gradient(120deg, $accent-dark 0%, $accent 55%, $teal 130%);
+    box-shadow: 0 20px 48px rgba(91, 61, 240, .28);
+    padding: 36px 40px;
+    margin-bottom: 40px;
+    overflow: hidden;
+    color: #fff;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(480px 220px at 88% -10%, rgba(255,255,255,.16), transparent 65%),
+        radial-gradient(320px 200px at 8% 120%, rgba(255,255,255,.10), transparent 60%);
+      pointer-events: none;
+    }
+
+    &__body {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    &__info { flex: 1; min-width: 240px; }
+
+    &__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.14);
+      padding: 5px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      i { font-size: 14px; }
+    }
+
+    &__plan {
+      font-size: 2.1rem;
+      font-weight: 800;
+      margin: 0 0 18px;
+      letter-spacing: -0.01em;
+    }
+
+    &__chips { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    &__chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.18);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: .85rem;
+      font-weight: 600;
+      i { font-size: 15px; opacity: .9; }
+    }
+
+    // ── Rings de stats (total / acceptées / refusées) ────────────────────
+    &__rings {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-shrink: 0;
+    }
+
+    &__ring-wrap { position: relative; flex-shrink: 0; }
+
+    &__ring {
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.4s ease;
+      background: rgba(255,255,255,.28);
+
+      &--total { background: #fff; }
+    }
+
+    &__ring-hole {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: $accent-dark;
+
+      strong { font-size: 1.55rem; font-weight: 800; line-height: 1; }
+      span { font-size: .64rem; font-weight: 600; letter-spacing: .02em; opacity: .9; margin-top: 4px; line-height: 1.25; }
+
+      &--total { background: $accent-dark; }
+      &--accept { background: darken($success, 4%); }
+      &--refuse { background: darken($danger, 2%); }
+    }
+
+    // ── État vide (aucune candidature) ────────────────────────────────────
+    &--empty {
+      background: linear-gradient(120deg, #3d3583 0%, $accent-dark 100%);
+      padding: 40px;
+    }
+
+    &__empty {
+      position: relative;
+      text-align: center;
+      max-width: 460px;
+      margin: 0 auto;
+    }
+
+    &__empty-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      i { font-size: 26px; }
+    }
+
+    &__empty h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    &__empty p { font-size: .92rem; color: rgba(255,255,255,.82); line-height: 1.6; margin: 0 auto; }
+  }
+
+  // ── Grille de cartes (identique à .jobs-grid / .job-card de la page Jobs) ─
+  .jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+
+  @media (max-width: 1100px) {
+    .jobs-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .jobs-grid { grid-template-columns: 1fr; }
+  }
+
+  .job-card {
+    position: relative;
+    height: 100%;
+    background: $card;
+    border: 1.5px solid $border;
+    border-radius: 18px;
+    padding: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(17, 12, 46, .05);
+    transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+    display: flex; flex-direction: column; gap: 1rem;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(to right, $accent, $teal);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .3s ease;
+    }
+
+    &:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(124, 92, 252, .18);
+      &::before { transform: scaleX(1); }
+      .card-cta { opacity: 1; transform: translateY(0); }
+      .job-title { color: $accent-dark; }
+    }
+
+    &.is-published {
+      border-color: $accent;
+      box-shadow: 0 0 0 3px rgba($accent, .12), 0 2px 8px rgba(17, 12, 46, .05);
+      &:hover { box-shadow: 0 0 0 3px rgba($accent, .16), 0 20px 40px rgba(124, 92, 252, .18); }
+    }
+    &.is-cloture {
+      border-color: #6b7280;
+      box-shadow: 0 0 0 3px rgba(#6b7280, .14), 0 2px 8px rgba(17, 12, 46, .05);
+      &:hover { box-shadow: 0 0 0 3px rgba(#6b7280, .18), 0 20px 40px rgba(124, 92, 252, .18); }
+
+      .banner-img, .banner-placeholder { filter: grayscale(.35); opacity: .85; }
+      .job-title, .company-name { opacity: .7; }
+    }
+  }
+
+  .card-banner {
+    position: relative;
+    height: 140px;
+    margin: -1.5rem -1.5rem 0;
+    background: linear-gradient(135deg, #f1edff 0%, #ded4fb 55%, #cdf3ec 100%);
+    overflow: hidden;
+    border-radius: 18px 18px 0 0;
+
+    .banner-img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
+    .banner-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      i { font-size: 44px; color: rgba($accent, .35); }
+    }
+    .badge-type { position: absolute; top: 12px; left: 12px; }
+    .badge-status { position: absolute; top: 12px; right: 12px; }
+  }
+
+  .badge-type, .badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .16);
+    white-space: nowrap;
+    flex-shrink: 0;
+    i { font-size: 12px; }
+  }
+
+  .badge-type { background: linear-gradient(135deg, $teal, darken($teal, 14%)); }
+  .badge-status {
+    background: linear-gradient(135deg, $accent, darken($accent, 12%));
+    &.cloture { background: linear-gradient(135deg, #6b7280, #374151); }
+  }
+
+  .job-card:hover .card-banner .banner-img { transform: scale(1.08); }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 1rem;
+    padding-top: 1.1rem;
+  }
+
+  .job-title    { font-size: 1.02rem; font-weight: 700; color: $text; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .2s; }
+  .company-name { font-size: .83rem; color: $accent-dark; font-weight: 600; margin: 0; }
+
+  .skills-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+  .skill-tag {
+    background: rgba($accent, .1);
+    color: $accent-dark;
+    font-size: .73rem; font-weight: 600;
+    padding: .22rem .65rem; border-radius: 12px;
+    transition: background .2s, color .2s;
+    &.more { background: $surface; color: $muted; }
+  }
+
+  .job-card:hover .skill-tag:not(.more) {
+    background: rgba($teal, .13);
+    color: darken($teal, 18%);
+  }
+
+  .salary-row {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .88rem; font-weight: 700; color: $accent-dark;
+    i {
+      font-size: 1.05rem;
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba($accent, .12);
+      color: $accent;
+    }
+  }
+
+  .period-row {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .81rem; color: $muted;
+    i { font-size: 1rem; color: $teal; }
+
+    &.interview-row {
+      color: darken($success, 8%);
+      font-weight: 600;
+      i { color: $success; }
+    }
+  }
+
+  // ── Statut de candidature (badge sur la carte) ────────────────────────
+  .application-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+    width: fit-content;
+    i { font-size: .85rem; }
+
+    &[data-status="EN_COURS_DE_TRAITEMENT"] { background: rgba($warning, .12); color: darken($warning, 10%); }
+    &[data-status="ACCEPTEE_POUR_ENTRETIEN"] { background: rgba($success, .12); color: darken($success, 5%); }
+    &[data-status="REFUSEE"] { background: rgba($danger, .12); color: darken($danger, 5%); }
+  }
+
+  // ── Bouton "Annuler la candidature" sur la carte ──────────────────────
+  .card-apply-section {
+    margin-top: auto;
+    padding-top: .3rem;
+    .btn-apply { padding: .65rem 1rem; font-size: .86rem; }
+  }
+
+  .btn-apply {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    width: 100%;
+    padding: .85rem 1rem;
+    border: none;
+    border-radius: 12px;
+    font-size: .92rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease, border-color .15s ease, color .15s ease;
+
+    &.cancel {
+      background: $surface;
+      color: $text;
+      border: 1px solid $border;
+      &:hover:not(:disabled) { border-color: $danger; color: $danger; }
+    }
+
+    &:disabled { opacity: .65; cursor: not-allowed; }
+
+    .spin {
+      width: 15px; height: 15px;
+      border: 2px solid rgba($text, .25);
+      border-top-color: $danger;
+      border-radius: 50%;
+      animation: app-spin .7s linear infinite;
+    }
+  }
+
+  // ── CTA "Voir détails" au survol ───────────────────────────────────────
+  .card-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    margin-top: .2rem;
+    padding-top: .9rem;
+    border-top: 1px dashed $border;
+    color: $accent-dark;
+    font-size: .84rem;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .25s ease, transform .25s ease;
+    i { font-size: .9rem; transition: transform .2s ease; }
+  }
+  .job-card:hover .card-cta i { transform: translateX(4px); }
 }
 
-// ── États (loading / vide / erreur) ─────────────────────────────────────────
-.loading-state, .empty-state {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1rem;
-  padding: 4rem 1rem;
-  text-align: center;
-  color: $muted;
+@keyframes app-spin { to { transform: rotate(360deg); } }
 
-  i { font-size: 2.6rem; color: rgba($accent, .35); }
-  p { margin: 0; font-size: .95rem; }
+// ── Modal détail (identique à la page Jobs) ─────────────────────────────
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(31, 20, 90, .4); backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  animation: app-fadeIn .2s ease;
 }
+@keyframes app-fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.global-error {
-  display: flex; align-items: center; gap: .5rem;
-  font-size: .88rem; color: #e5484d;
-  background: rgba(#e5484d, .08);
-  border: 1px solid rgba(#e5484d, .25);
-  border-radius: 10px;
-  padding: .7rem 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.btn-retry {
-  display: flex; align-items: center; gap: .4rem;
-  padding: .6rem 1.1rem;
-  border: 1px solid $border;
+.modal-card {
   background: $card;
-  color: $accent-dark;
-  border-radius: 10px;
-  font-size: .85rem; font-weight: 600;
-  cursor: pointer;
-  transition: border-color .2s, background .2s;
-  &:hover { border-color: $accent; background: rgba($accent, .06); }
-}
-
-// ── Grille des candidatures ──────────────────────────────────────────────────
-.applications-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.application-card {
-  background: $card;
   border: 1px solid $border;
-  border-radius: 20px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 18px rgba(31, 20, 90, .05);
-  transition: box-shadow .2s ease, transform .2s ease;
-
-  &:hover { box-shadow: 0 10px 30px rgba(31, 20, 90, .1); transform: translateY(-2px); }
-}
-
-.card-banner {
+  border-radius: 22px;
+  width: 100%; max-width: 640px;
+  max-height: 85vh; overflow-y: auto;
+  padding: 2rem;
   position: relative;
-  height: 120px;
-  margin: -1.5rem -1.5rem 1.1rem;
-  background: linear-gradient(135deg, #f1edff 0%, #ded4fb 55%, #cdf3ec 100%);
-  overflow: hidden;
-  border-radius: 20px 20px 0 0;
+  box-shadow: 0 30px 70px rgba(31, 20, 90, .25);
+  animation: app-popIn .25s cubic-bezier(.34, 1.56, .64, 1);
 
-  .banner-img { width: 100%; height: 100%; object-fit: cover; }
-  .banner-placeholder {
-    width: 100%; height: 100%;
-    display: flex; align-items: center; justify-content: center;
-    i { font-size: 38px; color: rgba($accent, .35); }
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: $border; border-radius: 4px; }
+}
+@keyframes app-popIn {
+  from { opacity: 0; transform: scale(.94) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-close {
+  position: absolute; top: 1.25rem; right: 1.25rem;
+  background: $surface; border: 1px solid $border;
+  color: $muted; border-radius: 10px;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem;
+  transition: color .2s, border-color .2s, background .2s, transform .15s;
+  z-index: 2;
+  &:hover { color: #fff; border-color: transparent; background: $accent; transform: rotate(90deg); }
+}
+
+.modal-header {
+  display: flex; align-items: flex-start; gap: 1.25rem;
+  margin: -2rem -2rem 1.75rem; padding: 1.75rem 2rem; padding-right: 3.5rem;
+  background: linear-gradient(120deg, rgba($accent, .09) 0%, rgba($teal, .09) 100%);
+  border-radius: 22px 22px 0 0;
+  .modal-logo { width: 68px; height: 68px; border-radius: 14px; object-fit: cover; box-shadow: 0 6px 16px rgba(31,20,90,.15); }
+  h2 { margin: 0 0 .35rem; font-size: 1.3rem; font-weight: 700; color: $text; }
+  .company-name { margin: 0 0 .6rem; font-size: .87rem; font-weight: 600; color: $accent-dark; }
+}
+
+.modal-body {
+  display: flex; flex-direction: column; gap: 1.5rem;
+
+  section h4 {
+    font-size: .8rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: $accent-dark; margin: 0 0 .75rem;
+    display: flex; align-items: center;
   }
 
-  .schedule-badge {
-    position: absolute; top: 12px; left: 12px;
-    background: rgba(255, 255, 255, .95) !important;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
-  }
-  .status-badge { position: absolute; top: 12px; right: 12px; }
-}
+  .description-text { color: $text; line-height: 1.75; font-size: .92rem; white-space: pre-line; }
 
-.schedule-badge {
-  font-size: .72rem; font-weight: 700;
-  padding: .3rem .75rem; border-radius: 20px;
-  white-space: nowrap; flex-shrink: 0;
-  background: rgba($teal, .13);
-  color: darken($teal, 16%);
-
-  &[data-schedule="CDI"]           { background: rgba($success, .13); color: darken($success, 10%); }
-  &[data-schedule="CDD"]           { background: rgba($teal, .13);    color: darken($teal, 16%); }
-  &[data-schedule="Stage"]         { background: rgba($warning, .15); color: darken($warning, 15%); }
-  &[data-schedule="Freelance"]     { background: rgba($accent, .13);  color: $accent-dark; }
-  &[data-schedule="Alternance"]    { background: rgba($pink, .13);    color: darken($pink, 8%); }
-  &[data-schedule="Temps partiel"] { background: #eef1f6;             color: $muted; }
-}
-
-.status-badge {
-  display: inline-flex; align-items: center; gap: .3rem;
-  font-size: .72rem; font-weight: 700;
-  padding: .3rem .75rem; border-radius: 20px;
-  white-space: nowrap; flex-shrink: 0;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
-
-  &.closed { background: rgba(#e5484d, .9); color: #fff; }
-}
-
-.card-body {
-  display: flex; flex-direction: column; gap: .85rem;
-}
-
-.job-title { font-size: 1rem; font-weight: 700; color: $text; margin: 0 0 2px; }
-.company-name { font-size: .83rem; color: $accent-dark; font-weight: 600; margin: 0; }
-
-.skills-list { display: flex; flex-wrap: wrap; gap: .4rem; }
-.skill-tag {
-  font-size: .74rem; font-weight: 600;
-  padding: .28rem .65rem; border-radius: 20px;
-  background: $surface; color: $accent-dark;
-  &.more { background: transparent; color: $muted; }
-}
-
-.salary-row {
-  display: flex; align-items: center; gap: .5rem;
-  font-size: .86rem; font-weight: 700; color: $accent-dark;
-  i {
-    font-size: 1rem; width: 24px; height: 24px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba($accent, .12); color: $accent;
+  .skills-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .skill-tag {
+    background: rgba($accent, .1);
+    color: $accent-dark;
+    font-size: .73rem; font-weight: 600;
+    padding: .22rem .65rem; border-radius: 12px;
   }
 }
 
-.period-row {
-  display: flex; align-items: center; gap: .5rem;
-  font-size: .8rem; color: $muted;
-  i { font-size: .95rem; color: $teal; }
+.info-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+
+  .info-item {
+    display: flex; gap: .8rem; align-items: flex-start;
+    padding: .85rem 1rem;
+    background: $surface;
+    border-radius: 12px;
+    border: 1px solid $border;
+    transition: border-color .2s, background .2s;
+
+    &:hover { border-color: rgba($accent, .3); background: rgba($accent, .05); }
+
+    i {
+      font-size: 1.1rem; color: #fff; margin-top: .05rem;
+      width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, $accent, $teal);
+    }
+    label { display: block; font-size: .72rem; color: $muted; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+    span, a { font-size: .89rem; color: $text; text-decoration: none; font-weight: 500; &:hover { color: $accent-dark; } }
+  }
 }
 
-.interview-row {
-  margin-top: -.2rem;
-  color: darken($success, 5%);
-  font-weight: 600;
-  i { color: darken($success, 5%); }
+.badge-type, .badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .16);
+  white-space: nowrap;
+  i { font-size: 12px; }
+}
+.badge-type { background: linear-gradient(135deg, $teal, darken($teal, 14%)); margin-right: 8px; }
+.badge-status {
+  background: linear-gradient(135deg, $accent, darken($accent, 12%));
+  &.cloture { background: linear-gradient(135deg, #6b7280, #374151); }
 }
 
-// ── Statut de candidature ────────────────────────────────────────────────
+// ── Statut de candidature dans le modal ─────────────────────────────────
+.apply-section {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding-top: .5rem;
+  border-top: 1px dashed $border;
+}
+
 .application-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: .6rem;
   padding: 4px 11px;
   border-radius: 999px;
   font-size: .72rem;
   font-weight: 700;
   width: fit-content;
-
   i { font-size: .85rem; }
 
-  &[data-status="EN_COURS_DE_TRAITEMENT"] {
-    background: rgba($warning, .12);
-    color: darken($warning, 10%);
-  }
-  &[data-status="ACCEPTEE_POUR_ENTRETIEN"] {
-    background: rgba($success, .12);
-    color: darken($success, 5%);
-  }
-  &[data-status="REFUSEE"] {
-    background: rgba(#f04438, .12);
-    color: darken(#f04438, 5%);
+  &[data-status="EN_COURS_DE_TRAITEMENT"] { background: rgba($warning, .12); color: darken($warning, 10%); }
+  &[data-status="ACCEPTEE_POUR_ENTRETIEN"] { background: rgba($success, .12); color: darken($success, 5%); }
+  &[data-status="REFUSEE"] { background: rgba($danger, .12); color: darken($danger, 5%); }
+}
+
+.period-row {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .81rem; color: $muted;
+  i { font-size: 1rem; color: $teal; }
+
+  &.interview-row {
+    color: darken($success, 8%);
+    font-weight: 600;
+    i { color: $success; }
   }
 }
 
-// ── Bouton Annuler ────────────────────────────────────────────────────────────
-.btn-cancel {
-  display: flex; align-items: center; justify-content: center; gap: .5rem;
-  width: 100%;
-  margin-top: .3rem;
-  padding: .75rem 1rem;
-  border: 1px solid $border;
-  border-radius: 12px;
-  font-size: .87rem; font-weight: 700;
-  color: $text;
-  background: $card;
-  cursor: pointer;
-  transition: border-color .2s, color .2s, transform .15s;
+.apply-error {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .82rem;
+  color: $danger;
+  background: rgba($danger, .08);
+  border: 1px solid rgba($danger, .25);
+  border-radius: 10px;
+  padding: .6rem .8rem;
+}
 
-  &:hover:not(:disabled) { border-color: #e5484d; color: #e5484d; }
+.btn-apply {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  width: 100%;
+  padding: .85rem 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: .92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+
+  &.cancel {
+    background: $surface;
+    color: $text;
+    border: 1px solid $border;
+    &:hover:not(:disabled) { border-color: $danger; color: $danger; }
+  }
   &:disabled { opacity: .65; cursor: not-allowed; }
 
   .spin {
-    width: 14px; height: 14px;
-    border: 2px solid rgba($accent, .25);
-    border-top-color: $accent-dark;
+    width: 15px; height: 15px;
+    border: 2px solid rgba($text, .25);
+    border-top-color: $danger;
     border-radius: 50%;
-    animation: spin .7s linear infinite;
+    animation: app-spin .7s linear infinite;
   }
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
-// ── Modal de confirmation (Annuler réussi) ──────────────────────────────────
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(31, 20, 90, .4); backdrop-filter: blur(5px);
-  z-index: 1100;
-  display: flex; align-items: center; justify-content: center;
-  padding: 1rem;
-  animation: fadeIn .2s ease;
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes popIn {
-  from { opacity: 0; transform: scale(.94) translateY(12px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
+// ── Modal de confirmation (Annuler réussi) ──────────────────────────────
+.confirmation-overlay { z-index: 1100; }
 
 .confirmation-card {
   background: $card;
@@ -255,7 +644,7 @@ $muted:       #6b7280;
   padding: 2.25rem 2rem;
   text-align: center;
   box-shadow: 0 30px 70px rgba(31, 20, 90, .25);
-  animation: popIn .25s cubic-bezier(.34, 1.56, .64, 1);
+  animation: app-popIn .25s cubic-bezier(.34, 1.56, .64, 1);
 
   h3 { margin: 1.1rem 0 .6rem; font-size: 1.15rem; font-weight: 700; color: $text; }
   p  { margin: 0 0 1.5rem; font-size: .9rem; color: $muted; line-height: 1.6; }
@@ -281,6 +670,14 @@ $muted:       #6b7280;
   background: linear-gradient(135deg, $accent, $teal);
   box-shadow: 0 8px 20px rgba($accent, .3);
   transition: transform .15s ease, box-shadow .15s ease;
-
   &:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba($accent, .38); }
+}
+
+@media (max-width: 576px) {
+  .applications-page {
+    .app-hero { padding: 28px 22px; }
+    .app-hero__body { flex-direction: column; align-items: flex-start; }
+    .app-hero__rings { align-self: center; flex-wrap: wrap; justify-content: center; }
+    .app-hero__plan { font-size: 1.7rem; }
+  }
 }

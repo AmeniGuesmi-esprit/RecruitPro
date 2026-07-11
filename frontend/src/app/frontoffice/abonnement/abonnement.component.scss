@@ -1,214 +1,527 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// ABONNEMENT — SCSS
+// Hero (formule en cours + ring de progression) | grille de formules | modal paiement
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Variables (alignées sur la palette de marque violet → teal) ─────────────
+$primary     : #7c5cfc;
+$primary-dark: #5b3df0;
+$accent      : #00c2a8;
+$success     : #12b76a;
+$danger      : #f04438;
+$warning     : #f59e0b;
+$gold        : #f0b100;
+$text        : #1f2937;
+$text-muted  : #6b7280;
+$border      : #e9e6f7;
+$bg-page     : #f7f6fd;
+$card-bg     : #ffffff;
+$radius-lg   : 20px;
+$radius-md   : 14px;
+$radius-sm   : 10px;
+$shadow      : 0 1px 3px rgba(31, 20, 90, .06);
+$shadow-hover: 0 16px 32px rgba(124, 92, 252, .16);
+
 .abonnement-page {
   padding: 4px;
 
-  .alert {
-    border-radius: 10px;
-    font-size: 0.92rem;
+  // ── Alertes ─────────────────────────────────────────────────────────────
+  .alert-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: $radius-sm;
+    font-size: .88rem;
+    font-weight: 500;
+    margin-bottom: 18px;
+    i { font-size: 17px; flex-shrink: 0; }
+
+    &--warning { background: lighten($warning, 40%); color: darken($warning, 22%); }
+    &--success { background: rgba($success, .12); color: darken($success, 12%); }
+    &--danger  { background: rgba($danger, .1); color: darken($danger, 8%); }
   }
 
-  .current-card {
-    border-radius: 14px;
-    border: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  .page-loading {
+    display: flex;
+    justify-content: center;
+    padding: 80px 0;
+    .spinner-border { color: $primary; }
+  }
 
-    .stat {
+  // ── Hero : abonnement actuel ───────────────────────────────────────────
+  .sub-hero {
+    position: relative;
+    border-radius: $radius-lg;
+    background: linear-gradient(120deg, $primary-dark 0%, $primary 55%, $accent 130%);
+    box-shadow: 0 20px 48px rgba(91, 61, 240, .28);
+    padding: 36px 40px;
+    margin-bottom: 40px;
+    overflow: hidden;
+    color: #fff;
+
+    // Texture radiale discrète, écho du "galaxy" utilisé ailleurs dans l'app
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(480px 220px at 88% -10%, rgba(255,255,255,.16), transparent 65%),
+        radial-gradient(320px 200px at 8% 120%, rgba(255,255,255,.10), transparent 60%);
+      pointer-events: none;
+    }
+
+    &__body {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    &__info { flex: 1; min-width: 240px; }
+
+    &__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.14);
+      padding: 5px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      i { font-size: 14px; }
+    }
+
+    &__plan {
+      font-size: 2.1rem;
+      font-weight: 800;
+      text-transform: capitalize;
+      margin: 0 0 18px;
+      letter-spacing: -0.01em;
+    }
+
+    &__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    &__chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.18);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: .85rem;
+      font-weight: 600;
+      i { font-size: 15px; opacity: .9; }
+
+      &--warn {
+        background: rgba($danger, .22);
+        border-color: rgba($danger, .35);
+      }
+    }
+
+    // ── Rings de progression (offres restantes + jours restants) ─────────
+    &__rings {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-shrink: 0;
+    }
+
+    &__ring-wrap { position: relative; flex-shrink: 0; }
+
+    &__ring {
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.4s ease;
+
+      &--warn { box-shadow: 0 0 0 3px rgba($danger, .35); }
+    }
+
+    &__ring-hole {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: $primary-dark;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
 
-      .label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #8a8a8a;
+      strong { font-size: 1.7rem; font-weight: 800; line-height: 1; }
+      span { font-size: .68rem; font-weight: 600; letter-spacing: .02em; opacity: .85; margin-top: 4px; line-height: 1.25; }
+
+      &--warn { background: darken($danger, 6%); }
+    }
+
+    // ── État vide (pas d'abonnement) ──────────────────────────────────────
+    &--empty {
+      background: linear-gradient(120deg, #3d3583 0%, $primary-dark 100%);
+      padding: 40px;
+    }
+
+    &__empty {
+      position: relative;
+      text-align: center;
+      max-width: 460px;
+      margin: 0 auto;
+    }
+
+    &__empty-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      i { font-size: 26px; }
+    }
+
+    &__empty h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    &__empty p { font-size: .92rem; color: rgba(255,255,255,.82); line-height: 1.6; margin: 0; }
+  }
+
+  // ── Section formules ────────────────────────────────────────────────────
+  .plans-section {
+    &__head {
+      margin-bottom: 22px;
+      h3 { font-size: 1.2rem; font-weight: 800; color: $text; margin-bottom: 4px; }
+      p  { font-size: .87rem; color: $text-muted; margin: 0; }
+    }
+  }
+
+  .plans-empty {
+    text-align: center;
+    padding: 60px 0;
+    color: $text-muted;
+    i { font-size: 40px; display: block; margin-bottom: 12px; opacity: .5; }
+    p { margin: 0; font-size: .92rem; }
+  }
+
+  // ── Carte formule ───────────────────────────────────────────────────────
+  .plan-card {
+    position: relative;
+    height: 100%;
+    background: $card-bg;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+    padding: 28px 26px 26px;
+    box-shadow: $shadow;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: $shadow-hover;
+    }
+
+    &--current {
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, .14), $shadow-hover;
+    }
+
+    &--featured {
+      border-color: rgba($gold, .5);
+    }
+
+    &__icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba($primary, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      i { font-size: 20px; color: $primary; }
+    }
+
+    &--featured &__icon {
+      background: rgba($gold, .14);
+      i { color: darken($gold, 8%); }
+    }
+
+    &__name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: $text;
+      text-transform: capitalize;
+      margin: 0 0 6px;
+    }
+
+    &__price {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      margin: 0 0 22px;
+    }
+
+    &__amount {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: $primary;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    &__currency {
+      font-size: .85rem;
+      font-weight: 600;
+      color: $text-muted;
+    }
+
+    &__features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
+
+      li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: .87rem;
+        color: $text;
+        margin-bottom: 11px;
+        line-height: 1.5;
       }
-      .value {
-        font-size: 1.1rem;
-        font-weight: 600;
+    }
+
+    &__feat-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba($success, .12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+      i { font-size: 12px; color: $success; }
+
+      &--info {
+        background: rgba($primary, .1);
+        i { color: $primary; }
+      }
+    }
+
+    &__cta {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 0;
+      border: none;
+      border-radius: $radius-sm;
+      font-size: .88rem;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      background: linear-gradient(135deg, $primary, $primary-dark);
+      box-shadow: 0 8px 18px rgba($primary, .28);
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+
+      &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 24px rgba($primary, .36); }
+      &:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+      &--featured {
+        background: linear-gradient(135deg, $gold, #e08a00);
+        box-shadow: 0 8px 18px rgba($gold, .3);
+        &:hover:not(:disabled) { box-shadow: 0 12px 24px rgba($gold, .38); }
       }
     }
   }
 
-  .plan-card {
-    border-radius: 14px;
-    border: 1px solid #eee;
-    height: 100%;
-    position: relative;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  .plan-ribbon {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(0,0,0,.16);
+    i { font-size: 12px; }
 
-    &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
-
-    &.active-plan {
-      border-color: #6c5ce7;
-      box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.25);
-    }
-
-    .badge-current {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      background: #6c5ce7;
-      color: #fff;
-      font-size: 0.7rem;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-weight: 600;
-    }
-
-    .plan-name {
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .plan-price {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #6c5ce7;
-      margin-bottom: 16px;
-
-      span {
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: #8a8a8a;
-      }
-    }
-
-    .plan-features {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 20px;
-
-      li {
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-        color: #444;
-      }
-    }
+    &--current { background: linear-gradient(135deg, $primary, $primary-dark); }
+    &--featured { background: linear-gradient(135deg, $gold, #e08a00); }
   }
 
   // ── Modal de paiement ─────────────────────────────────────────────────────
   .payment-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(20, 16, 40, 0.55);
-    backdrop-filter: blur(2px);
+    background: rgba(20, 16, 46, .55);
+    backdrop-filter: blur(3px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1050;
     padding: 16px;
+    animation: pay-fade-in .18s ease;
   }
 
   .payment-modal {
     position: relative;
-    background: #fff;
-    border-radius: 16px;
-    padding: 28px;
+    background: $card-bg;
+    border-radius: $radius-lg;
+    padding: 30px;
     width: 100%;
     max-width: 420px;
     max-height: 92vh;
     overflow-y: auto;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    box-shadow: 0 24px 56px rgba(31, 20, 90, .3);
+    animation: pay-pop-in .22s cubic-bezier(.34, 1.56, .64, 1);
   }
 
   .payment-close {
     position: absolute;
-    top: 14px;
-    right: 14px;
+    top: 16px;
+    right: 16px;
     border: none;
-    background: #f2f2f7;
+    background: $bg-page;
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    color: #555;
+    color: $text-muted;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    &:hover { background: #e7e7ef; }
+    cursor: pointer;
+    transition: background .15s ease;
+    &:hover { background: $border; }
   }
 
   .payment-summary {
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 
     .label {
-      font-size: 0.78rem;
-      color: #8a8a8a;
+      font-size: .74rem;
+      color: $text-muted;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: .06em;
+      font-weight: 600;
     }
     .plan-row {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-top: 2px;
+      margin-top: 4px;
 
-      strong { font-size: 1.1rem; }
-      .amount { font-weight: 700; color: #6c5ce7; font-size: 1.1rem; }
+      strong { font-size: 1.15rem; text-transform: capitalize; color: $text; }
+      .amount { font-weight: 800; color: $primary; font-size: 1.15rem; }
     }
   }
 
   .card-preview {
-    border-radius: 14px;
-    padding: 18px 20px;
+    border-radius: $radius-md;
+    padding: 20px 22px;
     color: #fff;
-    background: linear-gradient(135deg, #6c5ce7 0%, #4834d4 60%, #2ecc9e 130%);
-    margin-bottom: 20px;
-    box-shadow: 0 10px 24px rgba(72, 52, 212, 0.28);
+    background: linear-gradient(135deg, $primary 0%, $primary-dark 60%, $accent 135%);
+    margin-bottom: 22px;
+    box-shadow: 0 12px 26px rgba($primary-dark, .28);
 
-    &.mastercard { background: linear-gradient(135deg, #eb5757 0%, #6c5ce7 70%, #2c2c54 140%); }
-    &.amex       { background: linear-gradient(135deg, #2ecc9e 0%, #24a3d6 60%, #2c2c54 140%); }
+    &.mastercard { background: linear-gradient(135deg, #eb5757 0%, $primary 70%, #241c4d 140%); }
+    &.amex       { background: linear-gradient(135deg, $accent 0%, #24a3d6 60%, #241c4d 140%); }
 
     .card-preview-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 1.1rem;
-      margin-bottom: 22px;
+      margin-bottom: 24px;
 
       .brand {
         font-weight: 700;
-        letter-spacing: 0.06em;
-        font-size: 0.85rem;
+        letter-spacing: .06em;
+        font-size: .82rem;
       }
     }
 
     .card-preview-number {
-      font-size: 1.25rem;
-      letter-spacing: 0.08em;
+      font-size: 1.3rem;
+      letter-spacing: .09em;
       font-family: 'Courier New', monospace;
-      margin-bottom: 18px;
-      opacity: 0.95;
+      margin-bottom: 20px;
+      opacity: .96;
     }
 
     .card-preview-bottom {
       display: flex;
       justify-content: space-between;
-      font-size: 0.85rem;
+      font-size: .82rem;
       text-transform: uppercase;
 
       .mini-label {
         display: block;
-        font-size: 0.65rem;
-        opacity: 0.75;
+        font-size: .63rem;
+        opacity: .75;
         text-transform: none;
       }
     }
   }
 
   .pay-btn {
-    padding: 10px 0;
-    font-weight: 600;
-    background: linear-gradient(90deg, #6c5ce7, #2ecc9e);
+    padding: 12px 0;
+    font-weight: 700;
+    font-size: .9rem;
+    border-radius: $radius-sm;
+    background: linear-gradient(135deg, $primary, $accent);
     border: none;
+    box-shadow: 0 10px 22px rgba($primary, .28);
+    transition: transform .15s ease, box-shadow .15s ease;
+    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 28px rgba($primary, .34); }
   }
 
   .payment-note {
     text-align: center;
-    font-size: 0.75rem;
-    color: #9a9a9a;
-    margin: 12px 0 0;
+    font-size: .74rem;
+    color: $text-muted;
+    margin: 14px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  @keyframes pay-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes pay-pop-in {
+    from { opacity: 0; transform: scale(.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+}
+
+@media (max-width: 576px) {
+  .abonnement-page {
+    .sub-hero { padding: 28px 22px; }
+    .sub-hero__body { flex-direction: column; align-items: flex-start; }
+    .sub-hero__rings { align-self: center; }
+    .sub-hero__plan { font-size: 1.7rem; }
   }
 }

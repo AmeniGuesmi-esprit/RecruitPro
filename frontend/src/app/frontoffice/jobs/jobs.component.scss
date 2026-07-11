@@ -17,10 +17,11 @@ $card:        #ffffff;
 $border:      #e9e6f7;
 $text:        #1f2937;
 $muted:       #6b7280;
+$radius-lg:   20px;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 .jobs-page {
-  padding: 96px 2rem 3rem;
+  padding: 4px; // même espace avec la nav que les pages Abonnement / Post
   min-height: 100vh;
   background:
     radial-gradient(900px 420px at 100% -5%, rgba(0, 194, 168, 0.08), transparent 60%),
@@ -75,48 +76,73 @@ $muted:       #6b7280;
 .smart-search-wrapper {
   position: relative; // ancre le dropdown de suggestions
   overflow: visible;  // important : ne JAMAIS clipper le dropdown ici
-  margin-bottom: 1.75rem;
+  margin-bottom: 40px; // même marge que .sub-hero de la page Abonnement
 }
 
-// Le décor (étoiles + nébuleuses) est peint uniquement en `background` sur
-// cette boîte : un background est automatiquement borné par le border-radius
-// de son propre élément, donc pas besoin d'`overflow:hidden` — ce qui aurait
-// coupé le dropdown de suggestions qui dépasse en dessous.
+// Même dégradé, même padding, même ombre que .sub-hero de la page Abonnement,
+// pour une cohérence visuelle totale entre les pages Jobs et Abonnement.
 .smart-search-galaxy {
   position: relative;
-  border-radius: 18px;
-  padding: 10px;
-  background:
-    radial-gradient(1.5px 1.5px at 8% 22%,  rgba(255,255,255,.9) 50%, transparent 52%),
-    radial-gradient(1.5px 1.5px at 18% 68%, rgba(255,255,255,.7) 50%, transparent 52%),
-    radial-gradient(1px 1px at 32% 30%,     rgba(255,255,255,.8) 50%, transparent 52%),
-    radial-gradient(1.5px 1.5px at 46% 78%, rgba(255,255,255,.6) 50%, transparent 52%),
-    radial-gradient(1px 1px at 58% 18%,     rgba(255,255,255,.9) 50%, transparent 52%),
-    radial-gradient(1.5px 1.5px at 71% 55%, rgba(255,255,255,.7) 50%, transparent 52%),
-    radial-gradient(1px 1px at 84% 25%,     rgba(255,255,255,.8) 50%, transparent 52%),
-    radial-gradient(1.5px 1.5px at 92% 70%, rgba(255,255,255,.6) 50%, transparent 52%),
-    radial-gradient(1px 1px at 12% 88%,     rgba(255,255,255,.7) 50%, transparent 52%),
-    radial-gradient(1px 1px at 65% 90%,     rgba(255,255,255,.6) 50%, transparent 52%),
-    radial-gradient(550px 260px at 12% -10%,  rgba($accent, .55), transparent 62%),
-    radial-gradient(500px 260px at 100% 110%, rgba($teal, .45), transparent 60%),
-    radial-gradient(650px 300px at 80% -20%,  rgba($pink, .28), transparent 65%),
-    linear-gradient(135deg, #120c2e 0%, #1c1240 45%, #0f1c3d 100%);
-  box-shadow: 0 18px 45px rgba(18, 12, 46, .35);
+  border-radius: $radius-lg;
+  padding: 36px 40px;
+  background: linear-gradient(120deg, $accent-dark 0%, $accent 55%, $teal 130%);
+  box-shadow: 0 20px 48px rgba(91, 61, 240, .28);
   transition: box-shadow .25s ease;
 
-  &.focused {
-    box-shadow: 0 18px 45px rgba(18, 12, 46, .4), 0 0 0 4px rgba($accent, .3);
+  // Texture radiale discrète, identique au hero de la page Abonnement
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(480px 220px at 88% -10%, rgba(255,255,255,.16), transparent 65%),
+      radial-gradient(320px 200px at 8% 120%, rgba(255,255,255,.10), transparent 60%);
+    pointer-events: none;
   }
+
+  > * { position: relative; z-index: 1; }
+
+  &.focused {
+    box-shadow: 0 20px 48px rgba(91, 61, 240, .32), 0 0 0 4px rgba($accent, .3);
+  }
+}
+
+// ── En-tête de la box (eyebrow + titre), même motif que le hero des pages
+//    Abonnement / Candidatures pour une cohérence visuelle totale ───────────
+.galaxy-heading {
+  margin-bottom: 22px;
+}
+
+.galaxy-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .85);
+  background: rgba(255, 255, 255, .14);
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+  i { font-size: 14px; }
+}
+
+.galaxy-title {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .smart-search-bar {
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(18, 14, 40, .55);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1.5px solid rgba(255, 255, 255, .14);
+  background: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, .5);
   border-radius: 13px;
   padding: 0 1rem;
   height: 54px;
@@ -125,13 +151,13 @@ $muted:       #6b7280;
 
   &.focused,
   &:focus-within {
-    border-color: rgba(255, 255, 255, .32);
-    background: rgba(18, 14, 40, .7);
+    border-color: $accent-dark;
+    background: #ffffff;
     box-shadow: 0 0 0 4px rgba($accent, .22);
   }
 
   .search-icon {
-    color: rgba(255, 255, 255, .6);
+    color: $accent-dark;
     font-size: 1.15rem;
     flex-shrink: 0;
 
@@ -146,17 +172,18 @@ $muted:       #6b7280;
   background: transparent;
   border: none;
   outline: none;
-  color: #fff;
+  color: $accent-dark;
   font-size: .93rem;
   height: 100%;
+  font-weight: 500;
 
-  &::placeholder { color: rgba(255, 255, 255, .45); }
+  &::placeholder { color: rgba($accent-dark, .5); }
 }
 
 .btn-clear-search {
-  background: rgba(255, 255, 255, .08);
+  background: rgba($accent, .1);
   border: none;
-  color: rgba(255, 255, 255, .75);
+  color: $accent-dark;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -176,15 +203,14 @@ $muted:       #6b7280;
   i { font-size: 1rem; }
 }
 
-// ── Suggestions dropdown (dans le cadre de la box galaxy) ─────────────────────
+// ── Suggestions dropdown (repris dans le même style clair que la barre) ───────
 .suggestions-dropdown {
   margin-top: 8px;
-  background: rgba(18, 14, 40, .55);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, .14);
+  background: #ffffff;
+  border: 1px solid rgba($accent, .15);
   border-radius: 13px;
   overflow: hidden;
+  box-shadow: 0 10px 24px rgba(31, 20, 90, .12);
 }
 
 .suggestion-item {
@@ -193,26 +219,28 @@ $muted:       #6b7280;
   gap: .6rem;
   padding: .7rem 1.1rem;
   font-size: .87rem;
-  color: #fff;
+  color: $accent-dark;
+  font-weight: 500;
   cursor: pointer;
   transition: background .15s, padding-left .15s;
 
   i { font-size: .8rem; color: $teal; }
 
   &:hover {
-    background: rgba(255, 255, 255, .08);
+    background: rgba($accent, .08);
     padding-left: 1.4rem;
   }
 
-  & + & { border-top: 1px solid rgba(255, 255, 255, .1); }
+  & + & { border-top: 1px solid rgba($accent, .1); }
 
   &.no-match {
-    color: rgba(255, 255, 255, .55);
+    color: $muted;
     cursor: default;
     font-style: italic;
+    font-weight: 400;
 
     &:hover { background: none; padding-left: 1.1rem; }
-    i { color: rgba(255, 255, 255, .45); }
+    i { color: rgba($accent, .45); }
   }
 }
 
@@ -318,15 +346,30 @@ $muted:       #6b7280;
 // ── Grid ──────────────────────────────────────────────────────────────────────
 .jobs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
+  align-items: stretch;
+}
+
+@media (max-width: 1100px) {
+  .jobs-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 720px) {
+  .jobs-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 576px) {
+  .galaxy-title { font-size: 1.35rem; }
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
+// Contour + halo colorés selon le type de régime (comme la carte "offre" de
+// la page Post, qui colore le contour selon le statut) — même principe ici
+// mais basé sur job.workSchedule.
 .job-card {
   position: relative;
+  height: 100%;
   background: $card;
-  border: 1px solid $border;
+  border: 1.5px solid $border;
   border-radius: 18px;
   padding: 1.5rem;
   cursor: pointer;
@@ -349,13 +392,29 @@ $muted:       #6b7280;
 
   &:hover {
     transform: translateY(-6px);
-    border-color: rgba($accent, .3);
     box-shadow: 0 20px 40px rgba(124, 92, 252, .18);
 
     &::before { transform: scaleX(1); }
 
     .card-cta { opacity: 1; transform: translateY(0); }
     .job-title { color: $accent-dark; }
+  }
+
+  // Contour + halo par statut — repris de la page Post, mais seulement 2
+  // couleurs ici (Publiée / Clôturée) car cette page ne montre jamais
+  // d'offres archivées aux candidats.
+  &.is-published {
+    border-color: $accent;
+    box-shadow: 0 0 0 3px rgba($accent, .12), 0 2px 8px rgba(17, 12, 46, .05);
+    &:hover { box-shadow: 0 0 0 3px rgba($accent, .16), 0 20px 40px rgba(124, 92, 252, .18); }
+  }
+  &.is-cloture {
+    border-color: #6b7280;
+    box-shadow: 0 0 0 3px rgba(#6b7280, .14), 0 2px 8px rgba(17, 12, 46, .05);
+    &:hover { box-shadow: 0 0 0 3px rgba(#6b7280, .18), 0 20px 40px rgba(124, 92, 252, .18); }
+
+    .banner-img, .banner-placeholder { filter: grayscale(.35); opacity: .85; }
+    .job-title, .company-name { opacity: .7; }
   }
 }
 
@@ -381,34 +440,47 @@ $muted:       #6b7280;
     i { font-size: 44px; color: rgba($accent, .35); }
   }
 
-  .schedule-badge {
+  .badge-type {
     position: absolute;
     top: 12px; left: 12px;
-    background: rgba(255, 255, 255, .95) !important;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
   }
 
-  .status-badge {
+  .badge-status {
     position: absolute;
     top: 12px; right: 12px;
   }
 }
 
-// ── Badge de statut (offre clôturée / archivée) ─────────────────────────────
-.status-badge {
+// ── Badges "type" et "statut" — même style que la page "Publier une offre"
+//    (pill dégradé, majuscules, ombre portée) ─────────────────────────────
+.badge-type,
+.badge-status {
   display: inline-flex;
   align-items: center;
-  gap: .3rem;
-  font-size: .72rem; font-weight: 700;
-  padding: .3rem .75rem; border-radius: 20px;
-  white-space: nowrap; flex-shrink: 0;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .16);
+  white-space: nowrap;
+  flex-shrink: 0;
 
-  &.closed {
-    background: rgba(#e5484d, .9);
-    color: #fff;
+  i { font-size: 12px; }
+}
+
+.badge-type {
+  background: linear-gradient(135deg, $teal, darken($teal, 14%));
+}
+
+.badge-status {
+  background: linear-gradient(135deg, $accent, darken($accent, 12%));
+
+  &.cloture {
+    background: linear-gradient(135deg, #6b7280, #374151);
   }
 }
 
@@ -417,6 +489,7 @@ $muted:       #6b7280;
 .card-body {
   display: flex;
   flex-direction: column;
+  flex: 1; // remplit la hauteur restante de la carte (cartes égalisées par la grille)
   gap: 1rem;
   padding-top: 1.1rem;
 }
@@ -424,21 +497,6 @@ $muted:       #6b7280;
 .job-title    { font-size: 1.02rem; font-weight: 700; color: $text; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .2s; }
 .company-name { font-size: .83rem; color: $accent-dark; font-weight: 600; margin: 0; }
 
-// ── Badge contrat coloré selon le type ────────────────────────────────────────
-.schedule-badge {
-  font-size: .72rem; font-weight: 700;
-  padding: .3rem .75rem; border-radius: 20px;
-  white-space: nowrap; flex-shrink: 0;
-  background: rgba($teal, .13);
-  color: darken($teal, 16%);
-
-  &[data-schedule="CDI"]           { background: rgba($success, .13); color: darken($success, 10%); }
-  &[data-schedule="CDD"]           { background: rgba($teal, .13);    color: darken($teal, 16%); }
-  &[data-schedule="Stage"]         { background: rgba($warning, .15); color: darken($warning, 15%); }
-  &[data-schedule="Freelance"]     { background: rgba($accent, .13);  color: $accent-dark; }
-  &[data-schedule="Alternance"]    { background: rgba($pink, .13);    color: darken($pink, 8%); }
-  &[data-schedule="Temps partiel"] { background: #eef1f6;             color: $muted; }
-}
 
 .job-desc {
   font-size: .84rem;
@@ -604,7 +662,7 @@ $muted:       #6b7280;
 
 // Variante compacte quand le bouton est directement sur la carte (liste des offres)
 .card-apply-section {
-  margin-top: .2rem;
+  margin-top: auto; // colle le bouton "Postuler" en bas de la carte, quelle que soit sa hauteur
   padding-top: .8rem;
 
   .btn-apply {
@@ -736,4 +794,49 @@ $muted:       #6b7280;
   transition: transform .15s ease, box-shadow .15s ease;
 
   &:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba($accent, .38); }
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+.jobs-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: 2.5rem;
+}
+
+.page-nav, .page-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 .4rem;
+  border-radius: 10px;
+  border: 1px solid $border;
+  background: $card;
+  color: $text;
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s, transform .15s;
+
+  &:hover:not(:disabled) {
+    border-color: rgba($accent, .4);
+    color: $accent-dark;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+}
+
+.page-number.active {
+  background: linear-gradient(135deg, $accent, $teal);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba($accent, .3);
+  &:hover { color: #fff; transform: none; }
 }

@@ -29,6 +29,9 @@ export class ApplicationsComponent implements OnInit {
   /** Modal de confirmation affiché après une annulation réussie */
   confirmation: { title: string; message: string } | null = null;
 
+  /** Offre actuellement affichée dans le modal de détail (style page Jobs) */
+  selectedJob: Job | null = null;
+
   constructor(
     private applicationService: ApplicationService,
     private jobService: JobService,
@@ -120,5 +123,54 @@ export class ApplicationsComponent implements OnInit {
 
   closeConfirmation() {
     this.confirmation = null;
+  }
+
+  // ── Modal de détail (même comportement que la page Jobs) ─────────────────
+  openDetail(job: Job) { this.selectedJob = job; }
+  closeDetail()        { this.selectedJob = null; }
+
+  // ── Statut de l'offre (badge PUBLIÉE / CLÔTURÉE, même logique que Jobs) ──
+  isCloture(job: Job): boolean {
+    return job.status !== 'PUBLISHED';
+  }
+
+  jobStatusLabel(job: Job): string {
+    return this.isCloture(job) ? 'CLÔTURÉE' : 'PUBLIÉE';
+  }
+
+  jobStatusIcon(job: Job): string {
+    return this.isCloture(job) ? 'ti-calendar-off' : 'ti-check';
+  }
+
+  // ── Stats (box façon page Abonnement) ─────────────────────────────────────
+  get totalCount(): number {
+    return this.jobs.length;
+  }
+
+  get accepteeCount(): number {
+    return this.jobs.filter(j => this.statusFor(j) === 'ACCEPTEE_POUR_ENTRETIEN').length;
+  }
+
+  get refuseeCount(): number {
+    return this.jobs.filter(j => this.statusFor(j) === 'REFUSEE').length;
+  }
+
+  get enCoursCount(): number {
+    return this.jobs.filter(j => this.statusFor(j) === 'EN_COURS_DE_TRAITEMENT').length;
+  }
+
+  private ratioPercent(count: number): number {
+    if (this.totalCount === 0) return 0;
+    return Math.min(100, Math.max(0, (count / this.totalCount) * 100));
+  }
+
+  accepteeRingBackground(): string {
+    const pct = this.ratioPercent(this.accepteeCount);
+    return `conic-gradient(#fff ${pct}%, rgba(255,255,255,.28) ${pct}% 100%)`;
+  }
+
+  refuseeRingBackground(): string {
+    const pct = this.ratioPercent(this.refuseeCount);
+    return `conic-gradient(#fff ${pct}%, rgba(255,255,255,.28) ${pct}% 100%)`;
   }
 }

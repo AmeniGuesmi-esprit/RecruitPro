@@ -150,7 +150,37 @@ export class PostComponent implements OnInit {
 
   setFilter(filter: 'ALL' | 'PUBLISHED' | 'CLOTURE' | 'ARCHIVED') {
     this.activeFilter = filter;
+    this.currentPage = 1; // FIX: revenir à la page 1 quand on change de filtre
   }
+
+  // ── Pagination : 3 offres par ligne × 3 lignes = 9 offres par page ──────────
+  readonly pageSize = 9;
+  currentPage = 1;
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredJobs.length / this.pageSize));
+  }
+
+  get paginatedJobs(): Job[] {
+    // Sécurité : si la liste a rétréci (suppression, changement de filtre) et que la page
+    // courante n'existe plus, on revient à la dernière page valide plutôt que d'afficher du vide.
+    if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredJobs.slice(start, start + this.pageSize);
+  }
+
+  /** Numéros de page à afficher (ex: [1,2,3,4,5]) */
+  get pageNumbers(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+  }
+
+  prevPage() { this.goToPage(this.currentPage - 1); }
+  nextPage() { this.goToPage(this.currentPage + 1); }
 
   // ── Détail offre ──────────────────────────────────────────────────────────
 
@@ -315,6 +345,13 @@ export class PostComponent implements OnInit {
     if (status === 'ARCHIVED') return 'ARCHIVÉE';
     if (status === 'CLOTURE')  return 'CLÔTURÉE';
     return 'PUBLIÉE';
+  }
+
+  /** Icône ti- associée au statut, pour le badge-status style "ribbon". */
+  statusIcon(status: JobStatus): string {
+    if (status === 'ARCHIVED') return 'ti-archive';
+    if (status === 'CLOTURE')  return 'ti-calendar-off';
+    return 'ti-check';
   }
 
   isArchived(job: Job): boolean {

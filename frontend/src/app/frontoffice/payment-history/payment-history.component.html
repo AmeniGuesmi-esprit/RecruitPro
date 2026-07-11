@@ -1,0 +1,76 @@
+<div class="history-page">
+
+  @if (errorMsg()) {
+    <div class="alert-banner alert-banner--danger">
+      <i class="ti ti-alert-circle"></i><span>{{ errorMsg() }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="page-loading">
+      <div class="spinner-border" role="status"></div>
+    </div>
+  } @else {
+
+    <!-- ══ HERO ═══════════════════════════════════════════════════════════════ -->
+    <div class="history-hero">
+      <div class="history-hero__info">
+        <span class="history-hero__eyebrow"><i class="ti ti-receipt"></i> Historique de paiement</span>
+        <h2 class="history-hero__title">Vos transactions d'abonnement</h2>
+        <p class="history-hero__subtitle">Retrouvez ici tous vos abonnements souscrits, passés et actuel.</p>
+      </div>
+      <div class="history-hero__stats">
+        <div class="history-stat">
+          <span class="history-stat__value">{{ totalTransactions }}</span>
+          <span class="history-stat__label">Transaction{{ totalTransactions > 1 ? 's' : '' }}</span>
+        </div>
+        <div class="history-stat">
+          <span class="history-stat__value">{{ totalSpent | number:'1.0-0' }} <small>DT</small></span>
+          <span class="history-stat__label">Total dépensé</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ EMPTY STATE ══════════════════════════════════════════════════════ -->
+    @if (history().length === 0) {
+      <div class="history-empty">
+        <div class="history-empty__icon"><i class="ti ti-receipt-off"></i></div>
+        <h3>Aucun paiement pour le moment</h3>
+        <p>Dès que vous souscrivez à un abonnement, la transaction apparaîtra ici.</p>
+      </div>
+    }
+
+    <!-- ══ LISTE ════════════════════════════════════════════════════════════ -->
+    @if (history().length > 0) {
+      <div class="history-list">
+        @for (sub of history(); track sub.id) {
+          <div class="history-item" [class.history-item--active]="isActive(sub)">
+            <div class="history-item__icon">
+              <i class="ti ti-briefcase"></i>
+            </div>
+
+            <div class="history-item__main">
+              <div class="history-item__top">
+                <h4>{{ sub.planName }}</h4>
+                <span class="history-item__status" [class.history-item__status--active]="isActive(sub)">
+                  <i class="ti" [class.ti-circle-check]="isActive(sub)" [class.ti-circle-x]="!isActive(sub)"></i>
+                  {{ isActive(sub) ? 'Actif' : 'Expiré' }}
+                </span>
+              </div>
+              <div class="history-item__meta">
+                <span><i class="ti ti-stack-2"></i>{{ sub.quota }} {{ quotaLabel }}</span>
+                <span><i class="ti ti-calendar-event"></i>Du {{ sub.dateDebut | date:'dd/MM/yyyy' }} au {{ sub.dateFin | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+
+            <div class="history-item__amount">
+              <span class="amount-value">{{ sub.montant | number:'1.0-0' }}</span>
+              <span class="amount-currency">DT</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+</div>

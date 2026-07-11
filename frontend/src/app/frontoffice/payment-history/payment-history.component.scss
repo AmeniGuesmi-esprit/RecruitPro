@@ -1,0 +1,254 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// HISTORIQUE DE PAIEMENT — SCSS
+// Hero + liste de transactions (abonnements souscrits, actifs et expirés)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Variables (alignées sur la palette de marque violet → teal) ─────────────
+$primary     : #7c5cfc;
+$primary-dark: #5b3df0;
+$accent      : #00c2a8;
+$success     : #12b76a;
+$danger      : #f04438;
+$warning     : #f59e0b;
+$text        : #1f2937;
+$text-muted  : #6b7280;
+$border      : #e9e6f7;
+$card-bg     : #ffffff;
+$radius-lg   : 20px;
+$radius-md   : 14px;
+$radius-sm   : 10px;
+$shadow      : 0 1px 3px rgba(31, 20, 90, .06);
+$shadow-hover: 0 16px 32px rgba(124, 92, 252, .16);
+
+.history-page {
+  padding: 4px;
+
+  .alert-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: $radius-sm;
+    font-size: .88rem;
+    font-weight: 500;
+    margin-bottom: 18px;
+    i { font-size: 17px; flex-shrink: 0; }
+    &--danger { background: rgba($danger, .1); color: darken($danger, 8%); }
+  }
+
+  .page-loading {
+    display: flex;
+    justify-content: center;
+    padding: 80px 0;
+    .spinner-border { color: $primary; }
+  }
+
+  // ── Hero ────────────────────────────────────────────────────────────────
+  .history-hero {
+    position: relative;
+    border-radius: $radius-lg;
+    background: linear-gradient(120deg, $primary-dark 0%, $primary 55%, $accent 130%);
+    box-shadow: 0 20px 48px rgba(91, 61, 240, .28);
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(480px 220px at 88% -10%, rgba(255,255,255,.16), transparent 65%),
+        radial-gradient(320px 200px at 8% 120%, rgba(255,255,255,.10), transparent 60%);
+      pointer-events: none;
+    }
+
+    &__info { position: relative; flex: 1; min-width: 240px; }
+
+    &__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.14);
+      padding: 5px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      i { font-size: 14px; }
+    }
+
+    &__title { font-size: 1.6rem; font-weight: 800; margin: 0 0 6px; letter-spacing: -.01em; }
+    &__subtitle { font-size: .88rem; color: rgba(255,255,255,.85); margin: 0; }
+
+    &__stats {
+      position: relative;
+      display: flex;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+  }
+
+  .history-stat {
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: $radius-md;
+    padding: 14px 22px;
+    text-align: center;
+    min-width: 110px;
+
+    &__value {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+      small { font-size: .8rem; font-weight: 600; opacity: .85; }
+    }
+
+    &__label {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      opacity: .85;
+    }
+  }
+
+  // ── Empty state ─────────────────────────────────────────────────────────
+  .history-empty {
+    text-align: center;
+    padding: 60px 20px;
+    background: $card-bg;
+    border-radius: $radius-lg;
+    box-shadow: $shadow;
+
+    &__icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: rgba($primary, .1);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      i { font-size: 28px; color: $primary; }
+    }
+
+    h3 { font-size: 1.05rem; font-weight: 700; color: $text; margin: 0 0 6px; }
+    p  { font-size: .87rem; color: $text-muted; margin: 0; }
+  }
+
+  // ── Liste des transactions ──────────────────────────────────────────────
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: $card-bg;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+    padding: 18px 22px;
+    box-shadow: $shadow;
+    transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+
+    &:hover {
+      box-shadow: $shadow-hover;
+      transform: translateY(-2px);
+    }
+
+    // Abonnement actif = contour + halo violet, cohérent avec le reste de l'app
+    &--active {
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, .12), $shadow;
+    }
+
+    &__icon {
+      width: 46px; height: 46px;
+      border-radius: 14px;
+      background: rgba($primary, .1);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      i { font-size: 20px; color: $primary; }
+    }
+
+    &__main { flex: 1; min-width: 0; }
+
+    &__top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+
+      h4 {
+        font-size: .98rem;
+        font-weight: 700;
+        color: $text;
+        margin: 0;
+        text-transform: capitalize;
+      }
+    }
+
+    &__status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      background: rgba(#6b7280, .14);
+      color: #374151;
+      i { font-size: 12px; }
+
+      &--active {
+        background: rgba($success, .14);
+        color: darken($success, 10%);
+      }
+    }
+
+    &__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: .8rem;
+      color: $text-muted;
+
+      span { display: inline-flex; align-items: center; gap: 5px; }
+      i { font-size: 14px; color: $primary; opacity: .8; }
+    }
+
+    &__amount {
+      flex-shrink: 0;
+      text-align: right;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+
+      .amount-value { font-size: 1.3rem; font-weight: 800; color: $primary; }
+      .amount-currency { font-size: .78rem; font-weight: 600; color: $text-muted; }
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .history-page {
+    .history-hero { padding: 26px 22px; }
+    .history-item { flex-wrap: wrap; }
+    .history-item__amount { width: 100%; justify-content: flex-start; }
+  }
+}

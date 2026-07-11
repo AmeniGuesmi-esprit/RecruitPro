@@ -138,6 +138,12 @@ const routes: Routes = [
         path: 'abonnement',
         loadComponent: () =>
           import('./frontoffice/abonnement/abonnement.component').then(c => c.AbonnementComponent)
+      },
+      {
+        // ── HISTORIQUE DE PAIEMENT : accessible depuis le dropdown avatar ──
+        path: 'historique-paiement',
+        loadComponent: () =>
+          import('./frontoffice/payment-history/payment-history.component').then(c => c.PaymentHistoryComponent)
       }
     ]
   },

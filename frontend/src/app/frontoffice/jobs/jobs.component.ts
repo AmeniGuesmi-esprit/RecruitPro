@@ -22,6 +22,12 @@ export class JobsComponent implements OnInit, OnDestroy {
   /** Nombre total d'offres actives (sans filtre) — utilisé pour "sur X au total" et les états vides. */
   totalCount = 0;
 
+  // ── Pagination (3 lignes de 3 cartes = 9 offres par page) ─────────────────
+  readonly cardsPerRow = 3;
+  readonly rowsPerPage = 3;
+  readonly pageSize = this.cardsPerRow * this.rowsPerPage;
+  currentPage = 1;
+
   /** Chargement INITIAL de la page uniquement (affiche le spinner plein écran, cache la barre). */
   loading = true;
   /** Recherche en cours (déclenchée par la frappe) — ne cache JAMAIS la barre de recherche,
@@ -130,9 +136,33 @@ export class JobsComponent implements OnInit, OnDestroy {
     }
     this.loading = false;
     this.searching = false;
+    this.currentPage = 1; // nouvelle recherche → on revient à la première page
     this.updateSuggestions();
     this.cdr.detectChanges();
   }
+
+  // ── Pagination (3 lignes × 3 cartes = 9 offres par page) ───────────────────
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredJobs.length / this.pageSize));
+  }
+
+  get paginatedJobs(): Job[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredJobs.slice(start, start + this.pageSize);
+  }
+
+  get pageNumbers(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+    this.currentPage = page;
+    this.cdr.detectChanges();
+  }
+
+  prevPage() { this.goToPage(this.currentPage - 1); }
+  nextPage() { this.goToPage(this.currentPage + 1); }
 
   openDetail(job: Job)  { this.selectedJob = job; }
   closeDetail()         { this.selectedJob = null; }
@@ -164,6 +194,21 @@ export class JobsComponent implements OnInit, OnDestroy {
   /** L'offre accepte encore les candidatures (bouton actif) uniquement si PUBLIÉE */
   canApply(job: Job): boolean {
     return job.status === 'PUBLISHED';
+  }
+
+  /** Clôturée automatiquement car la date de clôture est dépassée (aucune offre archivée sur cette page). */
+  isCloture(job: Job): boolean {
+    return job.status !== 'PUBLISHED';
+  }
+
+  /** Libellé du badge de statut de l'offre (style repris de la page "Publier une offre"). */
+  jobStatusLabel(job: Job): string {
+    return this.isCloture(job) ? 'CLÔTURÉE' : 'PUBLIÉE';
+  }
+
+  /** Icône ti- associée au statut de l'offre. */
+  jobStatusIcon(job: Job): string {
+    return this.isCloture(job) ? 'ti-calendar-off' : 'ti-check';
   }
 
   /** Postuler / Annuler selon l'état courant. Empêche l'ouverture du modal (stopPropagation côté template). */
@@ -372,6 +417,7 @@ export class JobsComponent implements OnInit, OnDestroy {
     this.suggestions     = [];
     this.searchFocused   = false;
     this.searching = true;
+    this.currentPage = 1;
     this.search$.next('');
   }
 

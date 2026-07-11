@@ -1,10 +1,5 @@
 <div class="applications-page">
 
-  <div class="page-title">
-    <h4><i class="ti ti-file-text me-2"></i>Projets Postulés</h4>
-    <p class="text-muted">Vos candidatures en cours.</p>
-  </div>
-
   @if (cancelErrorMsg) {
     <div class="global-error"><i class="ti ti-alert-circle"></i>{{ cancelErrorMsg }}</div>
   }
@@ -26,80 +21,245 @@
     </div>
   }
 
-  @if (!loading && !errorMsg && jobs.length === 0) {
-    <div class="empty-state">
-      <i class="ti ti-mood-empty"></i>
-      <p>Vous n'avez postulé à aucune offre pour le moment.</p>
-    </div>
-  }
+  @if (!loading && !errorMsg) {
 
-  @if (!loading && !errorMsg && jobs.length > 0) {
-    <div class="applications-grid">
-      @for (job of jobs; track job.id) {
-        <div class="application-card">
-          <div class="card-banner">
-            @if (job.logoUrl) {
-              <img [src]="job.logoUrl" [alt]="job.companyName" class="banner-img" />
-            } @else {
-              <div class="banner-placeholder">
-                <i class="ti ti-building-skyscraper"></i>
-              </div>
-            }
-            <span class="schedule-badge" [attr.data-schedule]="job.workSchedule">{{ job.workSchedule }}</span>
-            @if (job.status !== 'PUBLISHED') {
-              <span class="status-badge closed"><i class="ti ti-lock"></i> Clôturée</span>
-            }
+    <!-- ══ HERO — statistiques de candidatures (box façon page Abonnement) ══ -->
+    <div class="app-hero" [class.app-hero--empty]="totalCount === 0">
+      @if (totalCount > 0) {
+        <div class="app-hero__body">
+          <div class="app-hero__info">
+            <span class="app-hero__eyebrow"><i class="ti ti-file-text"></i> Vos candidatures</span>
+            <h2 class="app-hero__plan">Suivi de vos postulations</h2>
+            <div class="app-hero__chips">
+              <div class="app-hero__chip"><i class="ti ti-clock"></i><span>{{ enCoursCount }} en cours de traitement</span></div>
+            </div>
           </div>
-
-          <div class="card-body">
-            <h3 class="job-title">{{ job.title }}</h3>
-            <p class="company-name">{{ job.companyName }}</p>
-
-            <div class="skills-list">
-              @for (skill of job.skills.slice(0, 4); track skill) {
-                <span class="skill-tag">{{ skill }}</span>
-              }
-              @if (job.skills.length > 4) {
-                <span class="skill-tag more">+{{ job.skills.length - 4 }}</span>
-              }
-            </div>
-
-            <div class="salary-row">
-              <i class="ti ti-currency-dollar"></i>
-              <span>{{ job.salary | number:'1.0-0' }} TND / mois</span>
-            </div>
-
-            <div class="period-row">
-              <i class="ti ti-calendar-event"></i>
-              <span>Du {{ job.dateDebut | date:'dd/MM/yyyy' }} au {{ job.dateCloture | date:'dd/MM/yyyy' }}</span>
-            </div>
-
-            <span class="application-status-badge" [attr.data-status]="statusFor(job)">
-              <i class="ti" [class.ti-clock]="statusFor(job) === 'EN_COURS_DE_TRAITEMENT'"
-                 [class.ti-circle-check]="statusFor(job) === 'ACCEPTEE_POUR_ENTRETIEN'"
-                 [class.ti-circle-x]="statusFor(job) === 'REFUSEE'"></i>
-              {{ statusLabel(statusFor(job)) }}
-            </span>
-
-            @if (statusFor(job) === 'ACCEPTEE_POUR_ENTRETIEN') {
-              <div class="period-row interview-row">
-                <i class="ti ti-calendar-time"></i>
-                <span>Entretien le {{ job.dateEntretien | date:'dd/MM/yyyy à HH:mm' }}</span>
+          <div class="app-hero__rings">
+            <div class="app-hero__ring-wrap">
+              <div class="app-hero__ring app-hero__ring--total">
+                <div class="app-hero__ring-hole app-hero__ring-hole--total">
+                  <strong>{{ totalCount }}</strong>
+                  <span>candidature{{ totalCount > 1 ? 's' : '' }}</span>
+                </div>
               </div>
-            }
-
-            @if (job.status === 'PUBLISHED') {
-              <button class="btn-cancel" [disabled]="isCanceling(job)" (click)="cancelApplication(job)">
-                @if (isCanceling(job)) { <span class="spin"></span> } @else { <i class="ti ti-x"></i> }
-                Annuler la candidature
-              </button>
-            }
+            </div>
+            <div class="app-hero__ring-wrap">
+              <div class="app-hero__ring app-hero__ring--accept" [style.background]="accepteeRingBackground()">
+                <div class="app-hero__ring-hole app-hero__ring-hole--accept">
+                  <strong>{{ accepteeCount }}</strong>
+                  <span>accepté{{ accepteeCount > 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="app-hero__ring-wrap">
+              <div class="app-hero__ring app-hero__ring--refuse" [style.background]="refuseeRingBackground()">
+                <div class="app-hero__ring-hole app-hero__ring-hole--refuse">
+                  <strong>{{ refuseeCount }}</strong>
+                  <span>refusé{{ refuseeCount > 1 ? 's' : '' }}</span>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
+      } @else {
+        <div class="app-hero__empty">
+          <div class="app-hero__empty-icon"><i class="ti ti-mood-empty"></i></div>
+          <h2>Aucune candidature</h2>
+          <p>Vous n'avez postulé à aucune offre pour le moment. Parcourez les offres disponibles pour commencer.</p>
         </div>
       }
     </div>
+
+    @if (totalCount > 0) {
+      <!-- ══ GRILLE DES CANDIDATURES (cartes façon page Jobs) ══════════════ -->
+      <div class="jobs-grid">
+        @for (job of jobs; track job.id) {
+          <div class="job-card" [class.is-published]="!isCloture(job)" [class.is-cloture]="isCloture(job)" (click)="openDetail(job)">
+            <div class="card-banner">
+              @if (job.logoUrl) {
+                <img [src]="job.logoUrl" [alt]="job.companyName" class="banner-img" />
+              } @else {
+                <div class="banner-placeholder">
+                  <i class="ti ti-building-skyscraper"></i>
+                </div>
+              }
+              <span class="badge-type"><i class="ti ti-briefcase"></i>{{ job.workSchedule }}</span>
+              <span class="badge-status" [class.cloture]="isCloture(job)">
+                <i class="ti" [class]="jobStatusIcon(job)"></i>{{ jobStatusLabel(job) }}
+              </span>
+            </div>
+
+            <div class="card-body">
+              <h3 class="job-title">{{ job.title }}</h3>
+              <p class="company-name">{{ job.companyName }}</p>
+
+              <div class="skills-list">
+                @for (skill of job.skills.slice(0, 4); track skill) {
+                  <span class="skill-tag">{{ skill }}</span>
+                }
+                @if (job.skills.length > 4) {
+                  <span class="skill-tag more">+{{ job.skills.length - 4 }}</span>
+                }
+              </div>
+
+              <div class="salary-row">
+                <i class="ti ti-currency-dollar"></i>
+                <span>{{ job.salary | number:'1.0-0' }} TND / mois</span>
+              </div>
+
+              <div class="period-row">
+                <i class="ti ti-calendar-event"></i>
+                <span>Du {{ job.dateDebut | date:'dd/MM/yyyy' }} au {{ job.dateCloture | date:'dd/MM/yyyy' }}</span>
+              </div>
+
+              <span class="application-status-badge" [attr.data-status]="statusFor(job)">
+                <i class="ti" [class.ti-clock]="statusFor(job) === 'EN_COURS_DE_TRAITEMENT'"
+                   [class.ti-circle-check]="statusFor(job) === 'ACCEPTEE_POUR_ENTRETIEN'"
+                   [class.ti-circle-x]="statusFor(job) === 'REFUSEE'"></i>
+                {{ statusLabel(statusFor(job)) }}
+              </span>
+
+              @if (statusFor(job) === 'ACCEPTEE_POUR_ENTRETIEN') {
+                <div class="period-row interview-row">
+                  <i class="ti ti-calendar-time"></i>
+                  <span>Entretien le {{ job.dateEntretien | date:'dd/MM/yyyy à HH:mm' }}</span>
+                </div>
+              }
+
+              @if (job.status === 'PUBLISHED') {
+                <div class="card-apply-section" (click)="$event.stopPropagation()">
+                  <button class="btn-apply cancel" [disabled]="isCanceling(job)" (click)="cancelApplication(job)">
+                    @if (isCanceling(job)) { <span class="spin"></span> } @else { <i class="ti ti-x"></i> }
+                    Annuler la candidature
+                  </button>
+                </div>
+              }
+
+              <!-- CTA visible au survol -->
+              <div class="card-cta">
+                <span>Voir détails</span>
+                <i class="ti ti-arrow-right"></i>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
   }
 </div>
+
+<!-- ══ MODAL DÉTAIL (même style que la page Jobs) ═══════════════════════════ -->
+@if (selectedJob) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeDetail()"><i class="ti ti-x"></i></button>
+
+      <div class="modal-header">
+        @if (selectedJob.logoUrl) {
+          <img [src]="selectedJob.logoUrl" [alt]="selectedJob.companyName" class="modal-logo" />
+        }
+        <div>
+          <h2>{{ selectedJob.title }}</h2>
+          <p class="company-name">{{ selectedJob.companyName }}</p>
+          <span class="badge-type"><i class="ti ti-briefcase"></i>{{ selectedJob.workSchedule }}</span>
+          <span class="badge-status" [class.cloture]="isCloture(selectedJob)">
+            <i class="ti" [class]="jobStatusIcon(selectedJob)"></i>{{ jobStatusLabel(selectedJob) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <section>
+          <h4><i class="ti ti-align-left me-1"></i>Description</h4>
+          <p class="description-text">{{ selectedJob.description }}</p>
+        </section>
+
+        <section>
+          <h4><i class="ti ti-tools me-1"></i>Compétences requises</h4>
+          <div class="skills-list">
+            @for (skill of selectedJob.skills; track skill) {
+              <span class="skill-tag">{{ skill }}</span>
+            }
+          </div>
+        </section>
+
+        <section class="info-grid">
+          <div class="info-item">
+            <i class="ti ti-currency-dollar"></i>
+            <div>
+              <label>Salaire</label>
+              <span>{{ selectedJob.salary | number:'1.0-0' }} TND / mois</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <i class="ti ti-clock"></i>
+            <div>
+              <label>Régime horaire</label>
+              <span>{{ selectedJob.workSchedule }}</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <i class="ti ti-mail"></i>
+            <div>
+              <label>Email</label>
+              <a [href]="'mailto:' + selectedJob.contactEmail">{{ selectedJob.contactEmail }}</a>
+            </div>
+          </div>
+          @if (selectedJob.contactPhone) {
+            <div class="info-item">
+              <i class="ti ti-phone"></i>
+              <div>
+                <label>Téléphone</label>
+                <a [href]="'tel:' + selectedJob.contactPhone">{{ selectedJob.contactPhone }}</a>
+              </div>
+            </div>
+          }
+          <div class="info-item">
+            <i class="ti ti-calendar-event"></i>
+            <div>
+              <label>Période</label>
+              <span>Du {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} au {{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <i class="ti ti-calendar-time"></i>
+            <div>
+              <label>Date d'entretien</label>
+              <span>{{ selectedJob.dateEntretien | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ STATUT DE CANDIDATURE ══════════════════════════════════════ -->
+        <section class="apply-section">
+          @if (cancelErrorMsg) {
+            <div class="apply-error"><i class="ti ti-alert-circle"></i>{{ cancelErrorMsg }}</div>
+          }
+          <span class="application-status-badge" [attr.data-status]="statusFor(selectedJob)">
+            <i class="ti" [class.ti-clock]="statusFor(selectedJob) === 'EN_COURS_DE_TRAITEMENT'"
+               [class.ti-circle-check]="statusFor(selectedJob) === 'ACCEPTEE_POUR_ENTRETIEN'"
+               [class.ti-circle-x]="statusFor(selectedJob) === 'REFUSEE'"></i>
+            {{ statusLabel(statusFor(selectedJob)) }}
+          </span>
+
+          @if (statusFor(selectedJob) === 'ACCEPTEE_POUR_ENTRETIEN') {
+            <div class="period-row interview-row">
+              <i class="ti ti-calendar-time"></i>
+              <span>Entretien le {{ selectedJob.dateEntretien | date:'dd/MM/yyyy à HH:mm' }}</span>
+            </div>
+          }
+
+          @if (selectedJob.status === 'PUBLISHED') {
+            <button class="btn-apply cancel" [disabled]="isCanceling(selectedJob)" (click)="cancelApplication(selectedJob)">
+              @if (isCanceling(selectedJob)) { <span class="spin"></span> } @else { <i class="ti ti-x"></i> }
+              Annuler la candidature
+            </button>
+          }
+        </section>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- ══ MODAL CONFIRMATION (Annuler réussi) ═══════════════════════════════════ -->
 @if (confirmation) {

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { SubscriptionService } from '../../core/services/subscription.service';
 import { AuthService } from '../../core/services/auth.service';
+import { JobService } from '../../core/services/job.service';
+import { ApplicationService } from '../../core/services/application.service';
 import { SubscriptionPlan, SubscriptionType, UserSubscription } from '../../core/models/subscription.model';
 
 @Component({
@@ -24,6 +26,9 @@ export class AbonnementComponent implements OnInit {
 
   /** Message affiché quand on arrive ici redirigé depuis "Publier une offre" / "Postuler" faute d'abonnement suffisant */
   redirectReason = '';
+
+  /** Nombre d'offres/candidatures déjà consommées sur la période en cours (null tant que non chargé) */
+  quotaUsed: number | null = null;
 
   // ── Paiement (simulation) ──────────────────────────────────────────────────
   /** Plan en cours de paiement (ouvre le modal carte). Null = modal fermé. */
@@ -47,6 +52,8 @@ export class AbonnementComponent implements OnInit {
   constructor(
     private subscriptionService: SubscriptionService,
     private authService: AuthService,
+    private jobService: JobService,
+    private applicationService: ApplicationService,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
@@ -54,7 +61,7 @@ export class AbonnementComponent implements OnInit {
   ngOnInit() {
     const reason = this.route.snapshot.queryParamMap.get('reason');
     if (reason === 'no-subscription') {
-      this.redirectReason = "Vous n'avez pas encore d'abonnement actif. Choisissez une formule ci-dessous pour continuer.";
+      this.redirectReason = "Vous n'avez pas encore d'abonnement actif. Choisissez un abonnement ci-dessous pour continuer.";
     } else if (reason === 'quota-exceeded') {
       this.redirectReason = 'Vous avez atteint le quota autorisé par votre abonnement actuel. Renouvelez-le pour continuer.';
     }
@@ -78,11 +85,17 @@ export class AbonnementComponent implements OnInit {
     return this.accountType === 'COMPANY' ? "offres d'emploi" : 'candidatures';
   }
 
+  /** Libellé court utilisé dans le ring "offres restantes" du hero (espace réduit). */
+  get quotaLabelShort(): string {
+    return this.accountType === 'COMPANY' ? 'offres' : 'candidatures';
+  }
+
   load() {
     this.loading = true;
     this.subscriptionService.getMySubscription().subscribe({
       next: res => {
         this.mySubscription = res.data ?? null;
+        this.loadQuotaUsed();
         this.loadPlans();
       },
       error: () => {
@@ -90,6 +103,35 @@ export class AbonnementComponent implements OnInit {
         this.loadPlans();
       }
     });
+  }
+
+  /** Charge le nombre d'offres/candidatures déjà consommées, pour afficher le quota restant dans le hero.
+   *  Calculé côté front à partir des endpoints déjà existants (mes offres / mes candidatures),
+   *  en comptant celles créées depuis le début de la période d'abonnement en cours. */
+  private loadQuotaUsed() {
+    if (!this.mySubscription) return;
+    const since = new Date(this.mySubscription.dateDebut).getTime();
+    const type = this.accountType;
+
+    if (type === 'COMPANY') {
+      this.jobService.getMyJobs().subscribe({
+        next: res => {
+          const jobs = res.data ?? [];
+          this.quotaUsed = jobs.filter(j => new Date(j.createdAt).getTime() >= since).length;
+          this.cdr.detectChanges();
+        },
+        error: () => { this.quotaUsed = null; }
+      });
+    } else if (type === 'CANDIDATE') {
+      this.applicationService.getMyApplications().subscribe({
+        next: res => {
+          const apps = res.data ?? [];
+          this.quotaUsed = apps.filter(a => new Date(a.appliedAt).getTime() >= since).length;
+          this.cdr.detectChanges();
+        },
+        error: () => { this.quotaUsed = null; }
+      });
+    }
   }
 
   private loadPlans() {
@@ -130,6 +172,53 @@ export class AbonnementComponent implements OnInit {
     if (!this.mySubscription) return 0;
     const diff = new Date(this.mySubscription.dateFin).getTime() - Date.now();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  /** Nombre d'offres/candidatures encore disponibles sur la période en cours (null tant que non chargé). */
+  remainingQuota(): number | null {
+    if (!this.mySubscription || this.quotaUsed === null) return null;
+    return Math.max(0, this.mySubscription.quota - this.quotaUsed);
+  }
+
+  /** Durée totale (en jours) de l'abonnement en cours — sert de base au ring de progression. */
+  private totalDaysForSubscription(): number {
+    if (!this.mySubscription) return 0;
+    const start = new Date(this.mySubscription.dateDebut).getTime();
+    const end = new Date(this.mySubscription.dateFin).getTime();
+    return Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+  }
+
+  /** % de jours restants par rapport à la durée totale, pour le ring de progression du hero. */
+  progressPercent(): number {
+    const total = this.totalDaysForSubscription();
+    if (!total) return 0;
+    return Math.min(100, Math.max(0, (this.daysRemaining() / total) * 100));
+  }
+
+  /** CSS conic-gradient utilisé comme fond du ring de progression du hero. */
+  ringBackground(): string {
+    const pct = this.progressPercent();
+    return `conic-gradient(#fff ${pct}%, rgba(255,255,255,.28) ${pct}% 100%)`;
+  }
+
+  /** % d'offres/candidatures restantes par rapport au quota total, pour le ring "offres restantes". */
+  quotaProgressPercent(): number {
+    const remaining = this.remainingQuota();
+    if (!this.mySubscription || remaining === null || this.mySubscription.quota <= 0) return 0;
+    return Math.min(100, Math.max(0, (remaining / this.mySubscription.quota) * 100));
+  }
+
+  /** CSS conic-gradient utilisé comme fond du ring "offres restantes" du hero. */
+  quotaRingBackground(): string {
+    const pct = this.quotaProgressPercent();
+    return `conic-gradient(#fff ${pct}%, rgba(255,255,255,.28) ${pct}% 100%)`;
+  }
+
+  /** Libellé du bouton d'action selon le contexte (souscription initiale / renouvellement / changement). */
+  ctaLabel(plan: SubscriptionPlan): string {
+    if (!this.hasActiveSubscription) return 'Souscrire';
+    if (this.isCurrentPlan(plan)) return 'Renouveler';
+    return 'Changer pour cet abonnement';
   }
 
   // ── Paiement (simulation carte bancaire) ──────────────────────────────────
@@ -257,6 +346,7 @@ export class AbonnementComponent implements OnInit {
       this.subscriptionService.subscribe(plan.id).subscribe({
         next: res => {
           this.mySubscription = res.data;
+          this.quotaUsed = 0; // nouvelle période qui démarre : quota consommé repart à zéro
           this.paying = false;
           this.paymentPlan = null;
           this.redirectReason = '';
