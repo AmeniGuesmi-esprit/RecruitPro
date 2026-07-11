@@ -1,5 +1,33 @@
 <div class="post-page">
 
+  <!-- ══ TOAST — petite box flottante (succès/erreur suppression, archivage…) ══ -->
+  @if (toastMsg) {
+    <div class="toast-box" [class.toast-success]="toastType === 'success'" [class.toast-error]="toastType === 'error'">
+      <i class="ti" [class.ti-circle-check]="toastType === 'success'" [class.ti-alert-circle]="toastType === 'error'"></i>
+      <span>{{ toastMsg }}</span>
+      <button class="toast-close" (click)="closeToast()"><i class="ti ti-x"></i></button>
+    </div>
+  }
+
+  <!-- ══ MODAL CONFIRMATION — Supprimer / Archiver (remplace window.confirm) ══ -->
+  @if (confirmDialog) {
+    <div class="modal-overlay confirmation-overlay" (click)="confirmNo()">
+      <div class="confirmation-card" (click)="$event.stopPropagation()">
+        <div class="confirmation-icon" [class.tone-danger]="confirmDialog.tone === 'danger'" [class.tone-warning]="confirmDialog.tone === 'warning'">
+          <i class="ti" [class]="confirmDialog.icon"></i>
+        </div>
+        <h3>{{ confirmDialog.title }}</h3>
+        <p>{{ confirmDialog.message }}</p>
+        <div class="confirmation-actions">
+          <button class="btn-confirmation-cancel" (click)="confirmNo()">Annuler</button>
+          <button class="btn-confirmation-ok" [class.tone-danger]="confirmDialog.tone === 'danger'" (click)="confirmYes()">
+            {{ confirmDialog.confirmLabel }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
 
 
   <!-- ══ FILTER BAR — GALAXY BOX ═════════════════════════════════════════════ -->
@@ -212,10 +240,17 @@
               </button>
             }
             @if (!isCloture(job)) {
-              <button class="btn-archive-card" [disabled]="isArchived(job)" (click)="archiveJob(job.id)">
-                <i class="ti ti-archive"></i>
-                {{ isArchived(job) ? 'Archivée' : 'Archiver' }}
-              </button>
+              @if (hasApplications(job)) {
+                <button class="btn-archive-card" [disabled]="isArchived(job)" (click)="archiveJob(job)">
+                  <i class="ti ti-archive"></i>
+                  {{ isArchived(job) ? 'Archivée' : 'Archiver' }}
+                </button>
+              } @else {
+                <button class="btn-delete-card" [disabled]="isDeleting(job)" (click)="deleteJob(job)">
+                  <i class="ti ti-trash"></i>
+                  {{ isDeleting(job) ? 'Suppression...' : 'Supprimer' }}
+                </button>
+              }
             } @else {
               <span class="footer-note"><i class="ti ti-calendar-off"></i> Clôturée automatiquement</span>
             }

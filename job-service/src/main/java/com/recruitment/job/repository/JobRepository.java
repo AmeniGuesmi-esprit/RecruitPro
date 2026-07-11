@@ -22,4 +22,7 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
 
     /** Offres encore PUBLISHED dont la date de clôture est déjà dépassée → à faire passer en CLOTURE automatiquement */
     List<Job> findByStatusAndDateClotureBefore(JobStatus status, LocalDateTime now);
+
+    /** Nombre d'offres créées par ce recruteur depuis une date donnée (utilisé pour le quota d'abonnement). */
+    long countByRecruiterIdAndCreatedAtAfter(Long recruiterId, LocalDateTime since);
 }

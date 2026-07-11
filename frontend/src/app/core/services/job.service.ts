@@ -4,6 +4,15 @@ import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/user.model';
 import { Job, JobRequest } from '../models/job.model';
 
+/** Réponse de GET /api/jobs/can-create (vérif abonnement avant d'ouvrir le formulaire) */
+export interface CanCreateResponse {
+  canCreate: boolean;
+  /** OK | NO_SUBSCRIPTION | QUOTA_EXCEEDED */
+  reason: 'OK' | 'NO_SUBSCRIPTION' | 'QUOTA_EXCEEDED';
+  quota: number;
+  used: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class JobService {
   private readonly API = 'http://localhost:8222/api/jobs';
@@ -40,6 +49,11 @@ export class JobService {
     return this.http.get<ApiResponse<Job[]>>(`${this.API}/my`);
   }
 
+  /** Vérifie l'abonnement AVANT d'ouvrir le formulaire de création d'offre (COMPANY) */
+  canCreate(): Observable<ApiResponse<CanCreateResponse>> {
+    return this.http.get<ApiResponse<CanCreateResponse>>(`${this.API}/can-create`);
+  }
+
   /** Créer une offre avec logo (COMPANY) */
   createJob(req: JobRequest, logo?: File): Observable<ApiResponse<Job>> {
     const form = new FormData();
@@ -59,5 +73,14 @@ export class JobService {
   /** Archiver une offre — remplace l'ancienne suppression (COMPANY) */
   archiveJob(id: number): Observable<ApiResponse<Job>> {
     return this.http.patch<ApiResponse<Job>>(`${this.API}/${id}/archive`, {});
+  }
+
+  /**
+   * Supprimer définitivement une offre (COMPANY) — refusé côté backend (409)
+   * si l'offre a déjà reçu au moins une candidature ; dans ce cas, archiver
+   * l'offre à la place (voir archiveJob).
+   */
+  deleteJob(id: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.API}/${id}`);
   }
 }

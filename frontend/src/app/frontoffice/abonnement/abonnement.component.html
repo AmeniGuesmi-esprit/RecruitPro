@@ -1,0 +1,186 @@
+<div class="abonnement-page">
+
+  @if (redirectReason) {
+    <div class="alert alert-warning">
+      <i class="ti ti-alert-triangle me-2"></i>{{ redirectReason }}
+    </div>
+  }
+
+  @if (successMsg) {
+    <div class="alert alert-success">
+      <i class="ti ti-check me-2"></i>{{ successMsg }}
+    </div>
+  }
+
+  @if (errorMsg) {
+    <div class="alert alert-danger">
+      <i class="ti ti-x me-2"></i>{{ errorMsg }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border" role="status"></div>
+    </div>
+  } @else {
+
+    <!-- Abonnement actuel -->
+    <div class="card current-card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="ti ti-credit-card me-2"></i>Mon abonnement</h5>
+      </div>
+      <div class="card-body">
+        @if (hasActiveSubscription && mySubscription) {
+          <div class="row g-3 align-items-center">
+            <div class="col-md-3">
+              <div class="stat"><span class="label">Formule</span><span class="value">{{ mySubscription.planName }}</span></div>
+            </div>
+            <div class="col-md-3">
+              <div class="stat"><span class="label">Quota</span><span class="value">{{ mySubscription.quota }} {{ quotaLabel }}</span></div>
+            </div>
+            <div class="col-md-3">
+              <div class="stat"><span class="label">Expire le</span><span class="value">{{ mySubscription.dateFin | date:'dd/MM/yyyy' }}</span></div>
+            </div>
+            <div class="col-md-3">
+              <div class="stat"><span class="label">Jours restants</span><span class="value">{{ daysRemaining() }}</span></div>
+            </div>
+          </div>
+        } @else {
+          <p class="text-muted mb-0">
+            <i class="ti ti-credit-card-off me-2"></i>
+            Vous n'avez pas d'abonnement actif pour le moment. Choisissez une formule ci-dessous.
+          </p>
+        }
+      </div>
+    </div>
+
+    <!-- Plans disponibles -->
+    <h6 class="mb-3">Formules disponibles</h6>
+    <div class="row g-4">
+      @for (plan of plans; track plan.id) {
+        <div class="col-md-4">
+          <div class="card plan-card" [class.active-plan]="isCurrentPlan(plan)">
+            <div class="card-body">
+              @if (isCurrentPlan(plan)) {
+                <span class="badge-current">Formule actuelle</span>
+              }
+              <h5 class="plan-name">{{ plan.name }}</h5>
+              <p class="plan-price">{{ plan.montant }} <span>DT</span></p>
+              <ul class="plan-features">
+                <li><i class="ti ti-check text-success me-2"></i>{{ plan.quota }} {{ quotaLabel }}</li>
+                <li><i class="ti ti-check text-success me-2"></i>Validité {{ plan.dureeJours }} jours</li>
+                @if (plan.description) {
+                  <li><i class="ti ti-info-circle text-info me-2"></i>{{ plan.description }}</li>
+                }
+              </ul>
+              <button class="btn btn-primary w-100"
+                      [disabled]="paymentPlan?.id === plan.id"
+                      (click)="openPayment(plan)">
+                <i class="ti ti-credit-card me-2"></i>
+                {{ hasActiveSubscription ? 'Renouveler / changer' : 'Souscrire' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="col-12">
+          <p class="text-muted text-center py-5 mb-0">Aucune formule d'abonnement disponible pour le moment.</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ══ MODAL PAIEMENT (simulation carte bancaire) ═══════════════════════════ -->
+  @if (paymentPlan) {
+    <div class="payment-overlay" (click)="closePayment()">
+      <div class="payment-modal" (click)="$event.stopPropagation()">
+
+        <button class="payment-close" (click)="closePayment()" [disabled]="paying" aria-label="Fermer">
+          <i class="ti ti-x"></i>
+        </button>
+
+        <div class="payment-summary">
+          <span class="label">Vous souscrivez à</span>
+          <div class="plan-row">
+            <strong>{{ paymentPlan.name }}</strong>
+            <span class="amount">{{ paymentPlan.montant }} DT</span>
+          </div>
+        </div>
+
+        <!-- Aperçu visuel de la carte -->
+        <div class="card-preview" [class]="cardBrand">
+          <div class="card-preview-top">
+            <i class="ti ti-credit-card"></i>
+            <span class="brand">{{ cardBrand !== 'unknown' ? (cardBrand === 'visa' ? 'VISA' : cardBrand === 'mastercard' ? 'MASTERCARD' : 'AMEX') : '' }}</span>
+          </div>
+          <div class="card-preview-number">{{ paymentForm.cardNumber || '•••• •••• •••• ••••' }}</div>
+          <div class="card-preview-bottom">
+            <div>
+              <span class="mini-label">Titulaire</span>
+              <div>{{ paymentForm.cardName || 'NOM PRÉNOM' }}</div>
+            </div>
+            <div>
+              <span class="mini-label">Expire</span>
+              <div>{{ paymentForm.expiry || 'MM/AA' }}</div>
+            </div>
+          </div>
+        </div>
+
+        @if (paymentError) {
+          <div class="alert alert-danger py-2 mb-3">
+            <i class="ti ti-x me-2"></i>{{ paymentError }}
+          </div>
+        }
+
+        <form (ngSubmit)="confirmPayment()">
+          <div class="mb-3">
+            <label class="form-label">Nom du titulaire</label>
+            <input type="text" class="form-control" placeholder="Comme indiqué sur la carte"
+                   [(ngModel)]="paymentForm.cardName" name="cardName"
+                   [class.is-invalid]="paymentErrors.cardName" [disabled]="paying">
+            @if (paymentErrors.cardName) { <div class="invalid-feedback">{{ paymentErrors.cardName }}</div> }
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Numéro de carte</label>
+            <input type="text" class="form-control" placeholder="4242 4242 4242 4242" inputmode="numeric"
+                   [value]="paymentForm.cardNumber" (input)="onCardNumberInput($event)"
+                   [class.is-invalid]="paymentErrors.cardNumber" [disabled]="paying">
+            @if (paymentErrors.cardNumber) { <div class="invalid-feedback">{{ paymentErrors.cardNumber }}</div> }
+          </div>
+
+          <div class="row">
+            <div class="col-7 mb-3">
+              <label class="form-label">Expiration (MM/AA)</label>
+              <input type="text" class="form-control" placeholder="MM/AA" inputmode="numeric"
+                     [value]="paymentForm.expiry" (input)="onExpiryInput($event)"
+                     [class.is-invalid]="paymentErrors.expiry" [disabled]="paying">
+              @if (paymentErrors.expiry) { <div class="invalid-feedback">{{ paymentErrors.expiry }}</div> }
+            </div>
+            <div class="col-5 mb-3">
+              <label class="form-label">CVC</label>
+              <input type="text" class="form-control" placeholder="123" inputmode="numeric"
+                     [value]="paymentForm.cvc" (input)="onCvcInput($event)"
+                     [class.is-invalid]="paymentErrors.cvc" [disabled]="paying">
+              @if (paymentErrors.cvc) { <div class="invalid-feedback">{{ paymentErrors.cvc }}</div> }
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 pay-btn" [disabled]="paying">
+            @if (paying) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Traitement du paiement...
+            } @else {
+              <i class="ti ti-lock me-2"></i>Payer {{ paymentPlan.montant }} DT
+            }
+          </button>
+
+          <p class="payment-note">
+            <i class="ti ti-shield-lock me-1"></i>
+            Paiement sécurisé — simulation à des fins de démonstration, aucune vraie carte n'est débitée.
+          </p>
+        </form>
+      </div>
+    </div>
+  }
+</div>

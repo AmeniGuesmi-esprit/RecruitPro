@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { JobService } from '../../core/services/job.service';
@@ -75,7 +76,8 @@ export class JobsComponent implements OnInit, OnDestroy {
     private jobService: JobService,
     private applicationService: ApplicationService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -195,10 +197,26 @@ export class JobsComponent implements OnInit, OnDestroy {
       });
     } else {
       this.applicationService.apply(job.id).subscribe({
-        next: () => {
+        // Le backend répond en HTTP 200 même en cas de refus métier (pas d'abonnement /
+        // quota atteint), pour ne pas dépendre d'un code HTTP d'erreur qui peut être
+        // altéré en route (Gateway/proxy). On distingue donc les cas via res.success/res.code.
+        next: (res) => {
+          this.applyingJobIds.delete(job.id);
+
+          if (res.success === false) {
+            if (res.code === 'NO_SUBSCRIPTION' || res.code === 'QUOTA_EXCEEDED') {
+              const reason = res.code === 'NO_SUBSCRIPTION' ? 'no-subscription' : 'quota-exceeded';
+              this.router.navigate(['/frontoffice/abonnement'], { queryParams: { reason } });
+              return;
+            }
+            this.applyErrorMsg = res.message || 'Impossible d\'envoyer la candidature. Veuillez réessayer.';
+            this.applyErrorJobId = job.id;
+            this.cdr.detectChanges();
+            return;
+          }
+
           this.appliedJobIds.add(job.id);
           this.applicationStatusByJobId.set(job.id, 'EN_COURS_DE_TRAITEMENT');
-          this.applyingJobIds.delete(job.id);
           this.confirmation = {
             title: 'Candidature envoyée !',
             message: 'Votre candidature a été envoyée avec succès. Nous vous contacterons pour vous communiquer le résultat.'
@@ -208,6 +226,15 @@ export class JobsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.applyingJobIds.delete(job.id);
+
+          // Filet de sécurité : si un vrai code HTTP 402 arrive malgré tout (appel direct
+          // au microservice sans passer par une Gateway qui l'altère), on gère aussi ce cas.
+          if (err?.status === 402) {
+            const reason = (err?.error?.message || '').includes('pas d\'abonnement') ? 'no-subscription' : 'quota-exceeded';
+            this.router.navigate(['/frontoffice/abonnement'], { queryParams: { reason } });
+            return;
+          }
+
           this.applyErrorMsg = err?.error?.message || 'Impossible d\'envoyer la candidature. Veuillez réessayer.';
           this.applyErrorJobId = job.id;
           this.cdr.detectChanges();

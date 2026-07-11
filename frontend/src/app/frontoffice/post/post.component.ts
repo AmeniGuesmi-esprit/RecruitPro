@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DecimalPipe, SlicePipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { JobService } from '../../core/services/job.service';
 import { ApplicationService } from '../../core/services/application.service';
 import { Job, JobRequest, JobStatus } from '../../core/models/job.model';
@@ -25,6 +26,9 @@ export class PostComponent implements OnInit {
   skillInput  = '';
   selectedJob: Job | null = null;
 
+  /** true pendant la vérification de l'abonnement, au clic sur "Créer une offre" */
+  checkingSubscription = false;
+
   logoFile:    File | undefined;
   logoPreview: string | null = null;
 
@@ -38,11 +42,63 @@ export class PostComponent implements OnInit {
   /** id de candidature en cours de mise à jour de statut (empêche le double-clic) */
   updatingStatusIds = new Set<number>();
 
+  // ── Suppression / archivage selon présence de candidatures ─────────────────
+  /** Nombre de candidatures par offre (jobId → count), utilisé pour savoir si
+   *  le bouton "Supprimer" doit se transformer en "Archiver". */
+  applicationsCountByJobId: Record<number, number> = {};
+  /** id d'offre en cours de suppression (empêche le double-clic) */
+  deletingIds = new Set<number>();
+
+  /** Petite box flottante (toast) affichée sur la page liste, ex: après suppression/archivage. */
+  toastType: 'success' | 'error' = 'success';
+  toastMsg = '';
+  private toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /** Modal de confirmation stylée (remplace window.confirm) pour Supprimer / Archiver. */
+  confirmDialog: { icon: string; tone: 'danger' | 'warning'; title: string; message: string; confirmLabel: string } | null = null;
+  private pendingConfirmAction: (() => void) | null = null;
+
   constructor(
     private jobService: JobService,
     private applicationService: ApplicationService,
-    private cdr: ChangeDetectorRef   // FIX: ajout du ChangeDetectorRef
+    private cdr: ChangeDetectorRef,   // FIX: ajout du ChangeDetectorRef
+    private router: Router
   ) {}
+
+  /** Ouvre la modal de confirmation stylée et mémorise l'action à exécuter si l'utilisateur confirme. */
+  private askConfirm(dialog: { icon: string; tone: 'danger' | 'warning'; title: string; message: string; confirmLabel: string }, action: () => void) {
+    this.confirmDialog = dialog;
+    this.pendingConfirmAction = action;
+  }
+
+  confirmYes() {
+    const action = this.pendingConfirmAction;
+    this.confirmDialog = null;
+    this.pendingConfirmAction = null;
+    action?.();
+  }
+
+  confirmNo() {
+    this.confirmDialog = null;
+    this.pendingConfirmAction = null;
+  }
+
+  /** Affiche une petite box de confirmation/erreur en haut de la page liste, avec auto-fermeture. */
+  private showToast(type: 'success' | 'error', message: string) {
+    clearTimeout(this.toastTimer);
+    this.toastType = type;
+    this.toastMsg = message;
+    this.cdr.detectChanges();
+    this.toastTimer = setTimeout(() => {
+      this.toastMsg = '';
+      this.cdr.detectChanges();
+    }, 4000);
+  }
+
+  closeToast() {
+    clearTimeout(this.toastTimer);
+    this.toastMsg = '';
+  }
 
   ngOnInit() { this.loadMyJobs(); }
 
@@ -51,7 +107,31 @@ export class PostComponent implements OnInit {
       next: res => {
         this.myJobs = res.data ?? [];
         this.cdr.detectChanges(); // FIX: forcer la détection de changements
+        this.loadApplicationsCounts();
       }
+    });
+  }
+
+  /**
+   * Récupère le nombre de candidatures pour chacune de mes offres, afin de
+   * savoir si le bouton "Supprimer" doit se transformer en "Archiver"
+   * (dès qu'au moins un candidat a postulé, la suppression n'est plus permise).
+   */
+  private loadApplicationsCounts() {
+    this.myJobs.forEach(job => {
+      this.applicationService.getApplicationsForJob(job.id).subscribe({
+        next: res => {
+          this.applicationsCountByJobId[job.id] = (res.data ?? []).length;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          // En cas d'erreur, on ne connaît pas le nombre de candidatures : par
+          // précaution on considère qu'il PEUT y en avoir (empêche une suppression
+          // à tort tant que l'info n'est pas confirmée).
+          this.applicationsCountByJobId[job.id] = 1;
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 
@@ -146,9 +226,47 @@ export class PostComponent implements OnInit {
   // ── Panel control ─────────────────────────────────────────────────────────
 
   openForm() {
-    this.resetForm();
-    this.showForm = true;
-    document.body.classList.add('panel-open');
+    // Ouverture pour MODIFIER une offre existante : pas de vérification d'abonnement
+    // (le quota ne s'applique qu'à la CRÉATION d'une nouvelle offre).
+    if (this.editingId) {
+      this.resetForm();
+      this.showForm = true;
+      document.body.classList.add('panel-open');
+      return;
+    }
+
+    // Ouverture pour CRÉER une offre : on vérifie l'abonnement AVANT d'afficher le
+    // formulaire, pour ne pas laisser la company le remplir en entier pour rien.
+    if (this.checkingSubscription) return;
+    this.checkingSubscription = true;
+    this.errorMsg = '';
+
+    this.jobService.canCreate().subscribe({
+      next: (res) => {
+        this.checkingSubscription = false;
+        const status = res.data;
+        if (status && !status.canCreate) {
+          const reason = status.reason === 'NO_SUBSCRIPTION' ? 'no-subscription' : 'quota-exceeded';
+          this.router.navigate(['/frontoffice/abonnement'], { queryParams: { reason } });
+          return;
+        }
+        this.resetForm();
+        this.showForm = true;
+        document.body.classList.add('panel-open');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.checkingSubscription = false;
+        // 402 renvoyé directement par can-create (cohérent avec le comportement du submit)
+        if (err?.status === 402) {
+          const reason = (err?.error?.message || '').includes('pas d\'abonnement') ? 'no-subscription' : 'quota-exceeded';
+          this.router.navigate(['/frontoffice/abonnement'], { queryParams: { reason } });
+          return;
+        }
+        this.errorMsg = 'Impossible de vérifier votre abonnement pour le moment. Veuillez réessayer.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   closeForm() {
@@ -211,6 +329,15 @@ export class PostComponent implements OnInit {
   /** Toute offre qui n'est plus visible publiquement, quelle qu'en soit la raison. */
   isInactive(job: Job): boolean {
     return job.status !== 'PUBLISHED';
+  }
+
+  /** Au moins une candidature a déjà été reçue pour cette offre. */
+  hasApplications(job: Job): boolean {
+    return (this.applicationsCountByJobId[job.id] ?? 0) > 0;
+  }
+
+  isDeleting(job: Job): boolean {
+    return this.deletingIds.has(job.id);
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -309,8 +436,17 @@ export class PostComponent implements OnInit {
         }
         this.cdr.detectChanges(); // FIX: forcer le rendu après réponse réelle
       },
-      error: () => {
-        this.errorMsg   = 'Une erreur est survenue. Veuillez réessayer.';
+      error: (err) => {
+        // 402 = pas d'abonnement actif, ou quota d'offres atteint → rediriger vers la page abonnement
+        if (!isEditing && err?.status === 402) {
+          this.myJobs = this.myJobs.filter(j => j.id !== tempId);
+          this.cdr.detectChanges();
+          const reason = (err?.error?.message || '').includes('pas d\'abonnement') ? 'no-subscription' : 'quota-exceeded';
+          this.router.navigate(['/frontoffice/abonnement'], { queryParams: { reason } });
+          return;
+        }
+
+        this.errorMsg   = err?.error?.message || 'Une erreur est survenue. Veuillez réessayer.';
         this.successMsg = '';
         if (isEditing) { this.loadMyJobs(); }
         else           {
@@ -343,11 +479,22 @@ export class PostComponent implements OnInit {
     document.body.classList.add('panel-open');
   }
 
-  archiveJob(id: number) {
-    if (!confirm('Archiver cette offre ? Elle ne sera plus visible publiquement.')) return;
+  archiveJob(job: Job) {
+    this.askConfirm(
+      {
+        icon: 'ti-archive',
+        tone: 'warning',
+        title: 'Archiver cette offre ?',
+        message: `L'offre « ${job.title} » ne sera plus visible publiquement. Vous pourrez toujours consulter ses candidatures.`,
+        confirmLabel: 'Archiver'
+      },
+      () => this.performArchive(job)
+    );
+  }
 
+  private performArchive(job: Job) {
     // FIX: optimistic update avec nouvelle référence de tableau
-    const idx = this.myJobs.findIndex(j => j.id === id);
+    const idx = this.myJobs.findIndex(j => j.id === job.id);
     if (idx !== -1) {
       this.myJobs = [
         ...this.myJobs.slice(0, idx),
@@ -357,26 +504,78 @@ export class PostComponent implements OnInit {
       this.cdr.detectChanges(); // FIX: forcer l'affichage immédiat
     }
 
-    this.jobService.archiveJob(id).subscribe({
+    this.jobService.archiveJob(job.id).subscribe({
       next: res => {
-        if (!res.data) {
-          // Même sans data, garder le statut ARCHIVED local (optimistic est déjà fait)
-          return;
+        if (res.data) {
+          const i = this.myJobs.findIndex(j => j.id === job.id);
+          if (i !== -1) {
+            // FIX: nouvelle référence + s'assurer que le statut est bien ARCHIVED
+            this.myJobs = [
+              ...this.myJobs.slice(0, i),
+              { ...this.myJobs[i], ...res.data, status: 'ARCHIVED' as JobStatus },
+              ...this.myJobs.slice(i + 1)
+            ];
+          }
         }
-        const i = this.myJobs.findIndex(j => j.id === id);
-        if (i !== -1) {
-          // FIX: nouvelle référence + s'assurer que le statut est bien ARCHIVED
-          this.myJobs = [
-            ...this.myJobs.slice(0, i),
-            { ...this.myJobs[i], ...res.data, status: 'ARCHIVED' as JobStatus },
-            ...this.myJobs.slice(i + 1)
-          ];
-          this.cdr.detectChanges();
-        }
+        this.showToast('success', `Offre « ${job.title} » archivée avec succès.`);
       },
       error: () => {
         // En cas d'erreur, recharger la vraie liste depuis le backend
         this.loadMyJobs();
+        this.showToast('error', `Impossible d'archiver l'offre « ${job.title} ». Veuillez réessayer.`);
+      }
+    });
+  }
+
+  /**
+   * Supprime définitivement une offre — uniquement disponible tant qu'aucun
+   * candidat n'a postulé (voir hasApplications() / le template). Si le backend
+   * refuse (409, quelqu'un vient de postuler entre-temps), on recharge la liste
+   * pour laisser apparaître le bouton "Archiver" à la place.
+   */
+  deleteJob(job: Job) {
+    if (this.isDeleting(job)) return;
+    if (this.hasApplications(job)) return; // sécurité : ne devrait pas être appelable depuis le template
+
+    this.askConfirm(
+      {
+        icon: 'ti-trash',
+        tone: 'danger',
+        title: 'Supprimer cette offre ?',
+        message: `L'offre « ${job.title} » sera supprimée définitivement. Cette action est irréversible.`,
+        confirmLabel: 'Supprimer définitivement'
+      },
+      () => this.performDelete(job)
+    );
+  }
+
+  private performDelete(job: Job) {
+    this.deletingIds.add(job.id);
+    this.errorMsg = '';
+    this.successMsg = '';
+
+    // FIX: retrait optimiste de la liste
+    const previousJobs = this.myJobs;
+    this.myJobs = this.myJobs.filter(j => j.id !== job.id);
+    this.cdr.detectChanges();
+
+    this.jobService.deleteJob(job.id).subscribe({
+      next: () => {
+        this.deletingIds.delete(job.id);
+        delete this.applicationsCountByJobId[job.id];
+        this.showToast('success', `Offre « ${job.title} » supprimée avec succès.`);
+      },
+      error: (err) => {
+        this.deletingIds.delete(job.id);
+        // Restaure la liste (409 = une candidature vient d'arriver, ou autre erreur)
+        this.myJobs = previousJobs;
+        const msg = err?.status === 409
+          ? (err?.error?.message || `L'offre « ${job.title} » a déjà reçu une candidature, elle ne peut plus être supprimée. Archivez-la à la place.`)
+          : `Impossible de supprimer l'offre « ${job.title} ». Veuillez réessayer.`;
+        this.showToast('error', msg);
+        // On recharge les compteurs pour que le bouton bascule vers "Archiver" si besoin
+        this.loadApplicationsCounts();
+        this.cdr.detectChanges();
       }
     });
   }

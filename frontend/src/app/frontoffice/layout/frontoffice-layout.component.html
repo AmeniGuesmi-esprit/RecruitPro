@@ -21,6 +21,9 @@
         <a routerLink="/frontoffice/applications" routerLinkActive="active">
           <i class="ti ti-file-text"></i><span>Candidatures</span>
         </a>
+        <a routerLink="/frontoffice/abonnement" routerLinkActive="active">
+          <i class="ti ti-credit-card"></i><span>Abonnement</span>
+        </a>
       }
       @if (user?.role === 'COMPANY') {
         <a routerLink="/frontoffice/dashboard" routerLinkActive="active">
@@ -28,6 +31,9 @@
         </a>
         <a routerLink="/frontoffice/post" routerLinkActive="active">
           <i class="ti ti-plus"></i><span>Publier une offre</span>
+        </a>
+        <a routerLink="/frontoffice/abonnement" routerLinkActive="active">
+          <i class="ti ti-credit-card"></i><span>Abonnement</span>
         </a>
       }
     </div>
@@ -60,6 +66,11 @@
            (click)="toggleDropdown($event)" 
            class="dropdown-item">
           <i class="ti ti-user me-2"></i> Mon Profil
+        </a>
+        <a routerLink="/frontoffice/abonnement" 
+           (click)="toggleDropdown($event)" 
+           class="dropdown-item">
+          <i class="ti ti-credit-card me-2"></i> Abonnement
         </a>
         <a href="#" 
            (click)="logout(); $event.preventDefault()" 

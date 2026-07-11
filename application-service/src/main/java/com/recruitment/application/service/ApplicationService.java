@@ -2,9 +2,12 @@ package com.recruitment.application.service;
 
 import com.recruitment.application.client.JobClient;
 import com.recruitment.application.client.JobInfo;
+import com.recruitment.application.client.SubscriptionClient;
+import com.recruitment.application.client.SubscriptionInfo;
 import com.recruitment.application.client.UserClient;
 import com.recruitment.application.client.UserInfo;
 import com.recruitment.application.dto.ApplicationResponse;
+import com.recruitment.application.exception.SubscriptionRequiredException;
 import com.recruitment.application.model.ApplicationStatus;
 import com.recruitment.application.model.JobApplication;
 import com.recruitment.application.repository.JobApplicationRepository;
@@ -24,6 +27,7 @@ public class ApplicationService {
     private final JobApplicationRepository repository;
     private final JobClient jobClient;
     private final UserClient userClient;
+    private final SubscriptionClient subscriptionClient;
 
     @Value("${app.base-url}")
     private String baseUrl;
@@ -31,6 +35,8 @@ public class ApplicationService {
     // ── Postuler ─────────────────────────────────────────────────────────────
     @Transactional
     public ApplicationResponse apply(Long jobId, Long candidateId) {
+        checkSubscriptionQuota(candidateId);
+
         JobInfo job = jobClient.getJob(jobId);
         if (job == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Offre introuvable");
@@ -111,6 +117,14 @@ public class ApplicationService {
         return repository.count();
     }
 
+    // ── INTERNE (job-service) : nombre de candidatures pour une offre ────────
+    // Appelé par job-service avant suppression définitive d'une offre (voir
+    // ApplicationController#countForJobInternal). Pas de vérification de
+    // propriétaire : appel interne service-à-service, pas exposé au frontend.
+    public long countByJob(Long jobId) {
+        return repository.countByJobId(jobId);
+    }
+
     // ── Changer le statut d'une candidature (COMPANY, doit être le recruteur propriétaire) ─
     @Transactional
     public ApplicationResponse updateStatus(Long applicationId, Long recruiterId, ApplicationStatus newStatus) {
@@ -127,6 +141,28 @@ public class ApplicationService {
 
         application.setStatus(newStatus);
         return toResponse(repository.save(application));
+    }
+
+    // ── Abonnement ───────────────────────────────────────────────────────────
+    /**
+     * Vérifie que le candidat a un abonnement actif et n'a pas dépassé le quota de
+     * candidatures autorisé pour la période en cours, avant de le laisser postuler.
+     * - Pas d'abonnement du tout → SubscriptionRequiredException(NO_SUBSCRIPTION),
+     *   le contrôleur renvoie 200 + success=false + code, front redirige vers la page abonnement.
+     * - Abonnement présent mais quota atteint → SubscriptionRequiredException(QUOTA_EXCEEDED),
+     *   idem, pour renouveler l'abonnement.
+     */
+    private void checkSubscriptionQuota(Long candidateId) {
+        SubscriptionInfo subscription = subscriptionClient.getActiveSubscription(candidateId);
+        if (subscription == null) {
+            throw new SubscriptionRequiredException(SubscriptionRequiredException.NO_SUBSCRIPTION,
+                    "Vous n'avez pas d'abonnement actif. Veuillez souscrire à un abonnement pour postuler.");
+        }
+        long candidaturesEnvoyees = repository.countByCandidateIdAndAppliedAtAfter(candidateId, subscription.getDateDebut());
+        if (candidaturesEnvoyees >= subscription.getQuota()) {
+            throw new SubscriptionRequiredException(SubscriptionRequiredException.QUOTA_EXCEEDED,
+                    "Vous avez atteint le nombre de candidatures autorisées par votre abonnement. Veuillez le renouveler.");
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

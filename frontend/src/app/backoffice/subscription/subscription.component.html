@@ -1,15 +1,205 @@
 <div class="row g-4">
   <div class="col-12">
     <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0"><i class="ti ti-credit-card me-2"></i>Abonnement</h5>
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="mb-0"><i class="ti ti-credit-card me-2"></i>Abonnements</h5>
+        <ul class="nav nav-pills mb-0">
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="activeTab === 'plans'" href="#" (click)="selectTab('plans'); $event.preventDefault()">Plans</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" [class.active]="activeTab === 'souscriptions'" href="#" (click)="selectTab('souscriptions'); $event.preventDefault()">Souscriptions</a>
+          </li>
+        </ul>
       </div>
+
       <div class="card-body">
-        <p class="text-muted text-center py-5 mb-0">
-          <i class="ti ti-credit-card-off f-30 d-block mb-2"></i>
-          Cette section sera bientôt disponible.
-        </p>
+
+        <!-- ═══════════ ONGLET PLANS ═══════════ -->
+        @if (activeTab === 'plans') {
+
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary" (click)="openCreateForm()">
+              <i class="ti ti-plus me-1"></i> Nouveau plan
+            </button>
+          </div>
+
+          @if (errorPlans) {
+            <div class="alert alert-danger">{{ errorPlans }}</div>
+          }
+
+          @if (loadingPlans) {
+            <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Montant</th>
+                    <th>Quota</th>
+                    <th>Durée</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (plan of plans; track plan.id) {
+                    <tr>
+                      <td>
+                        <strong>{{ plan.name }}</strong>
+                        @if (plan.description) {
+                          <div class="text-muted small">{{ plan.description }}</div>
+                        }
+                      </td>
+                      <td>
+                        <span class="badge" [class.bg-primary]="plan.type === 'COMPANY'" [class.bg-info]="plan.type === 'CANDIDATE'">
+                          {{ typeLabel(plan.type) }}
+                        </span>
+                      </td>
+                      <td>{{ plan.montant }} DT</td>
+                      <td>{{ plan.quota }} {{ plan.type === 'COMPANY' ? 'offres' : 'candidatures' }}</td>
+                      <td>{{ plan.dureeJours }} j</td>
+                      <td>
+                        @if (plan.active) {
+                          <span class="badge bg-success">Actif</span>
+                        } @else {
+                          <span class="badge bg-secondary">Désactivé</span>
+                        }
+                      </td>
+                      <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-2" (click)="openEditForm(plan)">
+                          <i class="ti ti-edit"></i>
+                        </button>
+                        @if (plan.active) {
+                          <button class="btn btn-sm btn-outline-danger" (click)="deactivatePlan(plan)">
+                            <i class="ti ti-trash"></i>
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="7" class="text-center text-muted py-4">Aucun plan d'abonnement créé pour le moment.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+
+        <!-- ═══════════ ONGLET SOUSCRIPTIONS ═══════════ -->
+        @if (activeTab === 'souscriptions') {
+
+          @if (errorSubs) {
+            <div class="alert alert-danger">{{ errorSubs }}</div>
+          }
+
+          @if (loadingSubs) {
+            <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
+          } @else {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Utilisateur (ID)</th>
+                    <th>Type</th>
+                    <th>Plan</th>
+                    <th>Montant</th>
+                    <th>Quota</th>
+                    <th>Début</th>
+                    <th>Fin</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (sub of subscriptions; track sub.id) {
+                    <tr>
+                      <td>#{{ sub.userId }}</td>
+                      <td>{{ typeLabel(sub.type) }}</td>
+                      <td>{{ sub.planName }}</td>
+                      <td>{{ sub.montant }} DT</td>
+                      <td>{{ sub.quota }}</td>
+                      <td>{{ sub.dateDebut | date:'dd/MM/yyyy' }}</td>
+                      <td>{{ sub.dateFin | date:'dd/MM/yyyy' }}</td>
+                      <td>
+                        @if (sub.status === 'ACTIVE') {
+                          <span class="badge bg-success">Active</span>
+                        } @else {
+                          <span class="badge bg-secondary">Expirée</span>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="8" class="text-center text-muted py-4">Aucune souscription pour le moment.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+
       </div>
     </div>
   </div>
 </div>
+
+<!-- ═══════════ MODAL FORMULAIRE PLAN ═══════════ -->
+@if (showForm) {
+  <div class="modal-backdrop-custom" (click)="closeForm()"></div>
+  <div class="modal-custom">
+    <div class="modal-content-custom">
+      <div class="modal-header">
+        <h5 class="mb-0">{{ editingPlan ? 'Modifier le plan' : 'Nouveau plan d\'abonnement' }}</h5>
+        <button class="btn-close" (click)="closeForm()"></button>
+      </div>
+      <div class="modal-body">
+
+        @if (formError) {
+          <div class="alert alert-danger">{{ formError }}</div>
+        }
+
+        <div class="mb-3">
+          <label class="form-label">Nom du plan</label>
+          <input type="text" class="form-control" [(ngModel)]="form.name" placeholder="Ex: Standard, Premium...">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Type de compte</label>
+          <select class="form-select" [(ngModel)]="form.type">
+            <option value="COMPANY">Société (nombre d'offres publiables)</option>
+            <option value="CANDIDATE">Candidat (nombre de candidatures)</option>
+          </select>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Montant (DT)</label>
+            <input type="number" min="0" class="form-control" [(ngModel)]="form.montant">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">{{ quotaLabel }}</label>
+            <input type="number" min="1" class="form-control" [(ngModel)]="form.quota">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Durée (jours)</label>
+            <input type="number" min="1" class="form-control" [(ngModel)]="form.dureeJours">
+          </div>
+        </div>
+
+        <div class="mb-3 mt-3">
+          <label class="form-label">Description (optionnelle)</label>
+          <textarea class="form-control" rows="2" [(ngModel)]="form.description"></textarea>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" (click)="closeForm()">Annuler</button>
+        <button class="btn btn-primary" [disabled]="savingPlan" (click)="savePlan()">
+          @if (savingPlan) { <span class="spinner-border spinner-border-sm me-2"></span> }
+          {{ editingPlan ? 'Enregistrer' : 'Créer le plan' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

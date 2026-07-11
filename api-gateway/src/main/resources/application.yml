@@ -62,6 +62,18 @@ spring:
             - StripPrefix=0
             - AuthenticationFilter
 
+        # ── subscription-service ─────────────────────────────────────────────────
+        # Plans d'abonnement (admin + consultation), souscription, "mon abonnement"
+        # → toutes les routes nécessitent un JWT valide (le contrôle ADMIN/COMPANY/CANDIDATE
+        #   fin est fait dans subscription-service lui-même via @PreAuthorize)
+        - id: subscription-service-protected
+          uri: lb://subscription-service
+          predicates:
+            - Path=/api/subscriptions/**
+          filters:
+            - StripPrefix=0
+            - AuthenticationFilter
+
 eureka:
   client:
     service-url:

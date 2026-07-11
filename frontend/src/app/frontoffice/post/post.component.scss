@@ -432,6 +432,31 @@ $galaxy-glow : #2f6bff;
     i { font-size: 15px; }
   }
 
+  .btn-delete-card {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: $radius-sm;
+    background: lighten($danger, 36%);
+    color: darken($danger, 10%);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background .2s;
+
+    &:hover:not(:disabled) { background: lighten($danger, 26%); }
+    &:disabled {
+      background: #f1f2f4;
+      color: $text-muted;
+      cursor: not-allowed;
+    }
+    i { font-size: 15px; }
+  }
+
   .footer-note {
     flex: 1;
     display: inline-flex;
@@ -555,6 +580,154 @@ $galaxy-glow : #2f6bff;
 .alert-error {
   background: lighten($danger, 36%);
   color: darken($danger, 10%);
+}
+
+// ── Toast — petite box flottante (succès/erreur suppression, archivage…) ────
+.toast-box {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 280px;
+  max-width: 380px;
+  padding: 14px 16px;
+  border-radius: $radius-sm;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+  font-size: 13px;
+  font-weight: 500;
+  animation: toast-in .25s ease-out;
+
+  i:first-child { font-size: 18px; flex-shrink: 0; }
+  span { flex: 1; line-height: 1.4; }
+
+  .toast-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    line-height: 0;
+    color: inherit;
+    opacity: .6;
+    flex-shrink: 0;
+    &:hover { opacity: 1; }
+    i { font-size: 14px; }
+  }
+}
+
+.toast-success {
+  background: lighten($success, 48%);
+  color: darken($success, 15%);
+  border: 1px solid lighten($success, 30%);
+}
+
+.toast-error {
+  background: lighten($danger, 36%);
+  color: darken($danger, 10%);
+  border: 1px solid lighten($danger, 20%);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Modal de confirmation stylée (Supprimer / Archiver) ──────────────────────
+.modal-overlay.confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  background: rgba(31, 20, 90, .4);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn-confirm .2s ease;
+}
+
+@keyframes fadeIn-confirm {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.confirmation-card {
+  background: $card-bg;
+  border-radius: 22px;
+  width: 100%;
+  max-width: 380px;
+  padding: 2.25rem 2rem;
+  text-align: center;
+  box-shadow: 0 30px 70px rgba(31, 20, 90, .25);
+  animation: popIn-confirm .25s cubic-bezier(.34, 1.56, .64, 1);
+
+  h3 { margin: 1.1rem 0 .6rem; font-size: 1.15rem; font-weight: 700; color: $text; }
+  p  { margin: 0 0 1.5rem; font-size: .9rem; color: $text-muted; line-height: 1.6; }
+}
+
+@keyframes popIn-confirm {
+  from { opacity: 0; transform: scale(.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.confirmation-icon {
+  width: 62px;
+  height: 62px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba($primary, .12);
+  i { font-size: 2rem; color: $primary; }
+
+  &.tone-warning {
+    background: rgba($warning, .14);
+    i { color: $warning; }
+  }
+  &.tone-danger {
+    background: rgba($danger, .14);
+    i { color: $danger; }
+  }
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: .75rem;
+}
+
+.btn-confirmation-cancel,
+.btn-confirmation-ok {
+  flex: 1;
+  padding: .8rem 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: .9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+  &:hover { transform: translateY(-2px); }
+}
+
+.btn-confirmation-cancel {
+  background: $primary-lt;
+  color: $text-muted;
+  &:hover { background: darken($primary-lt, 6%); }
+}
+
+.btn-confirmation-ok {
+  color: #fff;
+  background: linear-gradient(135deg, $primary, $accent);
+  box-shadow: 0 8px 20px rgba($primary, .3);
+  &:hover { box-shadow: 0 12px 26px rgba($primary, .38); }
+
+  &.tone-danger {
+    background: linear-gradient(135deg, $danger, #ff8a65);
+    box-shadow: 0 8px 20px rgba($danger, .3);
+    &:hover { box-shadow: 0 12px 26px rgba($danger, .38); }
+  }
 }
 
 // ── Form fields ─────────────────────────────────────────────────────────────
@@ -860,7 +1033,7 @@ $galaxy-glow : #2f6bff;
   margin-top: 24px; padding-top: 18px;
   border-top: 1px solid $border;
 
-  .btn-edit-card, .btn-archive-card { flex: 1; }
+  .btn-edit-card, .btn-archive-card, .btn-delete-card { flex: 1; }
 }
 
 // ── Bouton "Candidats" dans le footer de carte ──────────────────────────────

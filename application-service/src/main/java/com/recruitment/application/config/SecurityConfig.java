@@ -37,7 +37,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Toutes les routes de ce microservice nécessitent d'être authentifié
+                        // Appelé en interne par job-service (pas de JWT propagé) :
+                        // même principe que /api/subscriptions/internal/** côté subscription-service.
+                        .requestMatchers("/api/applications/internal/**").permitAll()
+                        // Toutes les autres routes de ce microservice nécessitent d'être authentifié
                         // (candidat pour postuler/annuler, recruteur pour voir les candidats)
                         .anyRequest().authenticated()
                 )

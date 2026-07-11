@@ -1,5 +1,9 @@
 package com.recruitment.job.service;
 
+import com.recruitment.job.client.ApplicationClient;
+import com.recruitment.job.client.SubscriptionClient;
+import com.recruitment.job.client.SubscriptionInfo;
+import com.recruitment.job.dto.CanCreateResponse;
 import com.recruitment.job.dto.JobRequest;
 import com.recruitment.job.dto.JobResponse;
 import com.recruitment.job.model.Job;
@@ -9,10 +13,12 @@ import com.recruitment.job.repository.JobSpecifications;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -26,6 +32,8 @@ public class JobService {
 
     private final JobRepository jobRepository;
     private final FileStorageService fileStorageService;
+    private final SubscriptionClient subscriptionClient;
+    private final ApplicationClient applicationClient;
 
     /** Statuts visibles publiquement : PUBLISHED (postulable) + CLOTURE (visible, non postulable). ARCHIVED reste caché. */
     private static final List<JobStatus> PUBLIC_STATUSES = List.of(JobStatus.PUBLISHED, JobStatus.CLOTURE);
@@ -36,6 +44,7 @@ public class JobService {
     // ── Création ────────────────────────────────────────────────────────────────
 
     public JobResponse createJob(JobRequest req, MultipartFile logo, Long recruiterId) throws IOException {
+        checkSubscriptionQuota(recruiterId);
         validateDateCloture(req.getDateCloture());
         validateDateEntretien(req.getDateCloture(), req.getDateEntretien());
 
@@ -172,6 +181,28 @@ public class JobService {
     }
 
     /**
+     * Suppression DÉFINITIVE d'une offre, réservée aux offres n'ayant reçu AUCUNE
+     * candidature. Si une ou plusieurs candidatures existent déjà, la suppression
+     * est refusée (409) : le recruteur doit archiver l'offre à la place (voir
+     * archiveJob ci-dessus), pour ne pas perdre l'historique des candidatures.
+     */
+    @Transactional
+    public void deleteJob(Long id, Long recruiterId) {
+        Job job = findOrThrow(id);
+        if (!job.getRecruiterId().equals(recruiterId)) throw new SecurityException("Non autorisé");
+
+        if (applicationClient.hasApplications(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Impossible de supprimer une offre ayant déjà reçu des candidatures. Archivez-la à la place.");
+        }
+
+        if (job.getLogoPath() != null) {
+            fileStorageService.deleteLogo(job.getLogoPath());
+        }
+        jobRepository.delete(job);
+    }
+
+    /**
      * Passage automatique au statut CLOTURE : toute offre PUBLISHED dont la
      * date de clôture est dépassée passe à CLOTURE (distinct de ARCHIVED, qui
      * reste réservé à l'archivage manuel par le recruteur). Exécuté
@@ -184,6 +215,57 @@ public class JobService {
         if (expired.isEmpty()) return;
         expired.forEach(j -> j.setStatus(JobStatus.CLOTURE));
         jobRepository.saveAll(expired);
+    }
+
+    // ── Abonnement ───────────────────────────────────────────────────────────────
+
+    /**
+     * Calcule si la company peut créer une nouvelle offre, sans lever d'exception.
+     * Utilisé par GET /api/jobs/can-create pour que le frontend vérifie l'abonnement
+     * AVANT d'ouvrir le formulaire de création (plutôt qu'après un submit qui échoue).
+     */
+    public CanCreateResponse canCreateJob(Long recruiterId) {
+        SubscriptionInfo subscription = subscriptionClient.getActiveSubscription(recruiterId);
+        if (subscription == null) {
+            return CanCreateResponse.builder()
+                    .canCreate(false)
+                    .reason("NO_SUBSCRIPTION")
+                    .quota(0)
+                    .used(0L)
+                    .build();
+        }
+        long offresPubliees = jobRepository.countByRecruiterIdAndCreatedAtAfter(recruiterId, subscription.getDateDebut());
+        if (offresPubliees >= subscription.getQuota()) {
+            return CanCreateResponse.builder()
+                    .canCreate(false)
+                    .reason("QUOTA_EXCEEDED")
+                    .quota(subscription.getQuota())
+                    .used(offresPubliees)
+                    .build();
+        }
+        return CanCreateResponse.builder()
+                .canCreate(true)
+                .reason("OK")
+                .quota(subscription.getQuota())
+                .used(offresPubliees)
+                .build();
+    }
+
+    /**
+     * Vérifie que la company a un abonnement actif et n'a pas dépassé le quota d'offres
+     * autorisé pour la période en cours, avant de la laisser créer une nouvelle offre.
+     * - Pas d'abonnement du tout → 402, front redirige vers la page abonnement pour en créer un.
+     * - Abonnement présent mais quota atteint → 402, front redirige vers la page abonnement
+     *   pour le renouveler.
+     */
+    private void checkSubscriptionQuota(Long recruiterId) {
+        CanCreateResponse status = canCreateJob(recruiterId);
+        if (!status.isCanCreate()) {
+            String message = "NO_SUBSCRIPTION".equals(status.getReason())
+                    ? "Vous n'avez pas d'abonnement actif. Veuillez souscrire à un abonnement pour publier une offre."
+                    : "Vous avez atteint le nombre d'offres autorisées par votre abonnement. Veuillez le renouveler.";
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, message);
+        }
     }
 
     // ── Utilitaires ──────────────────────────────────────────────────────────────

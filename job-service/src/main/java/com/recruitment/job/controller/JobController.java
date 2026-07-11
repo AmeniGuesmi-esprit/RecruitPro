@@ -2,6 +2,7 @@ package com.recruitment.job.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.recruitment.job.dto.ApiResponse;
+import com.recruitment.job.dto.CanCreateResponse;
 import com.recruitment.job.dto.JobRequest;
 import com.recruitment.job.dto.JobResponse;
 import com.recruitment.job.service.FileStorageService;
@@ -95,6 +96,13 @@ public class JobController {
         return ResponseEntity.ok(ApiResponse.ok("Mes offres", jobService.getJobsByRecruiter(recruiterId)));
     }
 
+    // ── COMPANY : vérifier l'abonnement AVANT d'ouvrir le formulaire de création ──
+    @GetMapping("/can-create")
+    public ResponseEntity<ApiResponse<CanCreateResponse>> canCreate(Authentication auth) {
+        Long recruiterId = (Long) auth.getCredentials();
+        return ResponseEntity.ok(ApiResponse.ok("Statut d'abonnement", jobService.canCreateJob(recruiterId)));
+    }
+
     // ── COMPANY : créer une offre (multipart) ────────────────────────────────────
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<JobResponse>> createJob(
@@ -126,5 +134,13 @@ public class JobController {
     public ResponseEntity<ApiResponse<JobResponse>> archiveJob(@PathVariable Long id, Authentication auth) {
         Long recruiterId = (Long) auth.getCredentials();
         return ResponseEntity.ok(ApiResponse.ok("Offre archivée", jobService.archiveJob(id, recruiterId)));
+    }
+
+    // ── COMPANY : supprimer une offre définitivement (uniquement si 0 candidature) ──
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteJob(@PathVariable Long id, Authentication auth) {
+        Long recruiterId = (Long) auth.getCredentials();
+        jobService.deleteJob(id, recruiterId);
+        return ResponseEntity.ok(ApiResponse.ok("Offre supprimée", null));
     }
 }

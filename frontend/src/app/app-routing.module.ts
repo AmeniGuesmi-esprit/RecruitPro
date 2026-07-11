@@ -132,6 +132,12 @@ const routes: Routes = [
          path: 'jobs',
          loadComponent: () => 
           import('./frontoffice/jobs/jobs.component').then(c => c.JobsComponent) 
+      },
+      {
+        // ── ABONNEMENT : accessible aux CANDIDATE et COMPANY (voir nav-bar) ──
+        path: 'abonnement',
+        loadComponent: () =>
+          import('./frontoffice/abonnement/abonnement.component').then(c => c.AbonnementComponent)
       }
     ]
   },

@@ -38,12 +38,18 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // lecture publique des offres actives et fichiers logos
                         .requestMatchers(HttpMethod.GET, "/api/jobs", "/api/jobs/{id}", "/api/jobs/files/**").permitAll()
+                        // laisse passer le forward interne d'erreur (sinon Spring Security masque
+                        // toute exception métier — 409, 500... — derrière un 403 générique)
+                        .requestMatchers("/error").permitAll()
                         // création / modification / archivage → COMPANY uniquement
                         .requestMatchers(HttpMethod.POST, "/api/jobs").hasRole("COMPANY")
                         .requestMatchers(HttpMethod.PUT, "/api/jobs/**").hasRole("COMPANY")
                         .requestMatchers(HttpMethod.PATCH, "/api/jobs/**").hasRole("COMPANY")
+                        // suppression → COMPANY uniquement, et seulement si aucune candidature (vérifié en service)
+                        .requestMatchers(HttpMethod.DELETE, "/api/jobs/**").hasRole("COMPANY")
                         // offres du recruteur connecté
                         .requestMatchers("/api/jobs/my").hasRole("COMPANY")
+                        .requestMatchers("/api/jobs/can-create").hasRole("COMPANY")
                         // ADMIN : toutes les offres, tous statuts
                         .requestMatchers("/api/jobs/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

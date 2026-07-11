@@ -4,6 +4,7 @@ import com.recruitment.application.dto.ApiResponse;
 import com.recruitment.application.dto.ApplicationResponse;
 import com.recruitment.application.dto.ApplyRequest;
 import com.recruitment.application.dto.UpdateStatusRequest;
+import com.recruitment.application.exception.SubscriptionRequiredException;
 import com.recruitment.application.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +26,15 @@ public class ApplicationController {
     @PreAuthorize("hasRole('CANDIDATE')")
     public ResponseEntity<ApiResponse<ApplicationResponse>> apply(@RequestBody ApplyRequest request, Authentication auth) {
         Long candidateId = (Long) auth.getCredentials();
-        ApplicationResponse response = applicationService.apply(request.getJobId(), candidateId);
-        return ResponseEntity.ok(ApiResponse.ok("Candidature envoyée", response));
+        try {
+            ApplicationResponse response = applicationService.apply(request.getJobId(), candidateId);
+            return ResponseEntity.ok(ApiResponse.ok("Candidature envoyée", response));
+        } catch (SubscriptionRequiredException e) {
+            // Volontairement HTTP 200 : certains environnements (Gateway/proxy) altèrent les
+            // codes 4xx en route, ce qui empêchait le front de détecter fiablement ce cas.
+            // Le front distingue ce cas via success=false + code, pas via le statut HTTP.
+            return ResponseEntity.ok(ApiResponse.error(e.getMessage(), e.getCode()));
+        }
     }
 
     // ── CANDIDATE : annuler sa candidature ───────────────────────────────────
@@ -74,6 +82,16 @@ public class ApplicationController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Long>> countAll() {
         return ResponseEntity.ok(ApiResponse.ok("Total candidatures", applicationService.countAll()));
+    }
+
+    // ── INTERNE (job-service) : nombre de candidatures pour une offre ────────
+    // Appelé par JobService#deleteJob (via ApplicationClient) avant suppression
+    // définitive d'une offre. Pas de JWT propagé lors de cet appel service-à-
+    // service : route ouverte via SecurityConfig ("/api/applications/internal/**"),
+    // même principe que /api/subscriptions/internal/** côté subscription-service.
+    @GetMapping("/internal/count/{jobId}")
+    public ResponseEntity<ApiResponse<Long>> countForJobInternal(@PathVariable Long jobId) {
+        return ResponseEntity.ok(ApiResponse.ok("Nombre de candidatures", applicationService.countByJob(jobId)));
     }
 
     // ── COMPANY : changer le statut d'une candidature (accepter / refuser) ───

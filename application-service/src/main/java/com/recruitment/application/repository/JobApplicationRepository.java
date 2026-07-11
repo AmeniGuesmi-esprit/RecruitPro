@@ -3,6 +3,7 @@ package com.recruitment.application.repository;
 import com.recruitment.application.model.JobApplication;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +20,10 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     List<JobApplication> findByCandidateId(Long candidateId);
 
     void deleteByJobIdAndCandidateId(Long jobId, Long candidateId);
+
+    /** Nombre de candidatures envoyées par ce candidat depuis une date donnée (quota d'abonnement). */
+    long countByCandidateIdAndAppliedAtAfter(Long candidateId, LocalDateTime since);
+
+    /** Nombre de candidatures reçues pour une offre (utilisé par job-service avant suppression définitive). */
+    long countByJobId(Long jobId);
 }
