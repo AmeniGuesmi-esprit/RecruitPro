@@ -18,7 +18,9 @@ export const NavigationItems: NavigationItem[] = [
       { id: 'admin-offers', title: 'Offers', type: 'item',
         classes: 'nav-item', url: '/backoffice/offers', icon: 'ti ti-briefcase', breadcrumbs: false },
       { id: 'admin-subscription', title: 'Abonnement', type: 'item',
-        classes: 'nav-item', url: '/backoffice/abonnement', icon: 'ti ti-credit-card', breadcrumbs: false }
+        classes: 'nav-item', url: '/backoffice/abonnement', icon: 'ti ti-credit-card', breadcrumbs: false },
+      { id: 'admin-souscriptions', title: 'Souscriptions', type: 'item',
+        classes: 'nav-item', url: '/backoffice/souscriptions', icon: 'ti ti-receipt', breadcrumbs: false }
     ]
   }
 ];

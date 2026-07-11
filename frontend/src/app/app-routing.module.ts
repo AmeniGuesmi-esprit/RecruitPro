@@ -84,6 +84,11 @@ const routes: Routes = [
           import('./backoffice/subscription/subscription.component').then(c => c.SubscriptionComponent)
       },
       {
+        path: 'souscriptions',
+        loadComponent: () =>
+          import('./backoffice/souscriptions/souscriptions.component').then(c => c.SouscriptionsComponent)
+      },
+      {
         path: 'profile',
         loadComponent: () =>
           import('./backoffice/profile/admin-profile.component').then(c => c.AdminProfileComponent)

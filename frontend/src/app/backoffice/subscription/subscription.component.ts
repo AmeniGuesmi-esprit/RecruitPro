@@ -2,7 +2,10 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SubscriptionService } from '../../core/services/subscription.service';
-import { PlanRequest, SubscriptionPlan, SubscriptionType, UserSubscription } from '../../core/models/subscription.model';
+import { PlanRequest, SubscriptionPlan, SubscriptionType } from '../../core/models/subscription.model';
+
+type PlanTypeFilter = 'ALL' | 'COMPANY' | 'CANDIDATE';
+type PlanStatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
 
 @Component({
   selector: 'app-subscription',
@@ -13,24 +16,18 @@ import { PlanRequest, SubscriptionPlan, SubscriptionType, UserSubscription } fro
 })
 export class SubscriptionComponent implements OnInit {
 
-  activeTab: 'plans' | 'souscriptions' = 'plans';
-
   // ── Plans ──────────────────────────────────────────────────────────────
   plans: SubscriptionPlan[] = [];
   loadingPlans = true;
   errorPlans: string | null = null;
+  planTypeFilter: PlanTypeFilter = 'ALL';
+  planStatusFilter: PlanStatusFilter = 'ALL';
 
   showForm = false;
   editingPlan: SubscriptionPlan | null = null;
   form: PlanRequest = this.emptyForm();
   savingPlan = false;
   formError: string | null = null;
-
-  // ── Souscriptions (vue admin) ─────────────────────────────────────────
-  subscriptions: UserSubscription[] = [];
-  loadingSubs = false;
-  errorSubs: string | null = null;
-  subsLoadedOnce = false;
 
   constructor(
     private subscriptionService: SubscriptionService,
@@ -39,14 +36,6 @@ export class SubscriptionComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPlans();
-  }
-
-  // ── Tabs ───────────────────────────────────────────────────────────────
-  selectTab(tab: 'plans' | 'souscriptions'): void {
-    this.activeTab = tab;
-    if (tab === 'souscriptions' && !this.subsLoadedOnce) {
-      this.loadSubscriptions();
-    }
   }
 
   // ── Chargement ─────────────────────────────────────────────────────────
@@ -67,22 +56,40 @@ export class SubscriptionComponent implements OnInit {
     });
   }
 
-  loadSubscriptions(): void {
-    this.loadingSubs = true;
-    this.errorSubs = null;
-    this.subscriptionService.getAllSubscriptionsAdmin().subscribe({
-      next: (res) => {
-        this.subscriptions = res.data ?? [];
-        this.loadingSubs = false;
-        this.subsLoadedOnce = true;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.errorSubs = 'Impossible de charger les souscriptions.';
-        this.loadingSubs = false;
-        this.cdr.detectChanges();
-      }
+  // ── Filtre par type de plan (Tous / Company / Candidat) ──────────────────
+  setPlanTypeFilter(type: PlanTypeFilter): void {
+    this.planTypeFilter = type;
+  }
+
+  // ── Filtre par statut de plan (Tous / Actif / Désactivé) ─────────────────
+  setPlanStatusFilter(status: PlanStatusFilter): void {
+    this.planStatusFilter = status;
+  }
+
+  get filteredPlans(): SubscriptionPlan[] {
+    return this.plans.filter(p => {
+      const matchesType = this.planTypeFilter === 'ALL' || p.type === this.planTypeFilter;
+      const matchesStatus =
+        this.planStatusFilter === 'ALL' ||
+        (this.planStatusFilter === 'ACTIVE' ? p.active : !p.active);
+      return matchesType && matchesStatus;
     });
+  }
+
+  get companyPlansCount(): number {
+    return this.plans.filter(p => p.type === 'COMPANY').length;
+  }
+
+  get candidatePlansCount(): number {
+    return this.plans.filter(p => p.type === 'CANDIDATE').length;
+  }
+
+  get activePlansCount(): number {
+    return this.plans.filter(p => p.active).length;
+  }
+
+  get inactivePlansCount(): number {
+    return this.plans.filter(p => !p.active).length;
   }
 
   // ── Formulaire plan ────────────────────────────────────────────────────
@@ -161,5 +168,13 @@ export class SubscriptionComponent implements OnInit {
 
   typeLabel(type: SubscriptionType): string {
     return type === 'COMPANY' ? 'Société' : 'Candidat';
+  }
+
+  typeIcon(type: SubscriptionType): string {
+    return type === 'COMPANY' ? 'ti-building' : 'ti-user';
+  }
+
+  quotaUnitLabel(type: SubscriptionType): string {
+    return type === 'COMPANY' ? 'offres' : 'candidatures';
   }
 }

@@ -1,12 +1,39 @@
 <div class="row g-4">
+  <!-- Barre de recherche + filtres par statut — style repris de la page post -->
   <div class="col-12">
-    <div class="card">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <h5 class="mb-0"><i class="ti ti-briefcase me-2"></i>Offres ({{ jobs.length }})</h5>
-        <button class="btn btn-sm btn-outline-primary" (click)="loadJobs()">
-          <i class="ti ti-refresh"></i>
-        </button>
+    <div class="galaxy-toolbar">
+      <div class="galaxy-heading">
+        <span class="galaxy-eyebrow"><i class="ti ti-briefcase"></i> Offres</span>
       </div>
+
+      <div class="toolbar-row">
+        <div class="toolbar-search">
+          <i class="ti ti-search"></i>
+          <input type="text" placeholder="Rechercher (titre, société)..."
+                 [(ngModel)]="search" (ngModelChange)="onSearchChange()">
+        </div>
+
+        <div class="filter-group">
+          <button type="button" class="btn-filter" [class.active]="statusFilter === 'ALL'" (click)="setStatusFilter('ALL')">
+            <i class="ti ti-list"></i><span>Tous</span><span class="count">{{ jobs.length }}</span>
+          </button>
+          <button type="button" class="btn-filter" [class.active]="statusFilter === 'PUBLISHED'" (click)="toggleStatusFilter('PUBLISHED')">
+            <i class="ti ti-circle-check"></i><span>Publiées</span><span class="count">{{ countByStatus('PUBLISHED') }}</span>
+          </button>
+          <button type="button" class="btn-filter" [class.active]="statusFilter === 'CLOTURE'" (click)="toggleStatusFilter('CLOTURE')">
+            <i class="ti ti-lock"></i><span>Clôturées</span><span class="count">{{ countByStatus('CLOTURE') }}</span>
+          </button>
+          <button type="button" class="btn-filter" [class.active]="statusFilter === 'ARCHIVED'" (click)="toggleStatusFilter('ARCHIVED')">
+            <i class="ti ti-archive"></i><span>Archivées</span><span class="count">{{ countByStatus('ARCHIVED') }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des offres (grille 2 colonnes) -->
+  <div [ngClass]="selectedJob ? 'col-xl-7 col-lg-6 col-12' : 'col-12'">
+    <div class="card shadow-sm">
       <div class="card-body">
         @if (loading) {
           <div class="text-center py-5">
@@ -14,101 +41,256 @@
             <p class="text-muted mt-2">Chargement des offres...</p>
           </div>
         } @else if (error) {
-          <div class="alert alert-danger">{{ error }}</div>
-        } @else if (jobs.length === 0) {
-          <p class="text-muted text-center py-4">
+          <div class="alert alert-danger d-flex align-items-center gap-2">
+            <i class="ti ti-alert-circle f-20"></i>
+            <span>{{ error }}</span>
+          </div>
+        } @else if (filteredJobs.length === 0) {
+          <p class="text-muted text-center py-5 mb-0">
             <i class="ti ti-database-off f-30 d-block mb-2"></i>
-            Aucune offre pour le moment
+            Aucune offre ne correspond à votre recherche
           </p>
         } @else {
-          @for (job of jobs; track job.id) {
-            <div class="card mb-3 border">
-              <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2"
-                   style="cursor:pointer" (click)="toggleJob(job)">
-                <div class="d-flex align-items-center gap-3">
+          <div class="offers-grid">
+            @for (job of pagedJobs; track job.id) {
+              <div class="offer-card"
+                   [class.is-published]="job.status === 'PUBLISHED'"
+                   [class.is-cloture]="job.status === 'CLOTURE'"
+                   [class.is-archived]="job.status === 'ARCHIVED'"
+                   [class.selected]="selectedJob?.id === job.id"
+                   (click)="openDetail(job)">
+
+                <!-- Bannière : logo + badge type (régime horaire) + badge statut -->
+                <div class="card-banner">
                   @if (job.logoUrl) {
-                    <img [src]="job.logoUrl" alt="logo" width="40" height="40" style="object-fit:cover;border-radius:8px">
+                    <img [src]="job.logoUrl" [alt]="job.companyName" class="banner-img">
                   } @else {
-                    <div class="avatar avatar-md bg-light-primary">
-                      <i class="ti ti-building f-20"></i>
+                    <div class="banner-placeholder">
+                      <i class="ti ti-building-skyscraper"></i>
                     </div>
                   }
-                  <div>
-                    <h6 class="mb-0">{{ job.title }}</h6>
-                    <small class="text-muted">{{ job.companyName }}</small>
+                  <span class="badge-type"><i class="ti ti-briefcase"></i>{{ job.workSchedule }}</span>
+                  <span class="badge-status" [class.archived]="job.status === 'ARCHIVED'" [class.cloture]="job.status === 'CLOTURE'">
+                    <i class="ti" [class]="statusIcon(job.status)"></i>{{ statusLabel(job.status) }}
+                  </span>
+                </div>
+
+                <!-- Corps -->
+                <div class="card-body">
+                  <h3 class="card-title">{{ job.title }}</h3>
+                  <p class="card-company">{{ job.companyName }}</p>
+                  <p class="card-desc">{{ job.description | slice:0:110 }}{{ job.description.length > 110 ? '…' : '' }}</p>
+
+                  <div class="card-meta">
+                    <div class="meta-row">
+                      <i class="ti ti-coin"></i>
+                      <span>{{ job.salary }} DT / mois</span>
+                    </div>
+                    <div class="meta-row">
+                      <i class="ti ti-calendar-plus"></i>
+                      <span>Créée le {{ job.createdAt | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="meta-row">
+                      <i class="ti ti-lock"></i>
+                      <span>Clôture le {{ job.dateCloture | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="meta-row">
+                      <i class="ti ti-calendar-time"></i>
+                      <span>Entretien le {{ job.dateEntretien | date:'dd/MM/yyyy' }}</span>
+                    </div>
                   </div>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge"
-                    [ngClass]="{
-                      'bg-success': job.status === 'PUBLISHED',
-                      'bg-secondary': job.status === 'CLOTURE',
-                      'bg-dark': job.status === 'ARCHIVED'
-                    }">{{ statusLabel(job.status) }}</span>
-                  <span class="text-muted small">{{ job.salary }} DT</span>
-                  <i class="ti" [ngClass]="expandedJobId === job.id ? 'ti-chevron-up' : 'ti-chevron-down'"></i>
+
+                <!-- Footer -->
+                <div class="card-footer" (click)="$event.stopPropagation()">
+                  <button class="btn-candidates-card" (click)="openCandidates(job, $event)">
+                    <i class="ti ti-users"></i>Candidats
+                  </button>
                 </div>
               </div>
+            }
+          </div>
 
-              @if (expandedJobId === job.id) {
-                <div class="card-body border-top pt-3">
-                  @if (applicationsLoading[job.id]) {
-                    <div class="text-center py-3">
-                      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                      <span class="ms-2 text-muted">Chargement des candidatures...</span>
-                    </div>
-                  } @else if (!applicationsByJob[job.id] || applicationsByJob[job.id].length === 0) {
-                    <p class="text-muted text-center py-3 mb-0">
-                      <i class="ti ti-user-off f-24 d-block mb-1"></i>
-                      Aucune candidature reçue pour cette offre
-                    </p>
-                  } @else {
-                    <div class="table-responsive">
-                      <table class="table table-sm table-hover align-middle">
-                        <thead>
-                          <tr>
-                            <th>Candidat</th>
-                            <th>Email</th>
-                            <th>Statut</th>
-                            <th>Date de candidature</th>
-                            <th>CV</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (app of applicationsByJob[job.id]; track app.id) {
-                            <tr>
-                              <td>{{ app.candidateFirstName }} {{ app.candidateLastName }}</td>
-                              <td>{{ app.candidateEmail }}</td>
-                              <td>
-                                <span class="badge"
-                                  [ngClass]="{
-                                    'bg-warning': app.status === 'EN_COURS_DE_TRAITEMENT',
-                                    'bg-success': app.status === 'ACCEPTEE_POUR_ENTRETIEN',
-                                    'bg-danger': app.status === 'REFUSEE'
-                                  }">{{ app.status }}</span>
-                              </td>
-                              <td>{{ app.appliedAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                              <td>
-                                @if (app.cvUrl) {
-                                  <a [href]="app.cvUrl" target="_blank" class="btn btn-sm btn-outline-secondary">
-                                    <i class="ti ti-file-cv"></i>
-                                  </a>
-                                } @else {
-                                  <span class="text-muted">—</span>
-                                }
-                              </td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    </div>
+          @if (totalPages > 1) {
+            <div class="d-flex align-items-center justify-content-between pt-3 mt-3 border-top">
+              <span class="text-muted f-14">Page {{ currentPage }} sur {{ totalPages }}</span>
+              <nav>
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item" [class.disabled]="currentPage === 1">
+                    <button class="page-link" (click)="goToPage(currentPage - 1)"><i class="ti ti-chevron-left"></i></button>
+                  </li>
+                  @for (p of pageNumbers; track p) {
+                    <li class="page-item" [class.active]="p === currentPage">
+                      <button class="page-link" (click)="goToPage(p)">{{ p }}</button>
+                    </li>
                   }
-                </div>
-              }
+                  <li class="page-item" [class.disabled]="currentPage === totalPages">
+                    <button class="page-link" (click)="goToPage(currentPage + 1)"><i class="ti ti-chevron-right"></i></button>
+                  </li>
+                </ul>
+              </nav>
             </div>
           }
         }
       </div>
     </div>
   </div>
+
+  <!-- Panneau latéral : détail de l'offre OU liste des candidats -->
+  @if (selectedJob) {
+    <div class="col-xl-5 col-lg-6 col-12">
+      <div class="card shadow-sm side-panel">
+        <div class="card-header bg-transparent d-flex align-items-center justify-content-between">
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm" [class.btn-primary]="panelMode === 'detail'" [class.btn-outline-primary]="panelMode !== 'detail'"
+                    (click)="showDetailForSelected()">
+              <i class="ti ti-info-circle me-1"></i>Détail
+            </button>
+            <button class="btn btn-sm" [class.btn-primary]="panelMode === 'candidates'" [class.btn-outline-primary]="panelMode !== 'candidates'"
+                    (click)="showCandidatesForSelected()">
+              <i class="ti ti-users me-1"></i>Candidats
+            </button>
+          </div>
+          <button class="btn btn-sm btn-light" (click)="closePanel()"><i class="ti ti-x"></i></button>
+        </div>
+
+        <div class="card-body">
+          @if (panelMode === 'detail') {
+            <div class="d-flex align-items-center gap-3 mb-3">
+              @if (selectedJob.logoUrl) {
+                <img [src]="selectedJob.logoUrl" alt="logo" class="offer-logo offer-logo-lg">
+              } @else {
+                <div class="offer-logo offer-logo-lg offer-logo-placeholder">
+                  <i class="ti ti-building f-24"></i>
+                </div>
+              }
+              <div>
+                <h5 class="mb-0">{{ selectedJob.title }}</h5>
+                <span class="text-muted">{{ selectedJob.companyName }}</span>
+              </div>
+            </div>
+
+            <span class="badge rounded-pill offer-status-badge mb-3"
+              [ngClass]="{
+                'bg-success': selectedJob.status === 'PUBLISHED',
+                'bg-secondary': selectedJob.status === 'CLOTURE',
+                'bg-dark': selectedJob.status === 'ARCHIVED'
+              }">
+              <i class="ti me-1" [ngClass]="statusIcon(selectedJob.status)"></i>{{ statusLabel(selectedJob.status) }}
+            </span>
+
+            <h6 class="text-muted text-uppercase f-12 mt-3">Description</h6>
+            <p>{{ selectedJob.description }}</p>
+
+            @if (selectedJob.skills?.length) {
+              <h6 class="text-muted text-uppercase f-12 mt-3">Compétences</h6>
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                @for (skill of selectedJob.skills; track skill) {
+                  <span class="badge bg-light-primary text-primary rounded-pill">{{ skill }}</span>
+                }
+              </div>
+            }
+
+            <div class="row g-3 mt-1">
+              <div class="col-6">
+                <div class="info-block">
+                  <i class="ti ti-coin text-success"></i>
+                  <div>
+                    <label>Salaire</label>
+                    <span>{{ selectedJob.salary }} DT / mois</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="info-block">
+                  <i class="ti ti-clock text-primary"></i>
+                  <div>
+                    <label>Régime</label>
+                    <span>{{ selectedJob.workSchedule }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="info-block">
+                  <i class="ti ti-mail text-info"></i>
+                  <div>
+                    <label>Email</label>
+                    <span>{{ selectedJob.contactEmail }}</span>
+                  </div>
+                </div>
+              </div>
+              @if (selectedJob.contactPhone) {
+                <div class="col-6">
+                  <div class="info-block">
+                    <i class="ti ti-phone text-warning"></i>
+                    <div>
+                      <label>Téléphone</label>
+                      <span>{{ selectedJob.contactPhone }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+              <div class="col-12">
+                <div class="info-block">
+                  <i class="ti ti-calendar-event text-secondary"></i>
+                  <div>
+                    <label>Période</label>
+                    <span>Du {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} au {{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="info-block">
+                  <i class="ti ti-calendar-time text-danger"></i>
+                  <div>
+                    <label>Date d'entretien</label>
+                    <span>{{ selectedJob.dateEntretien | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (panelMode === 'candidates') {
+            @if (applicationsLoading[selectedJob.id]) {
+              <div class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <p class="text-muted mt-2 mb-0">Chargement des candidatures...</p>
+              </div>
+            } @else if (!applicationsByJob[selectedJob.id] || applicationsByJob[selectedJob.id].length === 0) {
+              <p class="text-muted text-center py-4 mb-0">
+                <i class="ti ti-user-off f-24 d-block mb-1"></i>
+                Aucune candidature reçue pour cette offre
+              </p>
+            } @else {
+              <div class="d-flex flex-column gap-2">
+                @for (app of applicationsByJob[selectedJob.id]; track app.id) {
+                  <div class="candidate-row">
+                    <div class="avatar avatar-sm rounded-circle bg-light-primary text-primary flex-shrink-0">
+                      <span class="f-w-600 f-12">{{ app.candidateFirstName.charAt(0) }}{{ app.candidateLastName.charAt(0) }}</span>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                      <div class="fw-medium text-truncate">{{ app.candidateFirstName }} {{ app.candidateLastName }}</div>
+                      <small class="text-muted text-truncate d-block">{{ app.candidateEmail }}</small>
+                    </div>
+                    <span class="badge rounded-pill"
+                      [ngClass]="{
+                        'bg-light-warning text-warning': app.status === 'EN_COURS_DE_TRAITEMENT',
+                        'bg-light-success text-success': app.status === 'ACCEPTEE_POUR_ENTRETIEN',
+                        'bg-light-danger text-danger': app.status === 'REFUSEE'
+                      }">{{ applicationStatusLabel(app.status) }}</span>
+                    @if (app.cvUrl) {
+                      <a [href]="app.cvUrl" target="_blank" class="btn btn-sm btn-outline-secondary" title="Voir le CV">
+                        <i class="ti ti-file-cv"></i>
+                      </a>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
 </div>

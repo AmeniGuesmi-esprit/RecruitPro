@@ -1,146 +1,110 @@
 <div class="row g-4">
+
+  <!-- ══ TOOLBAR — titre + filtres de plan (même structure que la page Offres) ══ -->
   <div class="col-12">
-    <div class="card">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <h5 class="mb-0"><i class="ti ti-credit-card me-2"></i>Abonnements</h5>
-        <ul class="nav nav-pills mb-0">
-          <li class="nav-item">
-            <a class="nav-link" [class.active]="activeTab === 'plans'" href="#" (click)="selectTab('plans'); $event.preventDefault()">Plans</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" [class.active]="activeTab === 'souscriptions'" href="#" (click)="selectTab('souscriptions'); $event.preventDefault()">Souscriptions</a>
-          </li>
-        </ul>
+    <div class="galaxy-toolbar">
+      <div class="galaxy-heading">
+        <span class="galaxy-eyebrow"><i class="ti ti-credit-card"></i> Abonnements</span>
       </div>
 
-      <div class="card-body">
+      <div class="toolbar-row">
+        <div class="filter-group">
+          <button type="button" class="btn-filter" [class.active]="planTypeFilter === 'ALL'" (click)="setPlanTypeFilter('ALL')">
+            <i class="ti ti-apps"></i><span>Tous</span><span class="count">{{ plans.length }}</span>
+          </button>
+          <button type="button" class="btn-filter" [class.active]="planTypeFilter === 'COMPANY'" (click)="setPlanTypeFilter('COMPANY')">
+            <i class="ti ti-building"></i><span>Company</span><span class="count">{{ companyPlansCount }}</span>
+          </button>
+          <button type="button" class="btn-filter" [class.active]="planTypeFilter === 'CANDIDATE'" (click)="setPlanTypeFilter('CANDIDATE')">
+            <i class="ti ti-user"></i><span>Candidat</span><span class="count">{{ candidatePlansCount }}</span>
+          </button>
+          <button type="button" class="btn-filter" [class.active]="planStatusFilter === 'ACTIVE'" (click)="setPlanStatusFilter(planStatusFilter === 'ACTIVE' ? 'ALL' : 'ACTIVE')">
+            <i class="ti ti-circle-check"></i><span>Actif</span><span class="count">{{ activePlansCount }}</span>
+          </button>
+          <button type="button" class="btn-filter" [class.active]="planStatusFilter === 'INACTIVE'" (click)="setPlanStatusFilter(planStatusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')">
+            <i class="ti ti-circle-x"></i><span>Désactivé</span><span class="count">{{ inactivePlansCount }}</span>
+          </button>
+        </div>
 
-        <!-- ═══════════ ONGLET PLANS ═══════════ -->
-        @if (activeTab === 'plans') {
-
-          <div class="d-flex justify-content-end mb-3">
-            <button class="btn btn-primary" (click)="openCreateForm()">
-              <i class="ti ti-plus me-1"></i> Nouveau plan
-            </button>
-          </div>
-
-          @if (errorPlans) {
-            <div class="alert alert-danger">{{ errorPlans }}</div>
-          }
-
-          @if (loadingPlans) {
-            <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
-          } @else {
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>Nom</th>
-                    <th>Type</th>
-                    <th>Montant</th>
-                    <th>Quota</th>
-                    <th>Durée</th>
-                    <th>Statut</th>
-                    <th class="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (plan of plans; track plan.id) {
-                    <tr>
-                      <td>
-                        <strong>{{ plan.name }}</strong>
-                        @if (plan.description) {
-                          <div class="text-muted small">{{ plan.description }}</div>
-                        }
-                      </td>
-                      <td>
-                        <span class="badge" [class.bg-primary]="plan.type === 'COMPANY'" [class.bg-info]="plan.type === 'CANDIDATE'">
-                          {{ typeLabel(plan.type) }}
-                        </span>
-                      </td>
-                      <td>{{ plan.montant }} DT</td>
-                      <td>{{ plan.quota }} {{ plan.type === 'COMPANY' ? 'offres' : 'candidatures' }}</td>
-                      <td>{{ plan.dureeJours }} j</td>
-                      <td>
-                        @if (plan.active) {
-                          <span class="badge bg-success">Actif</span>
-                        } @else {
-                          <span class="badge bg-secondary">Désactivé</span>
-                        }
-                      </td>
-                      <td class="text-end">
-                        <button class="btn btn-sm btn-outline-primary me-2" (click)="openEditForm(plan)">
-                          <i class="ti ti-edit"></i>
-                        </button>
-                        @if (plan.active) {
-                          <button class="btn btn-sm btn-outline-danger" (click)="deactivatePlan(plan)">
-                            <i class="ti ti-trash"></i>
-                          </button>
-                        }
-                      </td>
-                    </tr>
-                  } @empty {
-                    <tr><td colspan="7" class="text-center text-muted py-4">Aucun plan d'abonnement créé pour le moment.</td></tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        }
-
-        <!-- ═══════════ ONGLET SOUSCRIPTIONS ═══════════ -->
-        @if (activeTab === 'souscriptions') {
-
-          @if (errorSubs) {
-            <div class="alert alert-danger">{{ errorSubs }}</div>
-          }
-
-          @if (loadingSubs) {
-            <div class="text-center py-5"><div class="spinner-border" role="status"></div></div>
-          } @else {
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>Utilisateur (ID)</th>
-                    <th>Type</th>
-                    <th>Plan</th>
-                    <th>Montant</th>
-                    <th>Quota</th>
-                    <th>Début</th>
-                    <th>Fin</th>
-                    <th>Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (sub of subscriptions; track sub.id) {
-                    <tr>
-                      <td>#{{ sub.userId }}</td>
-                      <td>{{ typeLabel(sub.type) }}</td>
-                      <td>{{ sub.planName }}</td>
-                      <td>{{ sub.montant }} DT</td>
-                      <td>{{ sub.quota }}</td>
-                      <td>{{ sub.dateDebut | date:'dd/MM/yyyy' }}</td>
-                      <td>{{ sub.dateFin | date:'dd/MM/yyyy' }}</td>
-                      <td>
-                        @if (sub.status === 'ACTIVE') {
-                          <span class="badge bg-success">Active</span>
-                        } @else {
-                          <span class="badge bg-secondary">Expirée</span>
-                        }
-                      </td>
-                    </tr>
-                  } @empty {
-                    <tr><td colspan="8" class="text-center text-muted py-4">Aucune souscription pour le moment.</td></tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        }
-
+        <button type="button" class="btn-new-plan" (click)="openCreateForm()">
+          <i class="ti ti-plus"></i><span>Ajouter abonnement</span>
+        </button>
       </div>
     </div>
+  </div>
+
+  <!-- ═══════════ CARTES DE PLANS ═══════════ -->
+  <div class="col-12">
+    @if (errorPlans) {
+      <div class="alert alert-danger d-flex align-items-center gap-2">
+        <i class="ti ti-alert-circle f-20"></i><span>{{ errorPlans }}</span>
+      </div>
+    }
+
+    @if (loadingPlans) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="text-muted mt-2">Chargement des plans...</p>
+      </div>
+    } @else if (filteredPlans.length === 0) {
+      <div class="plans-empty">
+        <i class="ti ti-mood-empty"></i>
+        @if (plans.length === 0) {
+          <p>Aucun plan d'abonnement créé pour le moment.</p>
+        } @else {
+          <p>Aucun plan ne correspond à ce filtre.</p>
+        }
+      </div>
+    } @else {
+      <div class="row g-4">
+        @for (plan of filteredPlans; track plan.id) {
+          <div class="col-xl-4 col-md-6 col-12">
+            <div class="plan-card" [class.plan-card--inactive]="!plan.active">
+
+              <span class="plan-ribbon" [class.plan-ribbon--active]="plan.active" [class.plan-ribbon--inactive]="!plan.active">
+                <i class="ti" [class.ti-circle-check]="plan.active" [class.ti-circle-x]="!plan.active"></i>
+                {{ plan.active ? 'Actif' : 'Désactivé' }}
+              </span>
+
+              <div class="plan-card__icon" [class.plan-card__icon--candidate]="plan.type === 'CANDIDATE'">
+                <i class="ti" [class]="typeIcon(plan.type)"></i>
+              </div>
+
+              <div class="plan-card__top">
+                <h4 class="plan-card__name">{{ plan.name }}</h4>
+                <span class="plan-card__type" [class.plan-card__type--candidate]="plan.type === 'CANDIDATE'">
+                  {{ typeLabel(plan.type) }}
+                </span>
+              </div>
+
+              <p class="plan-card__price">
+                <span class="plan-card__amount">{{ plan.montant }}</span>
+                <span class="plan-card__currency">DT</span>
+              </p>
+
+              <ul class="plan-card__features">
+                <li><span class="plan-card__feat-icon"><i class="ti ti-check"></i></span>{{ plan.quota }} {{ quotaUnitLabel(plan.type) }}</li>
+                <li><span class="plan-card__feat-icon"><i class="ti ti-check"></i></span>Validité {{ plan.dureeJours }} jours</li>
+                @if (plan.description) {
+                  <li><span class="plan-card__feat-icon plan-card__feat-icon--info"><i class="ti ti-info-circle"></i></span>{{ plan.description }}</li>
+                }
+              </ul>
+
+              <div class="plan-card__actions">
+                <button class="plan-card__btn plan-card__btn--edit" (click)="openEditForm(plan)">
+                  <i class="ti ti-edit"></i>Modifier
+                </button>
+                @if (plan.active) {
+                  <button class="plan-card__btn plan-card__btn--delete" (click)="deactivatePlan(plan)">
+                    <i class="ti ti-trash"></i>Supprimer
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
   </div>
 </div>
 
@@ -148,55 +112,112 @@
 @if (showForm) {
   <div class="modal-backdrop-custom" (click)="closeForm()"></div>
   <div class="modal-custom">
-    <div class="modal-content-custom">
-      <div class="modal-header">
-        <h5 class="mb-0">{{ editingPlan ? 'Modifier le plan' : 'Nouveau plan d\'abonnement' }}</h5>
-        <button class="btn-close" (click)="closeForm()"></button>
+    <div class="modal-content-custom modal-content-custom--plan">
+
+      <div class="modal-header modal-header--plan">
+        <div class="modal-header__icon">
+          <i class="ti" [class.ti-edit]="editingPlan" [class.ti-sparkles]="!editingPlan"></i>
+        </div>
+        <div class="modal-header__text">
+          <h5 class="mb-0">{{ editingPlan ? 'Modifier le plan' : 'Nouveau plan d\'abonnement' }}</h5>
+          <span>{{ editingPlan ? 'Ajustez les informations de "' + editingPlan.name + '"' : 'Configurez une nouvelle offre pour vos utilisateurs' }}</span>
+        </div>
+        <button class="btn-close" (click)="closeForm()"><i class="ti ti-x"></i></button>
       </div>
-      <div class="modal-body">
+
+      <div class="modal-body modal-body--plan">
 
         @if (formError) {
-          <div class="alert alert-danger">{{ formError }}</div>
+          <div class="form-alert">
+            <i class="ti ti-alert-circle"></i><span>{{ formError }}</span>
+          </div>
         }
 
-        <div class="mb-3">
-          <label class="form-label">Nom du plan</label>
-          <input type="text" class="form-control" [(ngModel)]="form.name" placeholder="Ex: Standard, Premium...">
+        <!-- Section : identité du plan -->
+        <div class="form-section">
+          <span class="form-section__title"><i class="ti ti-tag"></i>Identité du plan</span>
+
+          <div class="field-group">
+            <label class="field-label">Nom du plan</label>
+            <div class="input-icon">
+              <i class="ti ti-stack-2"></i>
+              <input type="text" class="form-control" [(ngModel)]="form.name" placeholder="Ex: Standard, Premium...">
+            </div>
+          </div>
+
+          <div class="field-group mt-3">
+            <label class="field-label">Type de compte</label>
+            <div class="type-selector">
+              <button type="button" class="type-option" [class.active]="form.type === 'COMPANY'" (click)="form.type = 'COMPANY'">
+                <span class="type-option__icon"><i class="ti ti-building"></i></span>
+                <span class="type-option__text">
+                  <strong>Société</strong>
+                  <small>Nombre d'offres publiables</small>
+                </span>
+                <i class="ti ti-circle-check-filled type-option__check"></i>
+              </button>
+              <button type="button" class="type-option" [class.active]="form.type === 'CANDIDATE'" (click)="form.type = 'CANDIDATE'">
+                <span class="type-option__icon type-option__icon--candidate"><i class="ti ti-user"></i></span>
+                <span class="type-option__text">
+                  <strong>Candidat</strong>
+                  <small>Nombre de candidatures</small>
+                </span>
+                <i class="ti ti-circle-check-filled type-option__check"></i>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Type de compte</label>
-          <select class="form-select" [(ngModel)]="form.type">
-            <option value="COMPANY">Société (nombre d'offres publiables)</option>
-            <option value="CANDIDATE">Candidat (nombre de candidatures)</option>
-          </select>
+        <!-- Section : tarification & quotas -->
+        <div class="form-section">
+          <span class="form-section__title"><i class="ti ti-coin"></i>Tarification &amp; quotas</span>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="field-label">Montant</label>
+              <div class="input-icon">
+                <i class="ti ti-currency-dollar"></i>
+                <input type="number" min="0" class="form-control" [(ngModel)]="form.montant">
+                <span class="input-icon__suffix">DT</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">{{ quotaLabel }}</label>
+              <div class="input-icon">
+                <i class="ti ti-hash"></i>
+                <input type="number" min="1" class="form-control" [(ngModel)]="form.quota">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">Durée</label>
+              <div class="input-icon">
+                <i class="ti ti-calendar-event"></i>
+                <input type="number" min="1" class="form-control" [(ngModel)]="form.dureeJours">
+                <span class="input-icon__suffix">jours</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label">Montant (DT)</label>
-            <input type="number" min="0" class="form-control" [(ngModel)]="form.montant">
+        <!-- Section : description -->
+        <div class="form-section form-section--last">
+          <span class="form-section__title"><i class="ti ti-align-left"></i>Description</span>
+          <div class="field-group">
+            <label class="field-label">Description (optionnelle)</label>
+            <textarea class="form-control" rows="3" placeholder="Un petit mot sur ce plan..." [(ngModel)]="form.description"></textarea>
           </div>
-          <div class="col-md-4">
-            <label class="form-label">{{ quotaLabel }}</label>
-            <input type="number" min="1" class="form-control" [(ngModel)]="form.quota">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Durée (jours)</label>
-            <input type="number" min="1" class="form-control" [(ngModel)]="form.dureeJours">
-          </div>
-        </div>
-
-        <div class="mb-3 mt-3">
-          <label class="form-label">Description (optionnelle)</label>
-          <textarea class="form-control" rows="2" [(ngModel)]="form.description"></textarea>
         </div>
 
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline-secondary" (click)="closeForm()">Annuler</button>
-        <button class="btn btn-primary" [disabled]="savingPlan" (click)="savePlan()">
-          @if (savingPlan) { <span class="spinner-border spinner-border-sm me-2"></span> }
+
+      <div class="modal-footer modal-footer--plan">
+        <button class="btn-plain" (click)="closeForm()">Annuler</button>
+        <button class="btn-submit" [disabled]="savingPlan" (click)="savePlan()">
+          @if (savingPlan) {
+            <span class="spinner-border spinner-border-sm"></span>
+          } @else {
+            <i class="ti" [class.ti-check]="editingPlan" [class.ti-plus]="!editingPlan"></i>
+          }
           {{ editingPlan ? 'Enregistrer' : 'Créer le plan' }}
         </button>
       </div>

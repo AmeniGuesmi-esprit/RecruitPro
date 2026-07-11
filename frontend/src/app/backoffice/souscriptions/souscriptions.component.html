@@ -1,0 +1,83 @@
+<div class="row g-4">
+
+  <!-- ══ TOOLBAR — titre + filtres de statut ══ -->
+  <div class="col-12">
+    <div class="galaxy-toolbar">
+      <div class="galaxy-heading">
+        <span class="galaxy-eyebrow"><i class="ti ti-receipt"></i> Souscriptions</span>
+      </div>
+
+      <div class="toolbar-row">
+        <div class="filter-group">
+          <button type="button" class="btn-filter" [class.active]="subStatusFilter === 'ALL'" (click)="setSubStatusFilter('ALL')">
+            <i class="ti ti-apps"></i><span>Tous</span><span class="count">{{ totalSubsCount }}</span>
+          </button>
+          <button type="button" class="btn-filter" [class.active]="subStatusFilter === 'ACTIVE'" (click)="setSubStatusFilter('ACTIVE')">
+            <i class="ti ti-circle-check"></i><span>Actif</span><span class="count">{{ activeSubsCount }}</span>
+          </button>
+          <button type="button" class="btn-filter" [class.active]="subStatusFilter === 'EXPIRED'" (click)="setSubStatusFilter('EXPIRED')">
+            <i class="ti ti-circle-x"></i><span>Expiré</span><span class="count">{{ expiredSubsCount }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ LISTE DES SOUSCRIPTIONS ═══════════ -->
+  <div class="col-12">
+
+    @if (errorSubs) {
+      <div class="alert alert-danger d-flex align-items-center gap-2">
+        <i class="ti ti-alert-circle f-20"></i><span>{{ errorSubs }}</span>
+      </div>
+    }
+
+    @if (loadingSubs) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="text-muted mt-2">Chargement des souscriptions...</p>
+      </div>
+    } @else if (filteredSubscriptions.length === 0) {
+      <div class="history-empty">
+        <div class="history-empty__icon"><i class="ti ti-receipt-off"></i></div>
+        @if (subscriptions.length === 0) {
+          <h3>Aucune souscription pour le moment</h3>
+          <p>Dès qu'un utilisateur souscrit à un abonnement, la transaction apparaîtra ici.</p>
+        } @else {
+          <h3>Aucune souscription ne correspond à ce filtre</h3>
+          <p>Essayez un autre filtre pour voir les souscriptions correspondantes.</p>
+        }
+      </div>
+    } @else {
+      <div class="history-list">
+        @for (sub of filteredSubscriptions; track sub.id) {
+          <div class="history-item" [class.history-item--active]="isSubActive(sub)">
+            <div class="history-item__icon">
+              <i class="ti" [class]="typeIcon(sub.type)"></i>
+            </div>
+
+            <div class="history-item__main">
+              <div class="history-item__top">
+                <h4>{{ sub.planName }}</h4>
+                <span class="history-item__badge">Utilisateur #{{ sub.userId }} · {{ typeLabel(sub.type) }}</span>
+                <span class="history-item__status" [class.history-item__status--active]="isSubActive(sub)">
+                  <i class="ti" [class.ti-circle-check]="isSubActive(sub)" [class.ti-circle-x]="!isSubActive(sub)"></i>
+                  {{ isSubActive(sub) ? 'Active' : 'Expirée' }}
+                </span>
+              </div>
+              <div class="history-item__meta">
+                <span><i class="ti ti-stack-2"></i>{{ sub.quota }} {{ quotaUnitLabel(sub.type) }}</span>
+                <span><i class="ti ti-calendar-event"></i>Du {{ sub.dateDebut | date:'dd/MM/yyyy' }} au {{ sub.dateFin | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+
+            <div class="history-item__amount">
+              <span class="amount-value">{{ sub.montant | number:'1.0-0' }}</span>
+              <span class="amount-currency">DT</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
