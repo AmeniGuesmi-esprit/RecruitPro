@@ -42,6 +42,16 @@ public class JobApplication {
     /** Nom de fichier (ou chemin) du CV, tel que renvoyé par user-service */
     private String candidateCvPath;
 
+    /**
+     * Score de matching CV <-> offre (0-100), calculé une seule fois au moment
+     * de la candidature par le microservice IA "matching-service" (snapshot,
+     * comme candidateCvPath/candidateFirstName/... ci-dessus). Null si le
+     * calcul n'a pas pu être fait (candidat sans CV, ou service indisponible
+     * au moment de la candidature).
+     */
+    @Column(name = "match_score")
+    private Double matchScore;
+
     /** Statut de la candidature. "EN_COURS_DE_TRAITEMENT" par défaut à la création. */
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

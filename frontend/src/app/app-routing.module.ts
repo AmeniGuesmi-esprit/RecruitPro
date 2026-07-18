@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AdminComponent } from './theme/layout/admin/admin.component';
 import { GuestComponent } from './theme/layout/guest/guest.component';
-import { authGuard, adminGuard, guestGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, guestGuard, frontofficeHomeGuard } from './core/guards/auth.guard';
 import { FrontofficeLayoutComponent } from './frontoffice/layout/frontoffice-layout.component';
 
 const routes: Routes = [
@@ -102,12 +102,7 @@ const routes: Routes = [
     component: FrontofficeLayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./frontoffice/dashboard/dashboard.component').then(c => c.FrontofficeDashboardComponent)
-      },
+      { path: '', pathMatch: 'full', canActivate: [frontofficeHomeGuard], children: [] },
       {
         path: 'profile',
         loadComponent: () =>

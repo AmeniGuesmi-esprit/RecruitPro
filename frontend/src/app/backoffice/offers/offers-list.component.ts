@@ -150,7 +150,13 @@ export class OffersListComponent implements OnInit {
     this.applicationsLoading[job.id] = true;
     this.adminService.getApplicationsForJobAdmin(job.id).subscribe({
       next: (res) => {
-        this.applicationsByJob[job.id] = res.data ?? [];
+        // Meilleurs matchs en premier ; candidats sans score (pas de CV,
+        // matching-service indisponible) en dernier.
+        this.applicationsByJob[job.id] = (res.data ?? []).slice().sort((a, b) => {
+          const scoreA = a.matchScore ?? -1;
+          const scoreB = b.matchScore ?? -1;
+          return scoreB - scoreA;
+        });
         this.applicationsLoading[job.id] = false;
         this.cdr.detectChanges();
       },

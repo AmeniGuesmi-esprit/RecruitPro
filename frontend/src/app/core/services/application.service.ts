@@ -39,4 +39,9 @@ export class ApplicationService {
   updateStatus(applicationId: number, status: ApplicationStatus): Observable<ApiResponse<ApplicationResponse>> {
     return this.http.patch<ApiResponse<ApplicationResponse>>(`${this.API}/${applicationId}/status`, { status });
   }
+
+  /** Recalculer le score de matching d'une candidature (ex: si le score est resté indisponible) (COMPANY) */
+  recomputeScore(applicationId: number): Observable<ApiResponse<ApplicationResponse>> {
+    return this.http.patch<ApiResponse<ApplicationResponse>>(`${this.API}/${applicationId}/recompute-score`, {});
+  }
 }

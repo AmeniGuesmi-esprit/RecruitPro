@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { Role } from '../core/models/user.model';
+import { frontofficeHomeRoute } from '../core/guards/auth.guard';
 
 @Component({
   selector: 'app-register',
@@ -48,7 +49,7 @@ export class RegisterComponent implements OnInit {
             size: 'large', 
             width: 400, 
             text: 'continue_with', 
-            locale: 'en'        // Changed to English
+            locale: 'fr'
           }
         );
       }
@@ -62,13 +63,13 @@ export class RegisterComponent implements OnInit {
         if (res.success) {
           const role = res.data.role;
           this.router.navigate([
-            role === 'ADMIN' ? '/backoffice/dashboard' : '/frontoffice/dashboard'
+            role === 'ADMIN' ? '/backoffice/dashboard' : frontofficeHomeRoute(role)
           ]);
         } else {
           this.error.set(res.message);
         }
       },
-      error: () => this.error.set('Google error. Please try again.')
+      error: () => this.error.set('Erreur Google. Veuillez réessayer.')
     });
   }
 
@@ -83,14 +84,14 @@ export class RegisterComponent implements OnInit {
     const allowed = ['image/png', 'image/jpeg', 'image/pjpeg'];
 
     if (!allowed.includes(file.type)) {
-      this.error.set('Profile photo must be in PNG, JPG or JFIF format');
+      this.error.set('La photo de profil doit être au format PNG, JPG ou JFIF');
       this.imagePreview.set(null);
       this.imageFile = null;
       input.value = '';
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      this.error.set('The photo must not exceed 5 MB');
+      this.error.set('La photo ne doit pas dépasser 5 Mo');
       this.imagePreview.set(null);
       this.imageFile = null;
       input.value = '';
@@ -145,11 +146,11 @@ export class RegisterComponent implements OnInit {
 
   private processCvFile(file: File) {
     if (file.type !== 'application/pdf') {
-      this.error.set('The CV must be a PDF file');
+      this.error.set('Le CV doit être un fichier PDF');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      this.error.set('The CV must not exceed 5 MB');
+      this.error.set('Le CV ne doit pas dépasser 5 Mo');
       return;
     }
     this.cvFile = file;
@@ -167,15 +168,15 @@ export class RegisterComponent implements OnInit {
     this.success.set('');
 
     if (!this.firstName || !this.lastName || !this.email || !this.phone || !this.password) {
-      this.error.set('Please fill in all required fields');
+      this.error.set('Veuillez remplir tous les champs obligatoires');
       return;
     }
     if (this.password.length < 8) {
-      this.error.set('Password must contain at least 8 characters');
+      this.error.set('Le mot de passe doit contenir au moins 8 caractères');
       return;
     }
     if (this.isCandidate && !this.cvFile) {
-      this.error.set('CV (PDF) is mandatory for candidates');
+      this.error.set('Le CV (PDF) est obligatoire pour les candidats');
       return;
     }
 
@@ -194,14 +195,14 @@ export class RegisterComponent implements OnInit {
       next: (res) => {
         this.loading.set(false);
         if (res.success) {
-          this.success.set('Registration successful! Please check your email to activate your account.');
+          this.success.set('Inscription réussie ! Vérifiez votre email pour activer votre compte.');
         } else {
           this.error.set(res.message);
         }
       },
       error: () => {
         this.loading.set(false);
-        this.error.set('Error during registration. Please try again.');
+        this.error.set('Erreur lors de l\'inscription. Veuillez réessayer.');
       }
     });
   }

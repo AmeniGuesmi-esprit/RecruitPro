@@ -105,4 +105,28 @@ public class ApplicationController {
         ApplicationResponse response = applicationService.updateStatus(id, recruiterId, request.getStatus());
         return ResponseEntity.ok(ApiResponse.ok("Statut mis à jour", response));
     }
+
+    // ── COMPANY : recalculer le score de matching d'une candidature ──────────
+    // Utile quand matching-service était indisponible au moment de la
+    // candidature (score resté à null) : permet de relancer le calcul sans
+    // que le candidat ait besoin de repostuler.
+    @PatchMapping("/{id}/recompute-score")
+    @PreAuthorize("hasRole('COMPANY')")
+    public ResponseEntity<ApiResponse<ApplicationResponse>> recomputeScore(
+            @PathVariable Long id, Authentication auth) {
+        Long recruiterId = (Long) auth.getCredentials();
+        ApplicationResponse response = applicationService.recomputeScore(id, recruiterId);
+        return ResponseEntity.ok(ApiResponse.ok("Score recalculé", response));
+    }
+
+    // ── ADMIN : recalculer en masse tous les scores manquants (null) ─────────
+    // À utiliser une fois après un incident matching-service (ex: le service
+    // était down au moment où des candidats ont postulé) pour rattraper tous
+    // les scores restés à null en une seule opération.
+    @PostMapping("/admin/recompute-null-scores")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Integer>> recomputeNullScores() {
+        int updated = applicationService.recomputeAllNullScores();
+        return ResponseEntity.ok(ApiResponse.ok(updated + " score(s) recalculé(s)", updated));
+    }
 }

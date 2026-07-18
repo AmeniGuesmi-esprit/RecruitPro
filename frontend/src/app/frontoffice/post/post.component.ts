@@ -41,6 +41,7 @@ export class PostComponent implements OnInit {
   candidatesErrorMsg = '';
   /** id de candidature en cours de mise à jour de statut (empêche le double-clic) */
   updatingStatusIds = new Set<number>();
+  recomputingScoreIds = new Set<number>();
 
   // ── Suppression / archivage selon présence de candidatures ─────────────────
   /** Nombre de candidatures par offre (jobId → count), utilisé pour savoir si
@@ -197,7 +198,9 @@ export class PostComponent implements OnInit {
 
     this.applicationService.getApplicationsForJob(job.id).subscribe({
       next: res => {
-        this.candidates = res.data ?? [];
+        // Le backend trie déjà par score de matching décroissant, mais on
+        // s'assure du tri côté front aussi (robustesse si l'ordre change).
+        this.candidates = this.sortByMatchScore(res.data ?? []);
         this.candidatesLoading = false;
         this.cdr.detectChanges();
       },
@@ -209,11 +212,41 @@ export class PostComponent implements OnInit {
     });
   }
 
+  /** Trie les candidats du meilleur match au moins bon ; ceux sans score passent en dernier. */
+  private sortByMatchScore(list: ApplicationResponse[]): ApplicationResponse[] {
+    return [...list].sort((a, b) => {
+      const scoreA = a.matchScore ?? -1;
+      const scoreB = b.matchScore ?? -1;
+      return scoreB - scoreA;
+    });
+  }
+
+  // ── Score de matching IA ─────────────────────────────────────────────────
+
+  /** true si un score de matching a pu être calculé pour ce candidat. */
+  hasMatchScore(c: ApplicationResponse): boolean {
+    return c.matchScore !== null && c.matchScore !== undefined;
+  }
+
+  /** Score arrondi à afficher (ex: 82). */
+  matchScoreRounded(c: ApplicationResponse): number {
+    return Math.round(c.matchScore ?? 0);
+  }
+
+  /** Classe CSS pour colorer le badge selon la pertinence du match. */
+  matchScoreClass(c: ApplicationResponse): string {
+    const score = c.matchScore ?? 0;
+    if (score >= 75) return 'match-high';
+    if (score >= 45) return 'match-medium';
+    return 'match-low';
+  }
+
   closeCandidates() {
     this.candidatesJob = null;
     this.candidates = [];
     this.candidatesErrorMsg = '';
     this.updatingStatusIds.clear();
+    this.recomputingScoreIds.clear();
   }
 
   candidateFullName(c: ApplicationResponse): string {
@@ -228,6 +261,35 @@ export class PostComponent implements OnInit {
 
   isUpdatingStatus(c: ApplicationResponse): boolean {
     return this.updatingStatusIds.has(c.id);
+  }
+
+  isRecomputingScore(c: ApplicationResponse): boolean {
+    return this.recomputingScoreIds.has(c.id);
+  }
+
+  /** Relance le calcul du score de matching (ex: matching-service était indisponible au moment de la candidature). */
+  recomputeScore(c: ApplicationResponse) {
+    if (this.isRecomputingScore(c)) return;
+
+    this.recomputingScoreIds.add(c.id);
+    this.cdr.detectChanges();
+
+    this.applicationService.recomputeScore(c.id).subscribe({
+      next: res => {
+        const idx = this.candidates.findIndex(x => x.id === c.id);
+        if (idx !== -1 && res.data) {
+          this.candidates[idx] = { ...this.candidates[idx], matchScore: res.data.matchScore };
+          this.candidates = this.sortByMatchScore(this.candidates);
+        }
+        this.recomputingScoreIds.delete(c.id);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.candidatesErrorMsg = 'Impossible de recalculer le score de matching pour ce candidat.';
+        this.recomputingScoreIds.delete(c.id);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   updateCandidateStatus(c: ApplicationResponse, status: ApplicationStatus) {

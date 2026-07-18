@@ -2,6 +2,8 @@ package com.recruitment.application.service;
 
 import com.recruitment.application.client.JobClient;
 import com.recruitment.application.client.JobInfo;
+import com.recruitment.application.client.MatchScoreResponse;
+import com.recruitment.application.client.MatchingClient;
 import com.recruitment.application.client.SubscriptionClient;
 import com.recruitment.application.client.SubscriptionInfo;
 import com.recruitment.application.client.UserClient;
@@ -12,6 +14,7 @@ import com.recruitment.application.model.ApplicationStatus;
 import com.recruitment.application.model.JobApplication;
 import com.recruitment.application.repository.JobApplicationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,12 +25,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ApplicationService {
 
     private final JobApplicationRepository repository;
     private final JobClient jobClient;
     private final UserClient userClient;
     private final SubscriptionClient subscriptionClient;
+    private final MatchingClient matchingClient;
 
     @Value("${app.base-url}")
     private String baseUrl;
@@ -53,6 +58,11 @@ public class ApplicationService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Candidat introuvable");
         }
 
+        // ── Matching IA : calculé UNE FOIS au moment de la candidature (snapshot,
+        //    comme le nom/email/CV recopiés ci-dessous), pour ne pas dépendre de
+        //    la disponibilité du matching-service à chaque affichage de la liste. ──
+        Double matchScore = computeMatchScore(job, candidate.getCvPath());
+
         JobApplication application = JobApplication.builder()
                 .jobId(jobId)
                 .candidateId(candidateId)
@@ -60,6 +70,7 @@ public class ApplicationService {
                 .candidateLastName(candidate.getLastName())
                 .candidateEmail(candidate.getEmail())
                 .candidateCvPath(candidate.getCvPath())
+                .matchScore(matchScore)
                 .build();
 
         return toResponse(repository.save(application));
@@ -88,6 +99,8 @@ public class ApplicationService {
     }
 
     // ── Candidats d'une offre (COMPANY, doit être le recruteur propriétaire) ─
+    // Triés par score de matching décroissant : les candidats les plus
+    // pertinents apparaissent en premier dans la liste du recruteur.
     public List<ApplicationResponse> getApplicationsForJob(Long jobId, Long recruiterId) {
         JobInfo job = jobClient.getJob(jobId);
         if (job == null) {
@@ -98,6 +111,9 @@ public class ApplicationService {
         }
         return repository.findByJobIdOrderByAppliedAtDesc(jobId).stream()
                 .map(this::toResponse)
+                .sorted((a, b) -> Double.compare(
+                        b.getMatchScore() != null ? b.getMatchScore() : -1,
+                        a.getMatchScore() != null ? a.getMatchScore() : -1))
                 .toList();
     }
 
@@ -109,6 +125,9 @@ public class ApplicationService {
         }
         return repository.findByJobIdOrderByAppliedAtDesc(jobId).stream()
                 .map(this::toResponse)
+                .sorted((a, b) -> Double.compare(
+                        b.getMatchScore() != null ? b.getMatchScore() : -1,
+                        a.getMatchScore() != null ? a.getMatchScore() : -1))
                 .toList();
     }
 
@@ -143,6 +162,57 @@ public class ApplicationService {
         return toResponse(repository.save(application));
     }
 
+    // ── Recalcul du score de matching (COMPANY) ──────────────────────────────
+    /**
+     * Recalcule le score de matching d'une candidature dont le calcul avait échoué
+     * au moment de la candidature (matching-service indisponible, CV absent à
+     * l'époque, etc.). Ne fait rien de plus qu'appeler matching-service à nouveau
+     * et sauvegarder le nouveau score en base ; renvoie toujours la candidature
+     * à jour, que le score ait pu être calculé ou non.
+     */
+    @Transactional
+    public ApplicationResponse recomputeScore(Long applicationId, Long recruiterId) {
+        JobApplication application = repository.findById(applicationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Candidature introuvable"));
+
+        JobInfo job = jobClient.getJob(application.getJobId());
+        if (job == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Offre introuvable");
+        }
+        if (!recruiterId.equals(job.getRecruiterId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cette offre ne vous appartient pas");
+        }
+
+        Double matchScore = computeMatchScore(job, application.getCandidateCvPath());
+        application.setMatchScore(matchScore);
+        return toResponse(repository.save(application));
+    }
+
+    // ── ADMIN : recalcul en masse de toutes les candidatures sans score ──────
+    /**
+     * Repasse sur toutes les candidatures avec matchScore == null (typiquement dues
+     * à une indisponibilité passée de matching-service) et retente le calcul.
+     * @return le nombre de candidatures dont le score a pu être calculé.
+     */
+    @Transactional
+    public int recomputeAllNullScores() {
+        List<JobApplication> pending = repository.findByMatchScoreIsNull();
+        int updated = 0;
+        for (JobApplication application : pending) {
+            JobInfo job = jobClient.getJob(application.getJobId());
+            if (job == null) {
+                continue;
+            }
+            Double matchScore = computeMatchScore(job, application.getCandidateCvPath());
+            if (matchScore != null) {
+                application.setMatchScore(matchScore);
+                repository.save(application);
+                updated++;
+            }
+        }
+        return updated;
+    }
+
     // ── Abonnement ───────────────────────────────────────────────────────────
     /**
      * Vérifie que le candidat a un abonnement actif et n'a pas dépassé le quota de
@@ -165,6 +235,26 @@ public class ApplicationService {
         }
     }
 
+    // ── Matching IA ──────────────────────────────────────────────────────────
+    /**
+     * Calcule le score de matching CV <-> offre via matching-service.
+     * Ne lève jamais d'exception : si le CV est absent ou si le service est
+     * indisponible, renvoie null (le candidat peut toujours postuler).
+     */
+    private Double computeMatchScore(JobInfo job, String candidateCvPath) {
+        String cvUrl = buildCvUrl(candidateCvPath);
+        if (cvUrl == null) {
+            return null;
+        }
+        try {
+            MatchScoreResponse result = matchingClient.computeMatchScore(job.getSkills(), job.getDescription(), cvUrl);
+            return result != null ? result.getMatchScore() : null;
+        } catch (Exception e) {
+            log.warn("Échec du calcul du score de matching pour l'offre {} : {}", job.getId(), e.getMessage());
+            return null;
+        }
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
     private ApplicationResponse toResponse(JobApplication a) {
         return ApplicationResponse.builder()
@@ -175,6 +265,7 @@ public class ApplicationService {
                 .candidateLastName(a.getCandidateLastName())
                 .candidateEmail(a.getCandidateEmail())
                 .cvUrl(buildCvUrl(a.getCandidateCvPath()))
+                .matchScore(a.getMatchScore())
                 .status(a.getStatus())
                 .appliedAt(a.getAppliedAt())
                 .build();

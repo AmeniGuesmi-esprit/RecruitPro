@@ -1220,7 +1220,28 @@ $shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
 
 // ── Modal "Liste des candidats" ─────────────────────────────────────────────
 .candidates-page {
-  max-width: 560px; // plus large que le detail-page standard, pour la liste
+  max-width: 900px; // large, pour une grille de candidats bien aérée
+}
+
+.candidates-page .modal-header {
+  flex-wrap: wrap;
+  row-gap: 8px;
+
+  .candidates-count {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: $primary;
+    background: rgba($primary, .1);
+    border: 1px solid rgba($primary, .2);
+    border-radius: 999px;
+    padding: 5px 12px;
+  }
+}
+
+.candidates-columns {
+  display: none; // visible uniquement sur desktop, cf. media query plus bas
 }
 
 .apply-error {
@@ -1264,26 +1285,34 @@ $shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
 }
 
 .candidate-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px 190px;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 18px;
+  padding: 16px 18px;
   border: 1px solid $border;
   border-radius: $radius-md;
   background: #fff;
-  transition: border-color .2s, background .2s;
+  transition: border-color .2s, background .2s, box-shadow .2s;
 
-  &:hover { border-color: rgba($primary, .3); background: $primary-lt; }
+  &:hover { border-color: rgba($primary, .3); background: $primary-lt; box-shadow: 0 6px 18px rgba(31,20,90,.06); }
+}
+
+.candidate-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
 .candidate-avatar {
   flex-shrink: 0;
-  width: 38px; height: 38px;
+  width: 42px; height: 42px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, $primary, $accent);
   color: #fff;
-  font-size: 17px;
+  font-size: 18px;
 }
 
 .candidate-info {
@@ -1291,9 +1320,9 @@ $shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 
-  .candidate-name { font-size: 13.5px; font-weight: 700; color: $text; }
+  .candidate-name { font-size: 14px; font-weight: 700; color: $text; }
   .candidate-email {
     font-size: 12px; color: $text-muted;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -1309,6 +1338,7 @@ $shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 7px 12px;
   border-radius: $radius-sm;
@@ -1327,6 +1357,7 @@ $shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   font-size: 12px;
   color: $text-muted;
@@ -1362,15 +1393,11 @@ $shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
   }
 }
 
-.candidate-row {
-  flex-wrap: wrap;
-}
-
 .candidate-actions {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 8px;
 }
 
@@ -1380,10 +1407,12 @@ $shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
 }
 
 .btn-status {
+  flex: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: $radius-sm;
   border: 1px solid transparent;
   font-size: 11.5px;
@@ -1406,4 +1435,128 @@ $shadow-hover: 0 12px 28px rgba(124, 92, 252, 0.18);
     color: darken($danger, 5%);
     &:hover:not(:disabled) { background: rgba($danger, .22); }
   }
+}
+// ── Score de matching IA (CV <-> offre) ──────────────────────────────────────
+.match-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  padding: 6px 10px;
+  position: relative;
+
+  &__ring {
+    width: 44px;
+    height: 44px;
+    position: absolute;
+    top: 2px;
+    transform: rotate(-90deg);
+  }
+  &__ring-bg {
+    fill: none;
+    stroke: $border;
+    stroke-width: 3;
+  }
+  &__ring-fill {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dasharray .4s ease;
+  }
+  &__value {
+    position: relative;
+    top: 14px;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  &__label {
+    position: relative;
+    top: 16px;
+    font-size: 10px;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+  &__na {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: $text-muted;
+    i { font-size: 14px; }
+  }
+
+  .btn-recompute-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: $primary;
+    background: rgba($primary, .08);
+    border: 1px solid rgba($primary, .25);
+    border-radius: $radius-sm;
+    cursor: pointer;
+    transition: background .2s;
+
+    i { font-size: 12px; }
+
+    &:hover:not(:disabled) { background: rgba($primary, .16); }
+    &:disabled { opacity: .6; cursor: not-allowed; }
+
+    .spin-sm {
+      width: 10px; height: 10px;
+      border: 2px solid rgba($primary, .3);
+      border-top-color: $primary;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+  }
+
+  &.match-high {
+    .match-score__ring-fill { stroke: $success; }
+    .match-score__value { color: darken($success, 8%); }
+  }
+  &.match-medium {
+    .match-score__ring-fill { stroke: $warning; }
+    .match-score__value { color: darken($warning, 10%); }
+  }
+  &.match-low {
+    .match-score__ring-fill { stroke: $danger; }
+    .match-score__value { color: darken($danger, 5%); }
+  }
+}
+
+// ── En-têtes de colonnes (desktop uniquement, alignés sur la grille de .candidate-row) ──
+@media (min-width: 700px) {
+  .candidates-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px 190px;
+    gap: 18px;
+    padding: 0 18px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: $text-muted;
+
+    span:nth-child(2) { text-align: center; }
+    span:nth-child(3) { text-align: center; }
+  }
+}
+
+// ── Repli mobile : la grille se transforme en carte empilée ────────────────
+@media (max-width: 699px) {
+  .candidate-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .match-score, .candidate-actions {
+    width: 100%;
+  }
+  .status-actions { width: 100%; }
 }

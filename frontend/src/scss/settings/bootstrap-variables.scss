@@ -32,7 +32,7 @@ $colors: (
 );
 
 $primary: $blue; // change
-$secondary: $indigo; // change
+$secondary: $blue-700; // change (était $indigo, désormais bleu au lieu de violet)
 
 // scss-docs-start theme-colors-map
 $theme-colors: (
@@ -375,8 +375,8 @@ $theme-font-color: #888;
 $theme-heading-color: #111;
 
 $form-bg: #f0f3f6;
-$theme-color: linear-gradient(-135deg, #673ab7 0%, #673ab7 100%);
-$theme-color2: linear-gradient(-135deg, #899fd4 0%, #a389d4 100%);
+$theme-color: linear-gradient(-135deg, #1565c0 0%, #1565c0 100%);
+$theme-color2: linear-gradient(-135deg, #64b5f6 0%, #1976d2 100%);
 
 $theme-colors: map-merge(
   (

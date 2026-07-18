@@ -1,0 +1,16 @@
+{
+  "trained_at": "2026-07-18T20:36:34.851362+00:00",
+  "n_rows": 10000,
+  "mae_test": 4.96,
+  "r2_test": 0.907,
+  "numeric_features": [
+    "skill_overlap_ratio",
+    "skill_jaccard",
+    "nb_matched_skills",
+    "nb_job_skills",
+    "experience_ratio",
+    "cv_years_experience",
+    "job_years_required"
+  ],
+  "model": "GradientBoostingRegressor"
+}

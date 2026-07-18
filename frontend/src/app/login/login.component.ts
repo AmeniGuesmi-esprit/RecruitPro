@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
+import { frontofficeHomeRoute } from '../core/guards/auth.guard';
 
 @Component({
   selector: 'app-login',
@@ -36,7 +37,7 @@ export class LoginComponent implements OnInit {
             size: 'large',
             width: 400,
             text: 'signin_with',
-            locale: 'en'   // Changed to English
+            locale: 'fr'
           }
         );
       }
@@ -50,19 +51,19 @@ export class LoginComponent implements OnInit {
         if (res.success) {
           const role = res.data.role;
           this.router.navigate([
-            role === 'ADMIN' ? '/backoffice/dashboard' : '/frontoffice/dashboard'
+            role === 'ADMIN' ? '/backoffice/dashboard' : frontofficeHomeRoute(role)
           ]);
         } else {
           this.error.set(res.message);
         }
       },
-      error: () => this.error.set('Google error. Please try again.')
+      error: () => this.error.set('Erreur Google. Veuillez réessayer.')
     });
   }
 
   onSubmit() {
     if (!this.email || !this.password) {
-      this.error.set('Please fill in all fields');
+      this.error.set('Veuillez remplir tous les champs');
       return;
     }
     this.loading.set(true);
@@ -73,7 +74,7 @@ export class LoginComponent implements OnInit {
         if (res.success) {
           const role = res.data.role;
           this.router.navigate([
-            role === 'ADMIN' ? '/backoffice/dashboard' : '/frontoffice/dashboard'
+            role === 'ADMIN' ? '/backoffice/dashboard' : frontofficeHomeRoute(role)
           ]);
         } else {
           this.error.set(res.message);
@@ -81,7 +82,7 @@ export class LoginComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        this.error.set('Login error. Please try again.');
+        this.error.set('Erreur de connexion. Veuillez réessayer.');
       }
     });
   }

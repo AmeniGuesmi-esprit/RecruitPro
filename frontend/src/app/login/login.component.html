@@ -1,37 +1,45 @@
 <div class="login-wrapper">
+  <!-- Background -->
+  <div class="bg-layer">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
   <div class="login-content">
 
     <!-- Left Column - Text -->
     <div class="left-column">
       <div class="logo">
         <span class="logo-icon">◈</span>
-        RecruitPro
+        <span class="logo-text">Recruit<span class="logo-accent">Pro</span></span>
       </div>
-      <h1 class="title">Welcome back!</h1>
+      <h1 class="title">Content de vous revoir !</h1>
       <p class="subtitle">
-        Sign in and pick up where you left off. Your next opportunity is waiting.
+        Connectez-vous et reprenez là où vous vous étiez arrêté. Votre prochaine opportunité vous attend.
       </p>
 
       <div class="register-link">
-        Don't have an account yet?
-        <a routerLink="/register" class="link">Sign up</a>
+        Vous n'avez pas encore de compte ?
+        <a routerLink="/register" class="link">S'inscrire</a>
       </div>
     </div>
 
     <!-- Right Column - Form -->
     <div class="right-column">
       <div class="login-card">
-        <h2 class="form-title">Sign In</h2>
+        <h2 class="form-title">Connexion</h2>
 
         <form (ngSubmit)="onSubmit()">
 
           <div>
-            <label>Email</label>
-            <input type="email" [(ngModel)]="email" name="email" placeholder="your@email.com" class="form-input">
+            <label>Adresse e-mail</label>
+            <input type="email" [(ngModel)]="email" name="email" placeholder="votre@email.com" class="form-input">
           </div>
 
           <div>
-            <label>Password</label>
+            <label>Mot de passe</label>
             <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" class="form-input">
             <!-- ✅ Lien "Mot de passe oublié" -->
             <div class="forgot-link">
@@ -43,10 +51,10 @@
 
           <button type="submit" class="btn-primary" [disabled]="loading()">
             @if (loading()) { <span class="spinner"></span> }
-            Sign in
+            Se connecter
           </button>
 
-          <div class="divider">OR</div>
+          <div class="divider">OU</div>
           <div id="google-login-btn-container" class="google-btn"></div>
 
         </form>

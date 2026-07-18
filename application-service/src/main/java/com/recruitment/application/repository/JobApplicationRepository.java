@@ -26,4 +26,10 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
     /** Nombre de candidatures reçues pour une offre (utilisé par job-service avant suppression définitive). */
     long countByJobId(Long jobId);
+
+    /**
+     * Candidatures dont le score de matching n'a pas pu être calculé (matching-service
+     * indisponible au moment de la candidature). Utilisé pour le recalcul en masse (ADMIN).
+     */
+    List<JobApplication> findByMatchScoreIsNull();
 }

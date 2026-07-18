@@ -321,9 +321,20 @@
             <h2>Candidats — {{ candidatesJob.title }}</h2>
             <p class="company-name">{{ candidatesJob.companyName }}</p>
           </div>
+          @if (!candidatesLoading && candidates.length > 0) {
+            <span class="candidates-count">{{ candidates.length }} candidat{{ candidates.length > 1 ? 's' : '' }}</span>
+          }
         </div>
 
         <div class="modal-body">
+          @if (!candidatesLoading && !candidatesErrorMsg && candidates.length > 0) {
+            <div class="candidates-columns">
+              <span>Candidat</span>
+              <span>Score IA</span>
+              <span>Actions</span>
+            </div>
+          }
+
           @if (candidatesLoading) {
             <div class="candidates-loading">
               <span class="spin"></span>
@@ -346,17 +357,47 @@
             <div class="candidates-list">
               @for (c of candidates; track c.id) {
                 <div class="candidate-row">
-                  <div class="candidate-avatar"><i class="ti ti-user"></i></div>
-                  <div class="candidate-info">
-                    <span class="candidate-name">{{ candidateFullName(c) }}</span>
-                    <span class="candidate-email">{{ c.candidateEmail }}</span>
-                    <span class="candidate-date"><i class="ti ti-calendar-event"></i> Postulé le {{ c.appliedAt | date:'dd/MM/yyyy à HH:mm' }}</span>
-                    <span class="application-status-badge" [attr.data-status]="c.status">
-                      <i class="ti" [class.ti-clock]="c.status === 'EN_COURS_DE_TRAITEMENT'"
-                         [class.ti-circle-check]="c.status === 'ACCEPTEE_POUR_ENTRETIEN'"
-                         [class.ti-circle-x]="c.status === 'REFUSEE'"></i>
-                      {{ applicationStatusLabel(c.status) }}
-                    </span>
+                  <div class="candidate-identity">
+                    <div class="candidate-avatar"><i class="ti ti-user"></i></div>
+                    <div class="candidate-info">
+                      <span class="candidate-name">{{ candidateFullName(c) }}</span>
+                      <span class="candidate-email">{{ c.candidateEmail }}</span>
+                      <span class="candidate-date"><i class="ti ti-calendar-event"></i> Postulé le {{ c.appliedAt | date:'dd/MM/yyyy à HH:mm' }}</span>
+                      <span class="application-status-badge" [attr.data-status]="c.status">
+                        <i class="ti" [class.ti-clock]="c.status === 'EN_COURS_DE_TRAITEMENT'"
+                           [class.ti-circle-check]="c.status === 'ACCEPTEE_POUR_ENTRETIEN'"
+                           [class.ti-circle-x]="c.status === 'REFUSEE'"></i>
+                        {{ applicationStatusLabel(c.status) }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Score de matching IA (CV <-> offre) -->
+                  <div class="match-score" [ngClass]="matchScoreClass(c)" [title]="'Score de correspondance CV / offre calculé par IA'">
+                    @if (hasMatchScore(c)) {
+                      <svg viewBox="0 0 36 36" class="match-score__ring">
+                        <path class="match-score__ring-bg"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="match-score__ring-fill"
+                              [attr.stroke-dasharray]="matchScoreRounded(c) + ', 100'"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      </svg>
+                      <span class="match-score__value">{{ matchScoreRounded(c) }}%</span>
+                      <span class="match-score__label">Matching IA</span>
+                    } @else {
+                      <span class="match-score__na"><i class="ti ti-help-circle"></i> Score indisponible</span>
+                      <button type="button" class="btn-recompute-score"
+                              [disabled]="isRecomputingScore(c)"
+                              title="Relancer le calcul du score de matching"
+                              (click)="recomputeScore(c)">
+                        @if (isRecomputingScore(c)) {
+                          <span class="spin spin-sm"></span>
+                        } @else {
+                          <i class="ti ti-refresh"></i>
+                        }
+                        Recalculer
+                      </button>
+                    }
                   </div>
 
                   <div class="candidate-actions">
@@ -372,7 +413,7 @@
                       <button class="btn-status accept"
                               [disabled]="isUpdatingStatus(c) || c.status === 'ACCEPTEE_POUR_ENTRETIEN'"
                               (click)="updateCandidateStatus(c, 'ACCEPTEE_POUR_ENTRETIEN')">
-                        <i class="ti ti-check"></i> Accepter pour entretien
+                        <i class="ti ti-check"></i> Accepter
                       </button>
                       <button class="btn-status refuse"
                               [disabled]="isUpdatingStatus(c) || c.status === 'REFUSEE'"

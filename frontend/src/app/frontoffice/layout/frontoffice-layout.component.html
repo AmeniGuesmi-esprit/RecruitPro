@@ -9,9 +9,6 @@
     <!-- Navigation Links -->
     <div class="nav-links">
       @if (user?.role === 'CANDIDATE') {
-        <a routerLink="/frontoffice/dashboard" routerLinkActive="active">
-          <i class="ti ti-layout-dashboard"></i><span>Dashboard</span>
-        </a>
         <a routerLink="/frontoffice/jobs" routerLinkActive="active">
           <i class="ti ti-briefcase"></i><span>Offres d'emploi</span>
         </a>
@@ -26,9 +23,6 @@
         </a>
       }
       @if (user?.role === 'COMPANY') {
-        <a routerLink="/frontoffice/dashboard" routerLinkActive="active">
-          <i class="ti ti-layout-dashboard"></i><span>Dashboard</span>
-        </a>
         <a routerLink="/frontoffice/post" routerLinkActive="active">
           <i class="ti ti-plus"></i><span>Publier une offre</span>
         </a>

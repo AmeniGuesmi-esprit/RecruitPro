@@ -273,6 +273,22 @@
                       <div class="fw-medium text-truncate">{{ app.candidateFirstName }} {{ app.candidateLastName }}</div>
                       <small class="text-muted text-truncate d-block">{{ app.candidateEmail }}</small>
                     </div>
+                    <!-- Score de matching IA (CV <-> offre) -->
+                    @if (app.matchScore !== null && app.matchScore !== undefined) {
+                      <span class="badge rounded-pill match-score-badge"
+                        [ngClass]="{
+                          'bg-light-success text-success': app.matchScore >= 75,
+                          'bg-light-warning text-warning': app.matchScore >= 45 && app.matchScore < 75,
+                          'bg-light-danger text-danger': app.matchScore < 45
+                        }"
+                        title="Score de correspondance CV / offre calculé par IA">
+                        <i class="ti ti-target f-12"></i> {{ app.matchScore | number:'1.0-0' }}%
+                      </span>
+                    } @else {
+                      <span class="badge rounded-pill bg-light-secondary text-secondary" title="Score de matching indisponible">
+                        N/A
+                      </span>
+                    }
                     <span class="badge rounded-pill"
                       [ngClass]="{
                         'bg-light-warning text-warning': app.status === 'EN_COURS_DE_TRAITEMENT',
