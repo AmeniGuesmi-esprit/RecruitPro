@@ -295,15 +295,15 @@
           <div class="info-item">
             <i class="ti ti-calendar-event"></i>
             <div>
-              <label>Période</label>
-              <span>Du {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} au {{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
+              <label>Créée le</label>
+              <span> {{ selectedJob.dateDebut | date:'dd/MM/yyyy' }} </span>
             </div>
           </div>
           <div class="info-item">
             <i class="ti ti-calendar-time"></i>
             <div>
-              <label>Date d'entretien</label>
-              <span>{{ selectedJob.dateEntretien | date:'dd/MM/yyyy' }}</span>
+              <label>Clôturée le </label>
+              <span>{{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span>
             </div>
           </div>
         </section>

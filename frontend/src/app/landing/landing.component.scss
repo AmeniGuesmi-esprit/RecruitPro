@@ -612,12 +612,26 @@
   span { color: #00c2a8; }
 }
 
-/* Timer visual */
-.timer-visual { margin-top: 20px; }
-.timer-block {
-  font-family: var(--font-d); font-size: 3rem; font-weight: 800;
+/* Quota visual (abonnements) */
+.quota-visual { margin-top: 22px; }
+.qv-top {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.qv-label { font-size: 0.78rem; color: var(--c-muted); font-weight: 600; }
+.qv-count {
+  font-family: var(--font-d); font-size: 1.3rem; font-weight: 800;
   color: var(--c-purple-h);
-  span { font-size: 1.5rem; color: var(--c-muted); }
+  span { font-size: 0.85rem; font-weight: 600; color: var(--c-muted); }
+}
+.qv-bar {
+  height: 8px; border-radius: 4px;
+  background: rgba(31,20,90,0.07); overflow: hidden;
+}
+.qv-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, #ec4899, #7c5cfc);
+  transition: width 1s;
 }
 
 /* Dashboard mini */

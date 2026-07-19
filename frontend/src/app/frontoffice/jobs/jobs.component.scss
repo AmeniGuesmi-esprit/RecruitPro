@@ -423,20 +423,36 @@ $radius-lg:   20px;
   position: relative;
   height: 140px;
   margin: -1.5rem -1.5rem 0;
-  background: linear-gradient(135deg, #f1edff 0%, #ded4fb 55%, #cdf3ec 100%);
+  padding: 10px;
+  box-sizing: border-box;
+  // Fond blanc uni (et non un dégradé coloré) : la plupart des logos ont
+  // eux-mêmes un fond blanc/transparent, donc un fond blanc ici fait que le
+  // logo "se fond" dans la bannière au lieu de ressortir comme une petite
+  // boîte isolée au milieu d'un dégradé qui ne matche pas sa propre couleur.
+  background: #ffffff;
   overflow: hidden;
   border-radius: 18px 18px 0 0;
+  // Logo toujours centré dans l'espace alloué, quelle que soit sa forme
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   .banner-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    // "contain" (et non "cover") : le logo est toujours affiché en entier,
+    // jamais rogné/coupé, tout en utilisant le maximum de l'espace alloué
+    // (même taille de zone pour toutes les cartes).
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
     transition: transform .35s ease;
   }
 
   .banner-placeholder {
     width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #f1edff 0%, #ded4fb 55%, #cdf3ec 100%);
     i { font-size: 44px; color: rgba($accent, .35); }
   }
 
@@ -611,7 +627,17 @@ $radius-lg:   20px;
   margin: -2rem -2rem 1.75rem; padding: 1.75rem 2rem; padding-right: 3.5rem;
   background: linear-gradient(120deg, rgba($accent, .09) 0%, rgba($teal, .09) 100%);
   border-radius: 22px 22px 0 0;
-  .modal-logo { width: 68px; height: 68px; border-radius: 14px; object-fit: cover; box-shadow: 0 6px 16px rgba(31,20,90,.15); }
+  .modal-logo {
+    width: 68px; height: 68px;
+    padding: 6px;
+    box-sizing: border-box;
+    border-radius: 14px;
+    background: $card;
+    // "contain" : le logo garde toujours la même taille de cadre (68x68)
+    // mais s'affiche en entier, sans être rogné, même s'il n'est pas carré.
+    object-fit: contain;
+    box-shadow: 0 6px 16px rgba(31,20,90,.15);
+  }
   h2 { margin: 0 0 .35rem; font-size: 1.3rem; font-weight: 700; color: $text; }
   .company-name { margin: 0 0 .6rem; font-size: .87rem; font-weight: 600; color: $accent-dark; }
 }

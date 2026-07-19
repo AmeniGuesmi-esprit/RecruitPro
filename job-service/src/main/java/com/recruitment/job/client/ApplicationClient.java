@@ -1,6 +1,7 @@
 package com.recruitment.job.client;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ApplicationClient {
 
     private final RestTemplate restTemplate;
@@ -42,6 +44,31 @@ public class ApplicationClient {
         } catch (RestClientException e) {
             // Fail-closed : service injoignable → on bloque la suppression par précaution
             return true;
+        }
+    }
+
+    /**
+     * Notifie application-service qu'une offre vient de passer au statut CLOTURE, afin qu'il
+     * traite automatiquement les candidatures encore en attente (acceptation des 5 meilleurs
+     * candidats avec score > 70%, refus des autres, envoi des emails correspondants).
+     *
+     * Appelle un endpoint interne (sans authentification utilisateur) qui doit exister côté
+     * application-service :
+     *
+     *   POST /api/applications/internal/process-closure/{jobId}  → ApiResponse<Void>
+     *
+     * Best-effort : si application-service est injoignable, on se contente de logger
+     * l'échec plutôt que de faire échouer le passage au statut CLOTURE côté job-service.
+     */
+    public void notifyJobClosure(Long jobId) {
+        try {
+            restTemplate.postForEntity(
+                    "http://application-service/api/applications/internal/process-closure/" + jobId,
+                    null,
+                    Void.class);
+        } catch (RestClientException e) {
+            log.warn("Échec de la notification de clôture de l'offre {} à application-service : {}",
+                    jobId, e.getMessage());
         }
     }
 }

@@ -46,7 +46,8 @@ public class JobService {
     public JobResponse createJob(JobRequest req, MultipartFile logo, Long recruiterId) throws IOException {
         checkSubscriptionQuota(recruiterId);
         validateDateCloture(req.getDateCloture());
-        validateDateEntretien(req.getDateCloture(), req.getDateEntretien());
+        LocalDateTime dateEntretien = normalizeDateEntretien(req.getDateEntretien());
+        validateDateEntretien(req.getDateCloture(), dateEntretien);
 
         String logoPath = null;
         if (logo != null && !logo.isEmpty()) {
@@ -67,7 +68,7 @@ public class JobService {
                 .status(JobStatus.PUBLISHED)
                 .dateDebut(LocalDateTime.now())
                 .dateCloture(req.getDateCloture())
-                .dateEntretien(req.getDateEntretien())
+                .dateEntretien(dateEntretien)
                 .build();
 
         return toResponse(jobRepository.save(job));
@@ -79,11 +80,7 @@ public class JobService {
     @Transactional
     public List<JobResponse> getAllActiveJobs() {
         // Archivage inline (évite le problème d'auto-invocation Spring AOP)
-        List<Job> expired = jobRepository.findByStatusAndDateClotureBefore(JobStatus.PUBLISHED, LocalDateTime.now());
-        if (!expired.isEmpty()) {
-            expired.forEach(j -> j.setStatus(JobStatus.CLOTURE));
-            jobRepository.saveAll(expired);
-        }
+        closeExpiredJobs();
         return jobRepository.findByStatusIn(PUBLIC_STATUSES).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -97,11 +94,7 @@ public class JobService {
     @Transactional
     public List<JobResponse> searchActiveJobs(String q) {
         // Archivage inline (mêmes raisons que ci-dessus)
-        List<Job> expired = jobRepository.findByStatusAndDateClotureBefore(JobStatus.PUBLISHED, LocalDateTime.now());
-        if (!expired.isEmpty()) {
-            expired.forEach(j -> j.setStatus(JobStatus.CLOTURE));
-            jobRepository.saveAll(expired);
-        }
+        closeExpiredJobs();
 
         Specification<Job> spec = JobSpecifications.search(q, PUBLIC_STATUSES);
         return jobRepository.findAll(spec).stream()
@@ -113,11 +106,7 @@ public class JobService {
     @Transactional
     public List<JobResponse> getJobsByRecruiter(Long recruiterId) {
         // Archivage inline (évite le problème d'auto-invocation Spring AOP)
-        List<Job> expired = jobRepository.findByStatusAndDateClotureBefore(JobStatus.PUBLISHED, LocalDateTime.now());
-        if (!expired.isEmpty()) {
-            expired.forEach(j -> j.setStatus(JobStatus.CLOTURE));
-            jobRepository.saveAll(expired);
-        }
+        closeExpiredJobs();
         return jobRepository.findByRecruiterId(recruiterId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -130,11 +119,7 @@ public class JobService {
     /** ADMIN : toutes les offres, tous statuts confondus (PUBLISHED, CLOTURE, ARCHIVED). */
     @Transactional
     public List<JobResponse> getAllJobsAdmin() {
-        List<Job> expired = jobRepository.findByStatusAndDateClotureBefore(JobStatus.PUBLISHED, LocalDateTime.now());
-        if (!expired.isEmpty()) {
-            expired.forEach(j -> j.setStatus(JobStatus.CLOTURE));
-            jobRepository.saveAll(expired);
-        }
+        closeExpiredJobs();
         return jobRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -148,7 +133,8 @@ public class JobService {
             throw new SecurityException("Non autorisé");
         }
         validateDateCloture(req.getDateCloture());
-        validateDateEntretien(req.getDateCloture(), req.getDateEntretien());
+        LocalDateTime dateEntretien = normalizeDateEntretien(req.getDateEntretien());
+        validateDateEntretien(req.getDateCloture(), dateEntretien);
 
         job.setTitle(req.getTitle());
         job.setDescription(req.getDescription());
@@ -159,7 +145,7 @@ public class JobService {
         job.setContactEmail(req.getContactEmail());
         job.setContactPhone(req.getContactPhone());
         job.setDateCloture(req.getDateCloture());
-        job.setDateEntretien(req.getDateEntretien());
+        job.setDateEntretien(dateEntretien);
 
         if (logo != null && !logo.isEmpty()) {
             if (job.getLogoPath() != null) fileStorageService.deleteLogo(job.getLogoPath());
@@ -211,10 +197,26 @@ public class JobService {
     @Scheduled(fixedRate = 5 * 60 * 1000) // toutes les 5 minutes
     @Transactional
     public void archiveExpiredJobs() {
+        closeExpiredJobs();
+    }
+
+    /**
+     * Fait passer au statut CLOTURE toute offre PUBLISHED dont la date de clôture est
+     * dépassée, puis notifie application-service pour chaque offre nouvellement clôturée
+     * (traitement automatique des candidatures : acceptation des 5 meilleurs candidats
+     * avec score > 70%, refus des autres, envoi des emails correspondants — voir
+     * ApplicationClient#notifyJobClosure).
+     *
+     * Comme la requête ne cible que les offres encore PUBLISHED, une offre donnée n'est
+     * jamais retournée deux fois par cette méthode : la notification n'est donc envoyée
+     * qu'une seule fois par offre, quel que soit le nombre d'appels (idempotent).
+     */
+    private void closeExpiredJobs() {
         List<Job> expired = jobRepository.findByStatusAndDateClotureBefore(JobStatus.PUBLISHED, LocalDateTime.now());
         if (expired.isEmpty()) return;
         expired.forEach(j -> j.setStatus(JobStatus.CLOTURE));
         jobRepository.saveAll(expired);
+        expired.forEach(j -> applicationClient.notifyJobClosure(j.getId()));
     }
 
     // ── Abonnement ───────────────────────────────────────────────────────────────
@@ -269,6 +271,15 @@ public class JobService {
     }
 
     // ── Utilitaires ──────────────────────────────────────────────────────────────
+
+    /**
+     * L'heure de l'entretien est TOUJOURS fixée à 10h00, quelle que soit l'heure
+     * saisie par le recruteur : seule la date (jour/mois/année) choisie est conservée.
+     */
+    private LocalDateTime normalizeDateEntretien(LocalDateTime dateEntretien) {
+        if (dateEntretien == null) return null;
+        return dateEntretien.toLocalDate().atTime(10, 0);
+    }
 
     private void validateDateCloture(LocalDateTime dateCloture) {
         if (dateCloture == null) {

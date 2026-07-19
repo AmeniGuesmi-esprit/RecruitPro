@@ -21,7 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,9 +36,18 @@ public class ApplicationService {
     private final UserClient userClient;
     private final SubscriptionClient subscriptionClient;
     private final MatchingClient matchingClient;
+    private final EmailService emailService;
 
     @Value("${app.base-url}")
     private String baseUrl;
+
+    /** Nombre maximum de candidats acceptés pour entretien à la clôture d'une offre. */
+    @Value("${app.matching.max-accepted:5}")
+    private int maxAccepted;
+
+    /** Score de matching minimum (exclusif) pour être éligible à l'acceptation. */
+    @Value("${app.matching.min-score:70}")
+    private double minScore;
 
     // ── Postuler ─────────────────────────────────────────────────────────────
     @Transactional
@@ -142,6 +154,78 @@ public class ApplicationService {
     // propriétaire : appel interne service-à-service, pas exposé au frontend.
     public long countByJob(Long jobId) {
         return repository.countByJobId(jobId);
+    }
+
+    // ── INTERNE (job-service) : traitement automatique à la clôture d'une offre ──
+    /**
+     * Appelé par job-service (via ApplicationClient) juste après qu'une offre soit
+     * passée au statut CLOTURE (expiration de la date de clôture). Parmi les
+     * candidatures encore EN_COURS_DE_TRAITEMENT pour cette offre :
+     *  - les {@code maxAccepted} (par défaut 5) meilleures ayant un score de matching
+     *    strictement supérieur à {@code minScore}% (par défaut 70%) passent à
+     *    ACCEPTEE_POUR_ENTRETIEN et reçoivent un email avec la date d'entretien.
+     *    S'il y a moins de {@code maxAccepted} candidats au-dessus du seuil, seuls
+     *    ceux-ci sont acceptés (le nombre d'acceptés ne dépasse jamais {@code maxAccepted}).
+     *  - toutes les autres passent à REFUSEE et reçoivent un email de refus.
+     *
+     * Idempotent ET sûr en cas d'appels concurrents (voir
+     * JobApplicationRepository#updateStatusIfPending) : même si job-service déclenche
+     * plusieurs fois ce traitement pour la même offre en même temps (ex : plusieurs
+     * endpoints détectant la même offre expirée quasi simultanément), chaque candidature
+     * n'est effectivement mise à jour, et donc ne déclenche l'envoi d'un email, qu'une
+     * seule fois.
+     */
+    @Transactional
+    public void processJobClosure(Long jobId) {
+        List<JobApplication> pending = repository.findByJobIdOrderByAppliedAtDesc(jobId).stream()
+                .filter(a -> a.getStatus() == ApplicationStatus.EN_COURS_DE_TRAITEMENT)
+                .toList();
+        if (pending.isEmpty()) {
+            return;
+        }
+
+        JobInfo job = jobClient.getJob(jobId);
+        String jobTitle = job != null ? job.getTitle() : "l'offre";
+        String companyName = job != null ? job.getCompanyName() : null;
+        LocalDateTime dateEntretien = job != null ? job.getDateEntretien() : null;
+
+        long alreadyAccepted = repository.findByJobIdOrderByAppliedAtDesc(jobId).stream()
+                .filter(a -> a.getStatus() == ApplicationStatus.ACCEPTEE_POUR_ENTRETIEN)
+                .count();
+        int remainingSlots = (int) Math.max(0, maxAccepted - alreadyAccepted);
+
+        List<JobApplication> eligible = pending.stream()
+                .filter(a -> a.getMatchScore() != null && a.getMatchScore() > minScore)
+                .sorted((a, b) -> Double.compare(b.getMatchScore(), a.getMatchScore()))
+                .toList();
+
+        Set<Long> toAcceptIds = eligible.stream()
+                .limit(remainingSlots)
+                .map(JobApplication::getId)
+                .collect(Collectors.toSet());
+
+        for (JobApplication application : pending) {
+            ApplicationStatus targetStatus = toAcceptIds.contains(application.getId())
+                    ? ApplicationStatus.ACCEPTEE_POUR_ENTRETIEN
+                    : ApplicationStatus.REFUSEE;
+
+            // Mise à jour atomique : si 0 ligne affectée, une autre exécution concurrente
+            // a déjà traité (et notifié) cette candidature entre-temps → on ne renvoie pas l'email.
+            int updated = repository.updateStatusIfPending(application.getId(), targetStatus);
+            if (updated == 0) {
+                continue;
+            }
+
+            if (targetStatus == ApplicationStatus.ACCEPTEE_POUR_ENTRETIEN) {
+                emailService.sendInterviewEmail(
+                        application.getCandidateEmail(), application.getCandidateFirstName(),
+                        jobTitle, companyName, dateEntretien);
+            } else {
+                emailService.sendRejectionEmail(
+                        application.getCandidateEmail(), application.getCandidateFirstName(),
+                        jobTitle, companyName);
+            }
+        }
     }
 
     // ── Changer le statut d'une candidature (COMPANY, doit être le recruteur propriétaire) ─

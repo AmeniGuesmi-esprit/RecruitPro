@@ -94,6 +94,17 @@ public class ApplicationController {
         return ResponseEntity.ok(ApiResponse.ok("Nombre de candidatures", applicationService.countByJob(jobId)));
     }
 
+    // ── INTERNE (job-service) : traitement automatique des candidatures à la clôture d'une offre ──
+    // Appelé par JobService (via ApplicationClient) juste après le passage d'une offre au
+    // statut CLOTURE. Pas de JWT propagé lors de cet appel service-à-service : route ouverte
+    // via SecurityConfig ("/api/applications/internal/**"), même principe que
+    // /api/applications/internal/count/{jobId} ci-dessus.
+    @PostMapping("/internal/process-closure/{jobId}")
+    public ResponseEntity<ApiResponse<Void>> processClosure(@PathVariable Long jobId) {
+        applicationService.processJobClosure(jobId);
+        return ResponseEntity.ok(ApiResponse.ok("Candidatures traitées", null));
+    }
+
     // ── COMPANY : changer le statut d'une candidature (accepter / refuser) ───
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('COMPANY')")
