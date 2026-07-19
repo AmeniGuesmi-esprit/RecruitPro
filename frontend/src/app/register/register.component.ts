@@ -5,11 +5,12 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { Role } from '../core/models/user.model';
 import { frontofficeHomeRoute } from '../core/guards/auth.guard';
+import { NavbarComponent } from '../theme/shared/navbar/navbar.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, NavbarComponent],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })

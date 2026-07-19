@@ -9,21 +9,7 @@
   </div>
 
   <!-- Navbar -->
-  <nav class="navbar">
-    <div class="nav-logo">
-      <span class="logo-icon">◈</span>
-      <span class="logo-text">Recruit<span class="logo-accent">Pro</span></span>
-    </div>
-    <div class="nav-links">
-      <a href="#how" class="nav-link">Comment ça marche</a>
-      <a href="#features" class="nav-link">Fonctionnalités</a>
-      <a href="#testimonials" class="nav-link">Avis</a>
-    </div>
-    <div class="nav-actions">
-      <button class="btn-ghost" (click)="goToLogin()">Se connecter</button>
-      <button class="btn-nav-cta" (click)="goToRegister()">Commencer gratuitement</button>
-    </div>
-  </nav>
+  <app-navbar></app-navbar>
 
   <!-- ══ HERO ══ -->
   <section class="hero">
@@ -44,35 +30,6 @@
         RecruitPro connecte les meilleurs candidats aux entreprises qui façonnent l'avenir —
         avec matching par IA, connexion par reconnaissance faciale et analyses en temps réel.
       </p>
-
-      <div class="hero-actions">
-        <button class="btn-primary-hero" (click)="goToRegister()">
-          <span>Démarrer gratuitement</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-        <button class="btn-ghost-hero" (click)="goToLogin()">
-          <span class="play-icon">▶</span>
-          Voir comment ça marche
-        </button>
-      </div>
-
-      <!-- Stats -->
-      <div class="hero-stats">
-        <div class="stat-item">
-          <span class="stat-val">12K+</span>
-          <span class="stat-lbl">Candidats actifs</span>
-        </div>
-        <div class="stat-sep"></div>
-        <div class="stat-item">
-          <span class="stat-val">3K+</span>
-          <span class="stat-lbl">Entreprises</span>
-        </div>
-        <div class="stat-sep"></div>
-        <div class="stat-item">
-          <span class="stat-val">98%</span>
-          <span class="stat-lbl">Satisfaction</span>
-        </div>
-      </div>
     </div>
 
     <!-- 3D Visual -->
@@ -174,17 +131,7 @@
     </div>
   </section>
 
-  <!-- Trusted by logos -->
-  <div class="trust-bar">
-    <span class="trust-label">Ils nous font confiance</span>
-    <div class="trust-logos">
-      <span class="trust-logo">Vermeg</span>
-      <span class="trust-logo">Tunisair</span>
-      <span class="trust-logo">Ooredoo</span>
-      <span class="trust-logo">BIAT</span>
-      <span class="trust-logo">Sopra HR</span>
-    </div>
-  </div>
+
 
   <!-- ══ HOW IT WORKS ══ -->
   <section class="how" id="how">
@@ -399,13 +346,31 @@
   <!-- ══ CTA ══ -->
   <section class="cta-section">
     <div class="cta-glow"></div>
+
+    <!-- Cubes 3D flottants — mallette (offre), CV (candidature), badge (recruté) -->
+    <div class="cta-3d-scene">
+      <div class="icube icube-briefcase">
+        <div class="icube-face icube-top"></div>
+        <div class="icube-face icube-front"><i class="ti ti-briefcase"></i></div>
+        <div class="icube-face icube-side"></div>
+      </div>
+      <div class="icube icube-cv">
+        <div class="icube-face icube-top"></div>
+        <div class="icube-face icube-front"><i class="ti ti-file-text"></i></div>
+        <div class="icube-face icube-side"></div>
+      </div>
+      <div class="icube icube-hired">
+        <div class="icube-face icube-top"></div>
+        <div class="icube-face icube-front"><i class="ti ti-circle-check"></i></div>
+        <div class="icube-face icube-side"></div>
+      </div>
+    </div>
+
     <div class="cta-inner">
-      <div class="cta-badge">🚀 Gratuit pour commencer</div>
       <h2 class="cta-title">Prêt à trouver<br><span class="title-gradient">votre prochaine opportunité ?</span></h2>
-      <p class="cta-sub">Rejoignez plus de 12 000 professionnels et 3 000 entreprises déjà sur RecruitPro.</p>
       <div class="cta-actions">
         <button class="btn-primary-hero" (click)="goToRegister()">
-          <span>Créer un compte gratuit</span>
+          <span>Créer un compte</span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
         <button class="btn-ghost-hero" (click)="goToLogin()">Se connecter à la place</button>
