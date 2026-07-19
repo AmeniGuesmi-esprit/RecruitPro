@@ -1,0 +1,23 @@
+{
+  "trained_at": "2026-07-19T12:50:54.314403+00:00",
+  "n_rows": 10000,
+  "mae_test": 6.922,
+  "r2_test": 0.743,
+  "numeric_features": [
+    "skill_overlap_ratio",
+    "skill_jaccard",
+    "nb_matched_skills",
+    "nb_job_skills",
+    "experience_ratio",
+    "cv_years_experience",
+    "job_years_required",
+    "resume_similarity"
+  ],
+  "model": "GradientBoostingRegressor",
+  "weighting": {
+    "experience": 0.5,
+    "competences": 0.4,
+    "resume": 0.1
+  },
+  "note": "Ces artefacts (tfidf_vectorizer.joblib + recommend_model.joblib) sont une copie exacte de ceux de matching-service (models/match_model.joblib), entraines sur le dataset 10000 lignes de matching-service (data/cv_job_matching_dataset.csv), afin que matching-service et recommendation-service renvoient TOUJOURS le meme pourcentage pour un meme couple (CV, offre). Ne pas relancer training/train_model.py sur ce service sans aussi le faire sur matching-service et re-synchroniser les deux modeles, sinon les scores rediverGeront. Ponderation : 50% experience_ratio, 40% skill_overlap_ratio, 10% resume_similarity."
+}

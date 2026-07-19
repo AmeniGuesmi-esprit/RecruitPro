@@ -2,6 +2,19 @@
 """
 Chargement du modèle entraîné et calcul du score de matching pour un
 couple (CV, offre) donné.
+
+IMPORTANT — synchronisation avec recommendation-service :
+Les fichiers models/tfidf_vectorizer.joblib et models/match_model.joblib
+sont une copie exacte des artefacts de recommendation-service
+(models/tfidf_vectorizer.joblib + models/recommend_model.joblib).
+Les deux services partagent le même pipeline de features
+(app/feature_engineering.py, identique dans les deux repos) : en utilisant
+aussi le même vecteur TF-IDF et le même régresseur, matching-service et
+recommendation-service renvoient désormais TOUJOURS le même pourcentage
+pour un même couple (CV, offre), quel que soit le service appelé.
+Si le modèle est ré-entraîné un jour, il faut le ré-entraîner une seule
+fois (idéalement dans un seul repo "modèle partagé") puis copier les
+mêmes fichiers .joblib dans les deux services.
 """
 import logging
 from pathlib import Path
@@ -24,6 +37,7 @@ NUMERIC_FEATURES = [
     "experience_ratio",
     "cv_years_experience",
     "job_years_required",
+    "resume_similarity",
 ]
 
 
@@ -64,6 +78,7 @@ class MatchingModel:
             "missingSkills": feats["missing_skills"],
             "extractedSkills": feats["extracted_cv_skills"],
             "extractedExperienceYears": feats["cv_years_experience"],
+            "resumeSimilarity": round(feats["resume_similarity"], 3),
         }
 
 

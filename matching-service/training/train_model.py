@@ -43,6 +43,7 @@ NUMERIC_FEATURES = [
     "experience_ratio",
     "cv_years_experience",
     "job_years_required",
+    "resume_similarity",
 ]
 
 

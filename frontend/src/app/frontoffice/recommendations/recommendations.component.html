@@ -1,0 +1,235 @@
+<div class="reco-page">
+
+  <!-- ══ BANDE HERO — même style que la page Candidatures ═══════════════════ -->
+  @if (!loading && hasCv && !errorState) {
+    <div class="reco-hero">
+      <div class="reco-hero__body">
+        <div class="reco-hero__info">
+          <span class="reco-hero__eyebrow"><i class="ti ti-sparkles"></i> Recommandations IA</span>
+          <h2 class="reco-hero__title">Les offres faites pour vous</h2>
+          <div class="reco-hero__chips">
+            <div class="reco-hero__chip">
+              <i class="ti ti-target-arrow"></i>
+              <span>{{ recommendations.length }} offre{{ recommendations.length > 1 ? 's' : '' }} à plus de 70% de correspondance</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══ ÉTAT : PAS DE CV ═════════════════════════════════════════════════════ -->
+  @if (!loading && !hasCv) {
+    <div class="empty-state">
+      <i class="ti ti-file-upload"></i>
+      <p>Ajoutez votre CV à votre profil pour recevoir des recommandations personnalisées.</p>
+      <button class="btn-primary-reco" (click)="goToProfile()">
+        <i class="ti ti-user-edit"></i> Compléter mon profil
+      </button>
+    </div>
+  }
+
+  <!-- ══ CHARGEMENT ═══════════════════════════════════════════════════════════ -->
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p>Analyse de votre CV et calcul des recommandations…</p>
+    </div>
+  }
+
+  <!-- ══ ERREUR / SERVICE INDISPONIBLE ═══════════════════════════════════════ -->
+  @if (!loading && hasCv && errorState) {
+    <div class="empty-state">
+      <i class="ti ti-alert-triangle"></i>
+      <p>Le service de recommandation est momentanément indisponible.</p>
+      <button class="btn-primary-reco" (click)="retry()">
+        <i class="ti ti-refresh"></i> Réessayer
+      </button>
+    </div>
+  }
+
+  <!-- ══ AUCUNE RECOMMANDATION ════════════════════════════════════════════════ -->
+  @if (!loading && hasCv && !errorState && recommendations.length === 0) {
+    <div class="empty-state">
+      <i class="ti ti-mood-empty"></i>
+      <p>Aucune offre ne dépasse actuellement 70% de correspondance avec votre profil. Complétez votre CV ou revenez plus tard : de nouvelles offres sont publiées régulièrement.</p>
+    </div>
+  }
+
+  <!-- ══ GRILLE DES RECOMMANDATIONS ═══════════════════════════════════════════ -->
+  @if (!loading && hasCv && !errorState && recommendations.length > 0) {
+    <div class="reco-grid">
+      @for (job of recommendations; track job.jobId; let i = $index) {
+        <div class="reco-card" (click)="openDetail(job)">
+          <span class="rank-badge">#{{ i + 1 }}</span>
+
+          <!-- Score de pertinence -->
+          <div class="score-ring" [attr.data-level]="scoreLevel(job.matchScore)">
+            <svg viewBox="0 0 40 40">
+              <circle class="score-track" cx="20" cy="20" r="16"></circle>
+              <circle class="score-fill" cx="20" cy="20" r="16"
+                      [style.stroke-dasharray]="100"
+                      [style.stroke-dashoffset]="100 - job.matchScore"></circle>
+            </svg>
+            <span class="score-value">{{ job.matchScore | number:'1.0-0' }}%</span>
+          </div>
+
+          <div class="card-banner">
+            @if (job.logoUrl) {
+              <img [src]="job.logoUrl" [alt]="job.companyName" class="banner-img" />
+            } @else {
+              <div class="banner-placeholder">
+                <i class="ti ti-building-skyscraper"></i>
+              </div>
+            }
+          </div>
+
+          <div class="card-body">
+            <h3 class="job-title">{{ job.title }}</h3>
+            <p class="company-name">{{ job.companyName }}</p>
+            <p class="job-desc">{{ job.description | slice:0:80 }}{{ job.description.length > 80 ? '…' : '' }}</p>
+
+            @if (job.matchedSkills.length > 0) {
+              <div class="skills-list">
+                <span class="skills-label"><i class="ti ti-check"></i> Vous avez :</span>
+                @for (skill of job.matchedSkills.slice(0, 4); track skill) {
+                  <span class="skill-tag matched">{{ skill }}</span>
+                }
+              </div>
+            }
+
+            @if (job.missingSkills.length > 0) {
+              <div class="skills-list">
+                <span class="skills-label muted"><i class="ti ti-plus"></i> À développer :</span>
+                @for (skill of job.missingSkills.slice(0, 3); track skill) {
+                  <span class="skill-tag missing">{{ skill }}</span>
+                }
+              </div>
+            }
+
+            <div class="salary-row">
+              <i class="ti ti-currency-dollar"></i>
+              <span>{{ job.salary | number:'1.0-0' }} TND / mois · {{ job.workSchedule }}</span>
+            </div>
+
+            <!-- Candidature directe -->
+            <div class="apply-section" (click)="$event.stopPropagation()">
+              @if (isApplied(job)) {
+                <span class="application-status-badge" [attr.data-status]="statusFor(job)">
+                  {{ statusLabel(statusFor(job)) }}
+                </span>
+                <button class="btn-apply cancel" [disabled]="isApplying(job)" (click)="toggleApply(job, $event)">
+                  @if (isApplying(job)) { <span class="spin"></span> } @else { <i class="ti ti-x"></i> }
+                  Annuler
+                </button>
+              } @else {
+                <button class="btn-apply" [disabled]="isApplying(job)" (click)="toggleApply(job, $event)">
+                  @if (isApplying(job)) { <span class="spin"></span> } @else { <i class="ti ti-send"></i> }
+                  Postuler
+                </button>
+              }
+              @if (applyErrorMsg && applyErrorJobId === job.jobId) {
+                <div class="apply-error"><i class="ti ti-alert-circle"></i>{{ applyErrorMsg }}</div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- ══ MODAL DÉTAIL ══════════════════════════════════════════════════════════ -->
+@if (selectedJob) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeDetail()"><i class="ti ti-x"></i></button>
+
+      <div class="modal-header">
+        @if (selectedJob.logoUrl) {
+          <img [src]="selectedJob.logoUrl" [alt]="selectedJob.companyName" class="modal-logo" />
+        }
+        <div>
+          <h2>{{ selectedJob.title }}</h2>
+          <p class="company-name">{{ selectedJob.companyName }}</p>
+          <span class="badge-score" [attr.data-level]="scoreLevel(selectedJob.matchScore)">
+            <i class="ti ti-sparkles"></i> {{ selectedJob.matchScore | number:'1.0-0' }}% de correspondance
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <section>
+          <h4><i class="ti ti-align-left me-1"></i>Description</h4>
+          <p class="description-text">{{ selectedJob.description }}</p>
+        </section>
+
+        <section>
+          <h4><i class="ti ti-tools me-1"></i>Compétences requises</h4>
+          <div class="skills-list">
+            @for (skill of selectedJob.skills; track skill) {
+              <span class="skill-tag" [class.matched]="selectedJob.matchedSkills.includes(skill)">{{ skill }}</span>
+            }
+          </div>
+        </section>
+
+        <section class="info-grid">
+          <div class="info-item">
+            <i class="ti ti-currency-dollar"></i>
+            <div><label>Salaire</label><span>{{ selectedJob.salary | number:'1.0-0' }} TND / mois</span></div>
+          </div>
+          <div class="info-item">
+            <i class="ti ti-clock"></i>
+            <div><label>Régime horaire</label><span>{{ selectedJob.workSchedule }}</span></div>
+          </div>
+          <div class="info-item">
+            <i class="ti ti-mail"></i>
+            <div><label>Email</label><a [href]="'mailto:' + selectedJob.contactEmail">{{ selectedJob.contactEmail }}</a></div>
+          </div>
+          @if (selectedJob.contactPhone) {
+            <div class="info-item">
+              <i class="ti ti-phone"></i>
+              <div><label>Téléphone</label><a [href]="'tel:' + selectedJob.contactPhone">{{ selectedJob.contactPhone }}</a></div>
+            </div>
+          }
+          <div class="info-item">
+            <i class="ti ti-calendar-event"></i>
+            <div><label>Clôture</label><span>{{ selectedJob.dateCloture | date:'dd/MM/yyyy' }}</span></div>
+          </div>
+        </section>
+
+        <section class="apply-section">
+          @if (applyErrorMsg && applyErrorJobId === selectedJob.jobId) {
+            <div class="apply-error"><i class="ti ti-alert-circle"></i>{{ applyErrorMsg }}</div>
+          }
+          @if (isApplied(selectedJob)) {
+            <span class="application-status-badge" [attr.data-status]="statusFor(selectedJob)">
+              {{ statusLabel(statusFor(selectedJob)) }}
+            </span>
+            <button class="btn-apply cancel" [disabled]="isApplying(selectedJob)" (click)="toggleApply(selectedJob)">
+              @if (isApplying(selectedJob)) { <span class="spin"></span> } @else { <i class="ti ti-x"></i> }
+              Annuler
+            </button>
+          } @else {
+            <button class="btn-apply" [disabled]="isApplying(selectedJob)" (click)="toggleApply(selectedJob)">
+              @if (isApplying(selectedJob)) { <span class="spin"></span> } @else { <i class="ti ti-send"></i> }
+              Postuler
+            </button>
+          }
+        </section>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ══ CONFIRMATION ═════════════════════════════════════════════════════════ -->
+@if (confirmation) {
+  <div class="modal-overlay confirmation-overlay" (click)="closeConfirmation()">
+    <div class="confirmation-card" (click)="$event.stopPropagation()">
+      <div class="confirmation-icon"><i class="ti ti-circle-check"></i></div>
+      <h3>{{ confirmation.title }}</h3>
+      <p>{{ confirmation.message }}</p>
+      <button class="btn-confirmation-ok" (click)="closeConfirmation()">Compris</button>
+    </div>
+  </div>
+}

@@ -17,6 +17,7 @@ class MatchResponse(BaseModel):
     missingSkills: List[str]
     extractedSkills: List[str]
     extractedExperienceYears: float
+    resumeSimilarity: float = 0.0
 
 
 class BatchCandidate(BaseModel):

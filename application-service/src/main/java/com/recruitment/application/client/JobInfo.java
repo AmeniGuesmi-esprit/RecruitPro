@@ -17,4 +17,14 @@ public class JobInfo {
     // ── Ajoutés pour le matching CV <-> offre (matching-service) ────────────
     private List<String> skills;
     private String description;
+
+    // ── Ajoutés pour l'affichage des offres recommandées (recommendation-service) ──
+    private Double salary;
+    private String workSchedule;
+    private String companyName;
+    private String logoUrl;
+    private String contactEmail;
+    private String contactPhone;
+    private java.time.LocalDateTime dateCloture;
+    private java.time.LocalDateTime dateEntretien;
 }

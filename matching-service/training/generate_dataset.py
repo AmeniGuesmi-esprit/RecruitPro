@@ -24,6 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.skills_bank import DOMAINS, SOFT_SKILLS, EDUCATION_LEVELS  # noqa: E402
+from app.feature_engineering import resume_text_similarity  # noqa: E402
 
 random.seed(42)
 
@@ -87,7 +88,16 @@ def _build_job_text(domain, job_skills, years_required):
     return f"{intro} {reqs}"
 
 
-def _true_match_score(true_candidate_skills, true_job_skills, cand_years, job_years, domain_match):
+def _true_match_score(true_candidate_skills, true_job_skills, cand_years, job_years,
+                       domain_match, cv_text, job_text):
+    """
+    Score de matching "vérité terrain", pondéré :
+      - 50% expérience (années du candidat vs années requises par l'offre)
+      - 40% compétences (recouvrement compétences candidat / compétences requises)
+      - 10% résumé (similarité texte entre le profil du candidat et l'offre,
+        via resume_text_similarity — capture aussi implicitement l'alignement
+        de domaine, un CV hors-domaine ayant peu de vocabulaire en commun)
+    """
     job_set = set(true_job_skills)
     cand_set = set(true_candidate_skills)
     overlap_ratio = len(cand_set & job_set) / len(job_set) if job_set else 0.0
@@ -95,9 +105,13 @@ def _true_match_score(true_candidate_skills, true_job_skills, cand_years, job_ye
     exp_ratio = min(cand_years / job_years, 1.5) if job_years > 0 else 1.0
     exp_score = min(exp_ratio, 1.0)
 
-    domain_bonus = 1.0 if domain_match else 0.55
+    resume_sim = resume_text_similarity(cv_text, job_text)
+    # Léger plancher si domaines différents, pour garder un signal clair même
+    # quand le vocabulaire partagé est faible (cas négatif net attendu).
+    if not domain_match:
+        resume_sim = min(resume_sim, 0.35)
 
-    score = 100 * (0.60 * overlap_ratio + 0.25 * exp_score + 0.15 * domain_bonus)
+    score = 100 * (0.50 * exp_score + 0.40 * overlap_ratio + 0.10 * resume_sim)
     score += random.gauss(0, 4.5)  # bruit réaliste (subjectivité recruteur)
     return max(0.0, min(100.0, score))
 
@@ -133,7 +147,10 @@ def generate_row(row_id):
 
     job_text = _build_job_text(job_domain, job_skills, job_years_required)
 
-    score = _true_match_score(candidate_skills, job_skills, cand_years, job_years_required, domain_match)
+    score = _true_match_score(
+        candidate_skills, job_skills, cand_years, job_years_required,
+        domain_match, cv_text, job_text,
+    )
 
     return {
         "candidate_domain": domain,
